@@ -1,0 +1,54 @@
+{% comment %}
+	Snippet for displaying transactions
+
+	Use like
+		<ul id="transactions">
+			{% include 'snippets/transaction_history.html' %}
+		</ul>
+	Or
+		<ul id="transactions">
+			{% include 'transaction_history.html' with headless=True %}
+		</ul>
+	If `headless` is not defined or false, this snippet also includes
+		transaction.js
+		transaction_history.css
+{% endcomment %}
+{% load ledger %}
+{% load static %}
+
+{% if not headless %}
+<script>
+	const TRANSACTION_PRODUCT_URL = "{% url 'product_transaction' %}"
+	const TRANSACTION_CUSTOM_URL = "{% url 'custom_transaction' %}"
+	const TRANSACTION_REVERT_URL = "{% url 'revert_transaction' %}"
+	const TRANSACTION_EVENT_URL = "{% url 'transaction_event' %}"
+</script>
+<script type="module" src="{% static 'ledger/transaction.js' %}"></script>
+<link rel="stylesheet" href="{% static 'ledger/transaction_history.css' %}">
+{% endif %}
+
+{% for transaction in transactions %}
+	{% if transaction.timejump_after %}
+		<span class="separator before">{{ transaction.timestamp|date:"l, d. F Y H:i" }}</span>
+	{% endif %}
+
+	<li class="transaction" data-transaction-id="{{ transaction.pk }}">
+		<span class="account">{{ transaction.account.name }}</span>
+		<span class="reason">{{ transaction.reason }}</span>
+		{{ transaction.amount|money }}
+		<span class="time">{{ transaction.timestamp }}</span>
+		<button 
+		class="undo button"
+		type="button"
+		{% if transaction.allow_revert is not None and not transaction.allow_revert %}disabled{% endif %}>
+			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo-2"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>
+		</button>
+	</li>
+
+	{% if transaction.timejump_before %}
+		<span class="separator after">{{ transaction.timestamp|date:"l, d. F Y H:i" }}</span>
+	{% endif %}
+{% empty %}
+	<span class="separator" id="no-transactions">Keine Transaktionen gefunden</span>
+{% endfor %}
+

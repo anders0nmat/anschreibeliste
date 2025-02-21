@@ -1,0 +1,194 @@
+/* Box sizing rules */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Remove default margin */
+body,
+h1,
+h2,
+h3,
+h4,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+/* Remove list styles on ul, ol elements with a list role, which suggests default styling will be removed */
+ul[role="list"],
+ol[role="list"] {
+  list-style: none;
+}
+
+/* Set core root defaults */
+html:focus-within {
+  scroll-behavior: smooth;
+}
+
+/* Set core body defaults */
+body {
+  min-height: 100vh;
+  text-rendering: optimizeSpeed;
+  line-height: 1.5;
+}
+
+/* A elements that don't have a class get default styles */
+a:not([class]) {
+  text-decoration-skip-ink: auto;
+}
+
+/* Make images easier to work with */
+img,
+picture {
+  max-width: 100%;
+  display: block;
+}
+
+/* Inherit fonts for inputs and buttons */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+/* Remove all animations and transitions for people that prefer not to see them */
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+   scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+	animation-duration: 0.01ms !important;
+	animation-iteration-count: 1 !important;
+	transition-duration: 0.01ms !important;
+	scroll-behavior: auto !important;
+  }
+}
+
+/* END OF RESET */
+
+:root {
+	--primary-bg-color: light-dark(rgb(243, 243, 243), rgb(18, 18, 18));
+	--secondary-bg-color: light-dark(rgb(255, 255, 255), rgb(30, 30, 30));
+	--selected-color: light-dark(rgb(47, 146, 47), rgb(0, 85, 0));
+
+	--highlight-color: light-dark(black, white);
+
+	--primary-text-color: light-dark(rgb(0, 0, 0), rgb(190, 190, 190));
+	--secondary-text-color: light-dark(rgb(100, 100, 100), rgb(117, 117, 117));
+	--disabled-text-color: light-dark(rgb(141, 141, 141), rgb(78, 78, 78));
+	--headline-text-color: light-dark(rgb(24, 24, 24), rgb(160, 160, 160));
+
+	color-scheme: light dark;
+
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html,
+body {
+	overflow: hidden;
+}
+
+body {
+	padding: 0;
+	margin: 0;
+	background: var(--primary-bg-color);
+	color: var(--primary-text-color);
+}
+
+header {
+	background-color: var(--secondary-bg-color);
+	display: flex;
+	flex-flow: row nowrap;
+	gap: 2em;
+
+	padding: 1em 1.5em;
+
+	& h1,
+	& a {
+		font-size: 1rem;
+		padding: 0;
+		margin: 0;
+		font-variant: small-caps;
+		letter-spacing: 10%;
+	}
+
+	& a {
+		text-decoration: none;
+		color: var(--secondary-text-color);
+	}
+}
+
+#user-info {
+	display: flex;
+	flex-flow: row nowrap;
+	justify-content: center;
+	gap: 0.25em;
+
+	& button {
+		display: flex;
+		flex-flow: column nowrap;
+		justify-content: center;
+		padding: 0.25em;
+		color: var(--primary-text-color);
+		border: none;
+		background: none;
+
+		&:hover {
+			background-color: color-mix(in srgb, transparent, var(--highlight-color) 10%);
+		}
+	}
+}
+
+
+.money {
+	&::after {
+		content: "€";
+		margin-left: 0.25ch;	
+	}
+	
+	&[negative] {
+		color: rgb(206, 95, 95);
+
+		& .wholes::before {
+			content: "-";
+		}
+	}
+	
+	& .cents::before {
+		content: ",";
+	}
+	
+	& .cents {
+		font-size: 75%;
+	}
+}
+
+.button {
+	--bg: transparent;
+	border: none;
+	background: var(--bg);
+	padding: 0.5em 0.75em;
+	margin: 0;
+	display: block;
+
+	&:not([disabled]):hover {
+		background: color-mix(in srgb, var(--bg), var(--highlight-color) 10%);
+	}
+
+	&.primary {
+		--bg: var(--selected-color);
+	}
+
+	&[disabled] {
+		opacity: 30%;
+	}
+}
+

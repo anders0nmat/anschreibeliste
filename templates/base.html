@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{% block tab_title %}{% endblock tab_title %}</title>
+
+	{% load static %}
+	<link rel="stylesheet" href="{% static 'base.css' %}">
+	{% block import %}{% endblock import %}
+</head>
+<body>
+	{% block header %}{% endblock header %}
+	{% block content %}{% endblock content %}
+</body>
+</html>

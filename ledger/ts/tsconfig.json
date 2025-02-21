@@ -1,0 +1,11 @@
+{
+	"compilerOptions": {
+		"module": "ES2022",
+		"outDir": "../static/ledger",
+		"target": "ES2022",
+		"strictNullChecks": true
+	},
+	"exclude": [
+		"node_modules"
+	]
+}

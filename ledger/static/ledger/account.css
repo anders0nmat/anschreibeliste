@@ -1,0 +1,309 @@
+body {
+	display: grid;
+	grid-template-columns: 3fr 1fr;
+	grid-template-rows: max-content auto;
+	grid-template-areas: 
+		"head head"
+		"content editor";
+	gap: 0.5em;
+	height: 100vh;
+}
+
+header {
+	grid-area: head;
+}
+
+main {
+	grid-area: content;
+}
+
+a.item {
+	text-decoration: none;
+	color: currentColor;
+}
+
+aside {
+	grid-area: editor;
+	display: flex;
+	flex-flow: column nowrap;
+	align-items: stretch;
+	gap: 1.5em;
+	padding-right: 0.25em;
+	padding-bottom: 0.25em;
+	overflow: hidden auto;
+
+	& h2 {
+		display: block;
+		font-weight: 600;
+		font-size: 120%;
+	}
+
+	& h3 {
+		display: inline;
+		font-weight: 500;
+		font-size: 100%;
+		font-variant: small-caps;
+	}
+
+	& details {
+		& summary {
+			display: flex;
+			flex-flow: row nowrap;
+			gap: 1ch;
+			margin-bottom: 0.25em;
+
+			details[open] > & > svg {
+				rotate: 90deg;
+			}
+
+			& svg {
+				display: inline;
+			}
+		}
+	}
+	
+	form {
+		display: grid;
+		grid-template-columns: max-content auto;
+		gap: 0.5em;
+		padding: 0.5em 1em;
+		background: var(--secondary-bg-color);
+		
+		
+		& > div {
+			display: grid;
+			grid-template-columns: subgrid;
+			grid-column: 1 / -1;
+		}
+		
+		& label {
+			align-self: center;
+			justify-self: end;
+			
+			font-variant: small-caps;
+			font-weight: 400;
+			font-size: 85%;
+			padding-left: 1em;
+		}
+		
+		& input[type="submit"] {
+			grid-column: 1 / -1;
+		}
+		
+		& input[type="text"],
+		& input[type="number"],
+		& select {
+			border: none;
+			padding: 0.25em 0.5em;
+			background: none;
+			/* width: 16ch; */
+			
+			&:not([disabled]):hover {
+				background-color: color-mix(in srgb, var(--secondary-bg-color), var(--highlight-color) 10%);
+			}
+		}
+		
+		& input[type="checkbox"] {
+			padding: 0;
+			margin: 0.25em 0.5em;
+			justify-self: start;
+		}
+		
+		& .balance {
+			padding: 0.25em 0.5em;
+			color: var(--secondary-text-color);
+		}
+	}
+}
+	
+.credit {
+	font-size: 75%;
+}
+
+#deposit-transaction,
+#withdraw-transaction {
+	/* padding: 0.25em; */
+	--bg: color-mix(in srgb, var(--secondary-bg-color), var(--selected-color) 20%);
+	border: thin solid var(--selected-color);
+	margin-right: 0.25em;
+	position: relative;
+	grid-area: new-transaction;
+	background: var(--bg);
+	grid-template-columns: auto max-content;
+	grid-template-rows: auto auto;
+	grid-template-areas:
+		"amount amount"
+		"buttons send";
+	gap: 0.5em;
+	
+	& .overlay {
+		position: absolute;
+		display: flex;
+		justify-content: center;
+		inset: 0;
+		background-color: rgba(71, 71, 71, 0.726);
+		text-align: center;
+		
+		&:not([visible]) {
+			display: none;
+		}
+
+		& svg {
+			display: none;
+		}
+
+		&[data-status="pending"] svg[data-status="pending"],
+		&[data-status="success"] svg[data-status="success"],
+		&[data-status="failure"] svg[data-status="failure"] {
+			display: unset;
+		}
+
+		& svg[data-status="pending"] {
+			stroke-width: 1;
+			stroke: rgb(107, 107, 107);
+			fill: none;
+			stroke-linecap: round;
+			stroke-linejoin: round;
+			stroke-dasharray: 8px 24px;
+			stroke-dashoffset: 0px;
+			animation: 
+				1.5s infinite spinner linear,
+				2s infinite alternate chase-lag cubic-bezier(.58,.14,.65,.99);
+		}
+
+		& svg[data-status="success"] {
+			stroke-width: 1;
+			stroke: green;
+			fill: none;
+			stroke-linecap: round;
+			stroke-linejoin: round;
+			stroke-dasharray: 16px;
+			stroke-dashoffset: 0px;
+			animation:
+				300ms draw ease-in-out;
+		}
+
+
+	}
+
+	& > .button {
+		grid-area: send;
+	}
+
+	& input {
+		grid-area: amount;
+		border: none;
+		padding: 0.25em 0.5em;
+		background: var(--secondary-bg-color);
+		font-size: 125%;
+		/* width: 16ch; */
+		
+		&:hover {
+			background-color: var(--secondary-bg-color);
+		}
+	}
+
+	& .buttons {
+		grid-area: buttons;
+		display: flex;
+		flex-flow: row nowrap;
+		justify-content: stretch;
+		align-items: stretch;
+		gap: 0.5em;
+
+		& .button {
+			--bg: var(--secondary-bg-color);
+		}
+	}
+
+	& .undo:not([disabled]):hover {
+		background-color: color-mix(in srgb, var(--bg), var(--highlight-color) 10%);
+	}
+
+	& [empty] {
+		font-style: italic;
+	}
+}
+
+#withdraw-transaction {
+	--selected-color: rgb(228, 109, 109);
+}
+
+
+
+.transaction {
+	background: var(--secondary-bg-color);
+	padding: 0.5em 0.75em;
+
+	display: grid;
+	grid-column: span 3;
+	grid-template-columns: subgrid;
+	grid-template-rows: auto auto;
+	grid-template-areas: 
+		"account price undo"
+		"reason  price undo";
+	column-gap: 0.5em;
+	align-items: center;
+	border: thin solid var(--secondary-bg-color);
+
+	&:not([data-transaction-id]) {
+		background-color: transparent;
+		border-color: transparent;
+	}
+
+	&[error] {
+		background-color: color-mix(in srgb, var(--secondary-bg-color), red 10%);
+		border-color: rgb(184, 0, 0);
+	}
+	
+	& > .account {
+		grid-area: account;
+		font-size: 80%;
+		font-weight: 600;
+	}
+
+	& > .reason {
+		grid-area: reason;
+		font-size: 80%;
+	}
+
+	& > .money {
+		grid-area: price;
+		text-align: right;
+		font-size: 100%;
+	}
+
+	& > .time {
+		display: none;
+	}
+
+	& > .status {
+		grid-area: undo;
+	}
+
+	&:has(> .status) > .undo {
+		display: none;
+	}
+
+	& > .undo {
+		grid-area: undo;
+		/* border: none;
+		background: none; */
+		padding: 4px;
+		color: var(--primary-text-color);
+		display: flex;
+		flex-flow: column nowrap;
+		justify-content: center;
+/* 
+		&[disabled] {
+			opacity: 30%;
+		}
+
+		&:not([disabled]):hover {
+			background-color: color-mix(in srgb, var(--secondary-bg-color), var(--highlight-color) 10%);
+		} */
+	}
+} 
+
+
+

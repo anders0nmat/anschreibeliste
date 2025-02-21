@@ -1,0 +1,20 @@
+# Server configuration
+# --------------------
+# Copy and rename to 'config.toml'
+
+
+# The secret key used by the server for signing and encryptcion
+# Should be kept secret (it is a *secret* key after all...)
+#
+# Can be generated with python:
+#   from django.core.management.utils import get_random_secret_key
+#   print(get_random_secret_key())
+secret-key=''
+
+
+# List of hostnames the server will accept
+allowed-hosts=[
+	'127.0.0.1',
+]
+
+

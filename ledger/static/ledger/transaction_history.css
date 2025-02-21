@@ -1,0 +1,88 @@
+#transactions {
+	display: grid;
+	grid-template-columns: auto auto min-content;
+	gap: 0.25em;
+	padding: 0;
+	margin: 0;
+	padding-right: 0.25em;
+	padding-bottom: 0.25em;
+	list-style: none;
+	overflow-y: auto;
+
+	& .separator {
+		font-size: 80%;
+		color: var(--secondary-text-color);
+		display: block;
+		grid-column: 1 / -1;
+		
+		&.before {
+			padding-top: 0.25em;
+			border-top: thin solid var(--secondary-bg-color);
+			text-align: right;
+		}
+	}
+}
+
+.transaction {
+	background: var(--secondary-bg-color);
+	padding: 0.5em 0.75em;
+
+	display: grid;
+	grid-column: span 3;
+	grid-template-columns: subgrid;
+	grid-template-rows: auto auto;
+	grid-template-areas: 
+		"account price undo"
+		"reason  price undo";
+	column-gap: 0.5em;
+	align-items: center;
+	border: thin solid var(--secondary-bg-color);
+
+	&:not([data-transaction-id]) {
+		background-color: transparent;
+		border-color: transparent;
+	}
+
+	&[error] {
+		background-color: color-mix(in srgb, var(--secondary-bg-color), red 10%);
+		border-color: rgb(184, 0, 0);
+	}
+	
+	& > .account {
+		grid-area: account;
+		font-size: 80%;
+		font-weight: 600;
+	}
+
+	& > .reason {
+		grid-area: reason;
+		font-size: 80%;
+	}
+
+	& > .money {
+		grid-area: price;
+		text-align: right;
+		font-size: 100%;
+	}
+
+	& > .time {
+		display: none;
+	}
+
+	& > .status {
+		grid-area: undo;
+	}
+
+	&:has(> .status) > .undo {
+		display: none;
+	}
+
+	& > .undo {
+		grid-area: undo;
+		padding: 4px;
+		color: var(--primary-text-color);
+		display: flex;
+		flex-flow: column nowrap;
+		justify-content: center;
+	}
+}

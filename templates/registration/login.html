@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block tab_title %}Login{% endblock tab_title %}
+
+{% block import %}
+<style>
+	body {
+		display: grid;
+		justify-content: center;
+		align-content: center;
+	}
+
+	main {
+		display: flex;
+		flex-flow: column nowrap;
+		padding: 2em 4em;
+		background: var(--secondary-bg-color);
+		gap: 1em;
+	}
+	h1 {
+		font-size: 200%;
+		text-align: center;
+	}
+	.note {
+		font-size: 85%;
+		color: color-mix(in srgb, var(--secondary-text-color), red 60%);
+		text-align: center;
+	}
+	form {
+		display: flex;
+		flex-flow: column nowrap;
+
+		& label {
+			font-weight: 600;
+			font-size: 85%;
+		}
+
+		& input {
+			border-radius: 0;
+			border: thin solid var(--secondary-text-color);
+			padding: 0.25em 0.5em;
+
+			margin-bottom: 1.25em;
+		}
+	}
+</style>
+{% endblock import %}
+
+{% block content %}
+<main>
+	<h1>User Login</h1>
+	{% if form.errors %}
+	<p class="note">
+		Wrong username or password.<br>
+		Please try again.
+	</p>
+	{% endif %}
+
+	{% if next %}
+		{% if user.is_authenticated %}
+		<p class="note">
+			Your don't have access to this page.<br>
+			Login with an account that has access.
+		</p>
+		{% endif %}
+	{% endif %}
+
+	<form method="post" action="{% url 'login' %}">
+		{% csrf_token %}
+
+		{{ form.username.label_tag }}
+		{{ form.username }}
+		{{ form.password.label_tag }}
+		{{ form.password }}
+
+		<button type="submit" class="primary button">Login</button>
+		<input type="hidden" name="next" value="{{ next }}">
+	</form>
+
+	{# Assumes you set up the password_reset view in your URLconf #}
+	<p><a href="{% url 'password_reset' %}">Lost password?</a></p>
+		
+</main>
+{% endblock content %}
+

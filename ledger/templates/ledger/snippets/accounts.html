@@ -1,0 +1,72 @@
+{% extends 'ledger/snippets/grouped_item_grid.html' %}
+
+{% comment %}
+	Snippet for displaying accounts
+
+	Arguments:
+		items : List of accounts
+		headless : (optional, default=False) Dont include JS and CSS
+		url : (optional, default='') Create <a> for each item
+			  and link it to `url` with argument `account.pk`
+		selected : (optional, default=None) Mark the account equal to `selected`
+				   with html-attribute 'selected'
+		show_credit : (optional, default=False) Show the credit for each account
+
+	Use like
+		<ul id="accounts">
+			{% include 'snippets/accounts.html' %}
+		</ul>
+	Or
+		<ul id="accounts">
+			{% include 'snippets/accounts.html' with headless=True %}
+		</ul>
+	If `headless` is not defined or false, this snippet also includes
+		accounts.js
+{% endcomment %}
+
+{% load static %}
+{% load ledger %}
+
+{% if not headless %}
+<script type="module" src="{% static 'ledger/accounts.js' %}"></script>
+{% endif %}
+
+{% block item %}
+{% with account=item %}
+{% with current_balance=account.current_balance %}
+
+{% if url %}
+	<a href="{% url url account.pk %}"
+{% else %}
+	<li
+{% endif %}
+class="item"
+data-account-id={{ account.pk }}
+data-balance={{ current_balance }}
+data-credit={{ account.credit }}
+{% if account.member %}data-member{% endif %}
+{% if not account.is_liquid %}blocked{% endif %}
+{% if selected.pk == account.pk %}selected{% endif %}>
+
+	<h3 class="name">{{ account.name }}</h3>
+	{{ current_balance|money }}
+	{% if show_credit %}<span class="credit">Credit: {{ account.credit|money }}</span>{% endif %}
+	<span>Authentic FPM</span>
+
+{% if url %}
+</a>
+{% else %}
+</li>
+{% endif %}
+
+{% endwith %}
+{% endwith %}
+{% endblock item %}
+
+{% block unnamed_items %}
+{% if create_account %}
+<a href="{% url 'account_create' %}" class="item new">
+	<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+</a>
+{% endif %}
+{% endblock unnamed_items %}

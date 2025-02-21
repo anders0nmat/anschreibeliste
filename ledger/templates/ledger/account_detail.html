@@ -1,0 +1,117 @@
+{% extends 'ledger/account_list.html' %}
+
+{% load ledger %}
+{% load static %}
+
+{% block import %}
+	<link rel="stylesheet" href="{% static 'ledger/transaction_history.css' %}">
+	<script type="module" src="{% static 'ledger/account_detail.js' %}"></script>
+	{{ block.super }}
+{% endblock import %}
+
+{% block editor %}
+<aside>
+	<h2>{{ account.name }}</h2>
+	<details>
+		<summary>
+			<h3>Account</h3>
+			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
+		</summary>
+		<form method="post">
+			{% csrf_token %}
+			{{ form }}
+			{% if form.can_submit %}
+			<input type="submit" class="primary button" value="Save">
+			{% endif %}
+		</form>
+	</details>
+	{% if allow_custom_transaction %}
+	<details open>
+		<summary>
+			<h3>Einzahlung</h3>
+			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
+		</summary>
+		<div id="deposit-transaction" class="transaction">
+			{% csrf_token %}
+			<input type="hidden" id="account-id" value="{{ account.pk }}">
+			<input type="hidden" id="account-name" value="{{ account.name }}">
+			<input type="number" id="deposit-amount" value="0" min="0">
+			<div class="buttons">
+				
+				<button type="button" class="button" data-amount="1000">
+					+10€
+				</button>
+				
+				<button type="button" class="button" data-amount="5000">
+					+50€
+				</button>
+			</div>
+			
+			<button type="button" id="confirm-deposit" class="primary button">
+				Bestätigen
+			</button>
+		</div>
+	</details>
+	<details open>
+		<summary>
+			<h3>Auszahlung</h3>
+			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
+		</summary>
+		<div id="withdraw-transaction" class="transaction">
+			{% csrf_token %}
+			<input type="hidden" id="account-id" value="{{ account.pk }}">
+			<input type="hidden" id="account-name" value="{{ account.name }}">
+			<input type="number" id="withdraw-amount" value="0" min="0">
+			<div class="buttons">
+				
+				<button type="button" class="button" data-amount="1000">
+					+10€
+				</button>
+				
+				<button type="button" class="button" data-amount="5000">
+					+50€
+				</button>
+				<button type="button" class="button" id="withdraw-all">
+					Alles
+				</button>
+			</div>
+			
+			<button type="button" id="confirm-withdraw" class="primary button">
+				Bestätigen
+			</button>
+		</div>
+	</details>
+	{% endif %}
+
+	<details open>
+		<summary>
+			<h3>Transaktionen</h3>
+			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>		
+		</summary>
+		<ul id="transactions">
+			{% include "ledger/snippets/transaction_history.html" with transactions=transactions only %}
+		</ul>
+	</details>
+	<template id="template-undo">
+		<button class="undo button" type="button">
+			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo-2"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>
+		</button>
+	</template>
+	
+	<template id="template-status">
+		<div class="status" data-status="pending">
+			<svg data-status="pending" viewBox="0 0 12 12">
+				<circle cx="6" cy="6" r="5"/>
+			</svg>
+			<svg data-status="success" viewBox="0 0 12 12">
+				<polyline points="1.5 7 4 9 10 2"/>
+			</svg>
+			<svg data-status="failure" viewBox="0 0 12 12">
+				<polyline points="3 9 9 3"/>
+				<polyline points="3 3 9 9"/>
+			</svg>
+		</div>
+	</template>
+
+</aside>
+{% endblock editor %}

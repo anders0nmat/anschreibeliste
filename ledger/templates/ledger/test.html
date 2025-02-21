@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block tab_title %}Anschreibeliste{% endblock tab_title %}
+{% block title %}Anschreibeliste{% endblock title %}
+
+{% block import %}
+	{% load static %}
+	{% load ledger %}
+
+	<link rel="stylesheet" href="{% static 'ledger/index.css' %}">
+	<script src="{% static 'ledger/test.js' %}" defer></script>
+	<style>
+		body {
+			overflow: hidden;
+			grid-template-columns: unset;
+			grid-template-rows: max-content auto;
+			grid-template-areas:
+			  "head"
+			  "content";
+		}
+	</style>
+{% endblock import %}
+
+{% block content %}
+<main style="grid-area: content">
+	<drunk-money class="money" amount="1450">
+		<span class="wholes">14</span>
+		<span class="cents">50</span>
+	</drunk-money>
+
+	<drunk-transaction transaction="">
+		<span slot="name">Tim</span>
+		<span slot="reason">Bierchen</span>
+	</drunk-transaction>
+</main>
+
+<template id="drunk-transaction-template">
+	<span class="name"><slot name="name"></slot></span>
+	<span class="reason"><slot name="reason"></slot></span>
+	<drunk-money></drunk-money>
+	<button type="button" class="button slim">
+			
+	</button>
+</template>
+
+<template id="drunk-money-template">
+	<span class="wholes"></span><span class="cents"></span>
+</template>
+
+{% endblock content %}

@@ -1,0 +1,27 @@
+{% extends 'index.html' %}
+
+{% block tab_title %}Account-Liste{% endblock tab_title %}
+{% block title %}Account-Liste{% endblock title %}
+
+{% block import %}
+	{% load static %}
+	{% load ledger %}
+
+	<link rel="stylesheet" href="{% static 'ledger/index.css' %}">
+	<link rel="stylesheet" href="{% static 'ledger/account.css' %}">
+	{{ block.super }}
+{% endblock import %}
+
+{% block links %}
+<a href="{% url 'main' %}">Anschreibeliste</a>
+{{ block.super }}
+{% endblock links %}
+
+{% block content %}
+<main>
+	<div class="group-list" id="accounts">
+		{% include 'ledger/snippets/accounts.html' with items=accounts selected=account url='account_detail' show_credit=True create_account=True require_empty_group=True only %}
+	</div>
+</main>
+{% block editor %}{% endblock editor %}
+{% endblock content %}

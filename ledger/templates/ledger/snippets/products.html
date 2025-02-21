@@ -1,0 +1,50 @@
+{% extends 'ledger/snippets/grouped_item_grid.html' %}
+
+{% comment %}
+	Snippet for displaying accounts
+
+	Use like
+		<ul id="accounts">
+			{% include 'snippets/accounts.html' %}
+		</ul>
+	Or
+		<ul id="accounts">
+			{% include 'snippets/accounts.html' with headless=True %}
+		</ul>
+	If `headless` is not defined or false, this snippet also includes
+		accounts.js
+{% endcomment %}
+
+{% load static %}
+{% load ledger %}
+
+{% block item %}
+{% with product=item %}
+
+{% if url %}
+	<a href="{% url url product.pk %}"
+{% else %}
+	<li
+{% endif %}
+class="item"
+data-product-id={{ product.pk }}
+data-cost={{ product.cost }}
+data-member-cost={{ product.member_cost }}
+{% if selected.pk == product.pk %}selected{% endif %}>
+
+	<h3 class="name">{{ product.name }}</h3>
+	<div class="price">
+		{{ product.cost|money }}
+		{% if product.cost != product.member_cost %}
+		{{ product.member_cost|money }}
+		{% endif %}
+	</div>
+
+{% if url %}
+</a>
+{% else %}
+</li>
+{% endif %}
+
+{% endwith %}
+{% endblock item %}

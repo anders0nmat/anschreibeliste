@@ -1,0 +1,42 @@
+{% comment %} 
+	Abstract snippet for displaying a list of grouped grid items
+
+	Expects a `items` property in context with a `group` property
+
+	Use like
+		<div class="group-list">
+			{% include 'snippets/grouped_item_grid.html' %}
+		</div>
+
+	Should not be used directly but can be inherited from
+	to define a concrete data model for each item:
+		{% block item %}
+			work with {{ item }} in here 
+		{% endblock item %}
+	If `headless` is not defined or false, this snippet also includes
+		item_grid.css
+{% endcomment %}
+{% load static %}
+{% load ledger %}
+
+{% if not headless %}
+<link rel="stylesheet" href="{% static 'ledger/item_grid.css' %}">
+{% endif %}
+
+{% regroup items by group as item_groups %}
+{% if require_empty_group %}
+	{% ensure_group_leading item_groups grouper=None as item_groups %}
+{% endif %}
+{% for group, items in item_groups %}
+<div>
+	{% if group is not None %}
+	<h2>{{ group.name }}</h2>
+	{% endif %}
+	<ul class="item-grid">
+	{% if group is None %}{% block unnamed_items %}{% endblock unnamed_items %}{% endif %}
+	{% for item in items %}
+		{% block item %}{% endblock item %}
+	{% endfor %}
+	</ul>
+</div>
+{% endfor %}
