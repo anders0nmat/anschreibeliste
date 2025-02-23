@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Window, F, Q, Value
+from django.db.models import Window, F, Q
 from django.db.models.functions import Lag, Lead
 from django.db.models.functions.datetime import Now
 from typing import Optional, Union
@@ -7,22 +7,31 @@ from datetime import timedelta
 from django.contrib.auth.models import User
 
 class TransactionManager(models.Manager):
-	def __init__(self, timejump_threshold: Union[timedelta, False]=False) -> None:
+	def __init__(self, timejump_threshold: Union[timedelta, False]=False, revert_threshold: Optional[timedelta] = None) -> None:
 		super().__init__()
 		self.default_timejump = timejump_threshold
+		self.revert_threshold = revert_threshold
 
 	def recent(self, account=None, timejump: Union[timedelta, False, None]=None, user: Optional[User] = None):
+		"""
+		Returns a manager with regular properties applied:
+
+		a) filtered for the specified account (all if not specified)
+		b) annotated if the given time has passed between transactions (no annotations if False, default_timedelta is used if None).
+		   These can be accessed by the `timejump_before` and `timejump_after` fields on the resulting objects,
+		c) annotated whether the specified user is allowed to revert the transaction (no annotations if None).
+		   This can be accessed by the `allow_revert` field on the resulting objects
+		   This is decided in order on the following questions:
+		   1. Is the current transaction already reverted? if yes => not allowed
+		   2. Is the specified user staff? if yes => allowed
+		   3. Is the specified user the issuer of the transaction? if no => not allowed
+		   4. Is the transaction less than the defined revert_timedelta in the past? if yes => allowed
+		   5. => not allowed
+		"""
 		manager = self.filter(closing_balance=None).order_by('-timestamp')
 		if account is not None:
 			manager = manager.filter(account=account)
-		can_revert_annotated = False
-		if user is not None:
-			if user.is_staff:
-				manager = manager.annotate(allow_revert=Value(True))
-			else:
-				manager = manager.annotate(
-					_timedelta_now=Now() - F('timestamp'))
-				can_revert_annotated = True
+
 		if timejump is None:
 			timejump = self.default_timejump
 		if timejump is not False:
@@ -35,14 +44,19 @@ class TransactionManager(models.Manager):
 				_timedelta_after=F("_next_timestamp") - F("timestamp"),
 				timejump_after=Q(_timedelta_after__gt=timejump),
 			)
-			if can_revert_annotated:
+
+		if user is not None:
+			if user.is_staff:
 				manager = manager.annotate(
-					allow_revert=Q(issuer=user) and Q(_timedelta_now__lt=timejump))
-				can_revert_annotated = False
-		if can_revert_annotated:
-			manager = manager.annotate(
-				allow_revert=Q(issuer=user))
-		
+					allow_revert=Q(related_transaction=None))
+			elif self.revert_threshold is None:
+				manager = manager.annotate(
+					allow_revert=Q(related_transaction=None) and Q(issuer=user))
+			else:
+				manager = manager.annotate(
+					_timedelta_now=Now() - F('timestamp'),
+					allow_revert=Q(related_transaction=None) and Q(issuer=user) and Q(_timedelta_now__lt=self.revert_threshold))
+			
 		return manager
 
 class AccountManager(models.Manager):

@@ -7,7 +7,6 @@
 	padding-right: 0.25em;
 	padding-bottom: 0.25em;
 	list-style: none;
-	overflow-y: auto;
 
 	& .separator {
 		font-size: 80%;
@@ -79,10 +78,10 @@
 
 	& > .undo {
 		grid-area: undo;
-		padding: 4px;
+		/* padding: 4px;
 		color: var(--primary-text-color);
 		display: flex;
 		flex-flow: column nowrap;
-		justify-content: center;
+		justify-content: center; */
 	}
 }

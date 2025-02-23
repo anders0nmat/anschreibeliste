@@ -100,7 +100,8 @@ class Transaction(models.Model):
     class AlreadyReverted(Exception): pass
 
     objects = TransactionManager(
-        timejump_threshold=timedelta(hours=6))
+        timejump_threshold=timedelta(hours=6),
+        revert_threshold=timedelta(hours=12))
 
     closing_balance = models.ForeignKey(AccountBalance, on_delete=models.CASCADE, related_name='transactions', null=True, default=None)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='transactions')
@@ -131,7 +132,7 @@ class Transaction(models.Model):
         return self.related_transaction == None
     
     def user_can_revert(self, user: User | None) -> bool:
-        has_permissions = user.is_staff or (user == self.issuer and datetime.now() - self.timestamp < timedelta(hours=6))
+        has_permissions = user.is_staff or (user == self.issuer and datetime.now() - self.timestamp < self.objects.revert_threshold)
         return has_permissions
 
     @transaction.atomic

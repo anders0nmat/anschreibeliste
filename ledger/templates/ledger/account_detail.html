@@ -20,7 +20,7 @@
 		<form method="post">
 			{% csrf_token %}
 			{{ form }}
-			{% if form.can_submit %}
+			{% if form.has_enabled_fields %}
 			<input type="submit" class="primary button" value="Save">
 			{% endif %}
 		</form>
@@ -45,8 +45,8 @@
 				<button type="button" class="button" data-amount="5000">
 					+50€
 				</button>
+				
 			</div>
-			
 			<button type="button" id="confirm-deposit" class="primary button">
 				Bestätigen
 			</button>
@@ -63,7 +63,6 @@
 			<input type="hidden" id="account-name" value="{{ account.name }}">
 			<input type="number" id="withdraw-amount" value="0" min="0">
 			<div class="buttons">
-				
 				<button type="button" class="button" data-amount="1000">
 					+10€
 				</button>
@@ -75,7 +74,6 @@
 					Alles
 				</button>
 			</div>
-			
 			<button type="button" id="confirm-withdraw" class="primary button">
 				Bestätigen
 			</button>

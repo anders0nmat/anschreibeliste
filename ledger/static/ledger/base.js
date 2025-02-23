@@ -31,3 +31,7 @@ export function _money(balance) {
     money.append(wholes, cents);
     return money;
 }
+export function _cloneTemplate(id) {
+    const template = document.getElementById(id);
+    return template.content.cloneNode(true);
+}

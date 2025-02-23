@@ -1,7 +1,7 @@
-from typing import Any, Dict, Optional, Type, Literal
-from django.forms.forms import BaseForm
+from typing import Any, Dict, Literal
 from django.views.generic.edit import FormMixin
 from django.core.exceptions import ImproperlyConfigured
+from django.views.generic.base import ContextMixin
 
 
 class EnableFieldsMixin(FormMixin):
@@ -14,7 +14,7 @@ class EnableFieldsMixin(FormMixin):
     def get_disabled_fields(self) -> list[str] | Literal['__all__']:
         return self.disabled_fields
     
-    def get_form(self, form_class: type | None = None) -> BaseForm:
+    def get_form(self, form_class = None):
         form = super().get_form(form_class)
 
         enabled_fields = self.get_enabled_fields()
@@ -42,8 +42,14 @@ class EnableFieldsMixin(FormMixin):
         return form
 
 class ExtraFormMixin(FormMixin):
-    extra_form_kwargs = None
+    extra_form_kwargs = {}
 
-    def get_form_kwargs(self) -> Dict[str, Any]:
-        return super().get_form_kwargs() | self.extra_form_kwargs if self.extra_form_kwargs else {}
+    def get_form_kwargs(self):
+        return super().get_form_kwargs() | self.extra_form_kwargs
     
+class ContextQuerysetMixin(ContextMixin):
+    querysets = {}
+    
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        return super().get_context_data(**kwargs) | {name: queryset.all() for name, queryset in self.querysets.items()}
+

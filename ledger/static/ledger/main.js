@@ -223,7 +223,7 @@ const current_transaction = {
         current_transaction.timeout = setTimeout(current_transaction.reset, TRANSACTION_TIMEOUT);
     },
 };
-function changeSlide(name) { document.querySelector(`.slide[data-slide="${name}"]`)?.scrollIntoView(); }
+function changeSlide(name) { document.querySelector(`.slide[data-slide="${name}"]`)?.scrollIntoView({ block: "nearest" }); }
 const slideshow = document.querySelector('.slideshow');
 const observer = new IntersectionObserver((entries) => {
     let activated = entries.reduce((max, entry) => {

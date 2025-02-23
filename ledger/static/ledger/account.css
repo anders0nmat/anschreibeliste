@@ -47,6 +47,7 @@ aside {
 
 	& details {
 		& summary {
+			list-style: none;
 			display: flex;
 			flex-flow: row nowrap;
 			gap: 1ch;
@@ -128,12 +129,13 @@ aside {
 	margin-right: 0.25em;
 	position: relative;
 	grid-area: new-transaction;
+	grid-template-rows: auto auto auto;
+	grid-template-columns: auto;
+	grid-template-areas: 
+		"amount"
+		"buttons"
+		"confirm";
 	background: var(--bg);
-	grid-template-columns: auto max-content;
-	grid-template-rows: auto auto;
-	grid-template-areas:
-		"amount amount"
-		"buttons send";
 	gap: 0.5em;
 	
 	& .overlay {
@@ -186,8 +188,8 @@ aside {
 
 	}
 
-	& > .button {
-		grid-area: send;
+	& > button {
+		grid-area: confirm;
 	}
 
 	& input {
@@ -196,6 +198,7 @@ aside {
 		padding: 0.25em 0.5em;
 		background: var(--secondary-bg-color);
 		font-size: 125%;
+		min-width: 5ch;
 		/* width: 16ch; */
 		
 		&:hover {
@@ -207,13 +210,9 @@ aside {
 		grid-area: buttons;
 		display: flex;
 		flex-flow: row nowrap;
-		justify-content: stretch;
 		align-items: stretch;
+		overflow-x: auto;
 		gap: 0.5em;
-
-		& .button {
-			--bg: var(--secondary-bg-color);
-		}
 	}
 
 	& .undo:not([disabled]):hover {
@@ -226,7 +225,7 @@ aside {
 }
 
 #withdraw-transaction {
-	--selected-color: rgb(228, 109, 109);
+	--selected-color: var(--negative-color);
 }
 
 

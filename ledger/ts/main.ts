@@ -253,7 +253,7 @@ const current_transaction = {
 }
 
 
-function changeSlide(name: string) { document.querySelector<HTMLElement>(`.slide[data-slide="${name}"]`)?.scrollIntoView() }
+function changeSlide(name: string) { document.querySelector<HTMLElement>(`.slide[data-slide="${name}"]`)?.scrollIntoView({block: "nearest"}) }
 
 
 

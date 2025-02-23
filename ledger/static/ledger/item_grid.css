@@ -45,6 +45,14 @@
 		font-size: 1.25em;
 		font-weight: 600;
 		color: var(--headline-text-color);
+		display: flex;
+		flex-flow: row wrap;
+		align-items: center;
+		gap: 4px;
+	}
+
+	& .badge {
+		color: color-mix(in srgb, var(--selected-color), var(--highlight-color) 25%);
 	}
 	
 	& .price {

@@ -1,18 +1,18 @@
-from typing import Any, Literal
+from typing import Any, Dict, Literal
 from http import HTTPStatus
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.decorators import permission_required, login_required
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpResponseForbidden, JsonResponse
 from django.forms.fields import IntegerField
-from django.forms.models import BaseModelForm
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
-from django.views.generic import ListView, UpdateView, CreateView
+from django.views.generic import ListView, UpdateView, CreateView, TemplateView
 
 from .decorators import idempotent, json_body, require_POST_fields, one_of, satisfies, chain
-from .mixins import EnableFieldsMixin, ExtraFormMixin
+from .eventstream import send_event, EventstreamResponse
+from .mixins import EnableFieldsMixin, ExtraFormMixin, ContextQuerysetMixin
 from .models import Account, Transaction, Product
 
 
@@ -29,9 +29,6 @@ class AccountDetail(LoginRequiredMixin, ExtraFormMixin, EnableFieldsMixin, Updat
 	extra_form_kwargs = {
 		'label_suffix': '',
 	}
-	extra_context = {
-		'accounts': Account.objects.grouped(),
-	}
 	
 	def get_success_url(self) -> str:
 		return reverse('account_detail', args=[self.object.pk])
@@ -39,6 +36,7 @@ class AccountDetail(LoginRequiredMixin, ExtraFormMixin, EnableFieldsMixin, Updat
 	def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
 		return super().get_context_data(**kwargs) | {
 			'transactions': Transaction.objects.recent(account=self.object, user=self.request.user),
+			'accounts': Account.objects.grouped(),
 			'allow_custom_transaction': self.can_do_custom_transaction(),
 		}
 	
@@ -47,7 +45,7 @@ class AccountDetail(LoginRequiredMixin, ExtraFormMixin, EnableFieldsMixin, Updat
 		user_can_edit_temporary = self.request.user.has_perm('ledger.change_account')
 		user_can_edit_permanent = self.request.user.has_perm('ledger.change_permanent_account')
 
-		if user_can_edit_permanent and user_can_edit_temporary:
+		if user_can_edit_permanent:
 			return []
 		elif account_is_permanent and user_can_edit_permanent:
 			return ['permanent']
@@ -62,7 +60,7 @@ class AccountDetail(LoginRequiredMixin, ExtraFormMixin, EnableFieldsMixin, Updat
 		user_can_custom_permanent = self.request.user.has_perm('ledger.add_permanent_custom_transaction')
 		return user_can_custom_permanent if account_is_permanent else user_can_custom_temporary
 
-	def get_form(self, form_class: type[BaseModelForm] | None = None) -> BaseModelForm:
+	def get_form(self, form_class = None):
 		form = super().get_form(form_class)
 		form.fields['balance'] = IntegerField(required=False, disabled=True, initial=self.object.current_balance)
 		form.order_fields(['name', 'balance', 'credit', 'group', 'member', 'permanent'])
@@ -78,37 +76,46 @@ class AccountCreate(PermissionRequiredMixin, ExtraFormMixin, EnableFieldsMixin, 
 		'member': False,
 		'credit': 0,
 	}
-	extra_context = {
-		'accounts': Account.objects.grouped(),
-	}
 	extra_form_kwargs = {
 		'label_suffix': '',
 	}
 
-	permission_required = [
-		'ledger.add_account',
-		'ledger.add_permanent_account'
-	]
+	def has_permission(self) -> bool:
+		return self.request.user.has_perm('ledger.add_account') or self.request.user.has_perm('ledger.add_permanent_account')
+
+	def get_initial(self) -> Dict[str, Any]:
+		return super().get_initial() | {
+			'permanent': self.request.user.has_perm('ledger.add_permanent_account') and not self.request.user.has_perm('ledger.add_account')
+		}
+	
+	def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+		return super().get_context_data(**kwargs) | {
+			'accounts': Account.objects.grouped(),
+		}
 
 	def get_success_url(self) -> str:
 		return reverse('account_detail', args=[self.object.pk])
 
 	def get_disabled_fields(self) -> list[str]:
+		user_can_add = self.request.user.has_perm('ledger.add_account')
 		user_can_add_permanent = self.request.user.has_perm('ledger.add_permanent_account')
 
-		if user_can_add_permanent:
+		if user_can_add and user_can_add_permanent:
 			return []
+		elif user_can_add_permanent:
+			return ['permanent']
 		else:
 			return ['member', 'permanent']
 
+class IndexView(LoginRequiredMixin, TemplateView):
+	template_name = "ledger/main.html"
 
-@login_required
-def main(request: HttpRequest):
-	return render(request, "ledger/main.html", {
-		"accounts": Account.objects.grouped(),
-		"products": Product.objects.grouped(),
-		"transactions": Transaction.objects.recent(user=request.user)
-	})
+	def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+		return super().get_context_data(**kwargs) | {
+			"accounts": Account.objects.grouped(),
+			"products": Product.objects.grouped(),
+			"transactions": Transaction.objects.recent(user=self.request.user)
+		}
 
 def test(request: HttpRequest):
 	return render(request, "ledger/test.html", {
@@ -158,7 +165,6 @@ def product_transaction(request: HttpRequest, account: int, product: int, amount
 
 
 @require_POST
-@permission_required(["ledger.add_transaction"], raise_exception=True)
 @idempotent
 #@require_POST_fields([("account", int), ("amount", int)])
 @json_body(patterns=[
@@ -204,3 +210,16 @@ def revert_transaction(request: HttpRequest, transaction: int):
 	except Transaction.AlreadyReverted:
 		return HttpResponse('Already reverted', status=HTTPStatus.CONFLICT)
 
+@login_required
+def transaction_event(request: HttpRequest):
+	return EventstreamResponse(channel='transaction')
+
+
+def send(request: HttpRequest):
+	counter = request.GET.get('counter', 0)
+	send_event('counter', None, {'server': 'hello', 'counter': counter})
+	return HttpResponse('ok')
+
+@login_required
+def event(request):
+	return EventstreamResponse('counter')

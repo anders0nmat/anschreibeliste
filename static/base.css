@@ -75,9 +75,12 @@ select {
 /* END OF RESET */
 
 :root {
+	--positive-color: light-dark(rgb(47, 146, 47), rgb(0, 85, 0));
+	--negative-color: light-dark(rgb(228, 109, 109), rgb(146, 37, 37));
+
 	--primary-bg-color: light-dark(rgb(243, 243, 243), rgb(18, 18, 18));
 	--secondary-bg-color: light-dark(rgb(255, 255, 255), rgb(30, 30, 30));
-	--selected-color: light-dark(rgb(47, 146, 47), rgb(0, 85, 0));
+	--selected-color: var(--positive-color);
 
 	--highlight-color: light-dark(black, white);
 
@@ -109,13 +112,13 @@ header {
 	flex-flow: row nowrap;
 	gap: 2em;
 
-	padding: 1em 1.5em;
+	padding: 0.5em 1.5em;
 
 	& h1,
 	& a {
 		font-size: 1rem;
 		padding: 0;
-		margin: 0;
+		margin: 0.5em 0;
 		font-variant: small-caps;
 		letter-spacing: 10%;
 	}
@@ -129,21 +132,12 @@ header {
 #user-info {
 	display: flex;
 	flex-flow: row nowrap;
-	justify-content: center;
+	align-items: center;
 	gap: 0.25em;
+	font-size: 110%;
 
-	& button {
-		display: flex;
-		flex-flow: column nowrap;
-		justify-content: center;
-		padding: 0.25em;
+	& a {
 		color: var(--primary-text-color);
-		border: none;
-		background: none;
-
-		&:hover {
-			background-color: color-mix(in srgb, transparent, var(--highlight-color) 10%);
-		}
 	}
 }
 
@@ -172,19 +166,34 @@ header {
 }
 
 .button {
-	--bg: transparent;
+	--bg: var(--secondary-bg-color);
+	color: var(--primary-text-color);
 	border: none;
 	background: var(--bg);
 	padding: 0.5em 0.75em;
 	margin: 0;
 	display: block;
-
+	
 	&:not([disabled]):hover {
 		background: color-mix(in srgb, var(--bg), var(--highlight-color) 10%);
 	}
-
+	
 	&.primary {
 		--bg: var(--selected-color);
+	}
+	
+	&.transparent {
+		--bg: transparent;
+	}
+
+	&.slim {
+		padding: 4px;
+	}
+
+	&.center {
+		display: flex;
+		flex-flow: row nowrap;
+		justify-content: center;
 	}
 
 	&[disabled] {

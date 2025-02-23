@@ -72,3 +72,19 @@ class DrunkTransaction extends HTMLElement {
 }
 window.customElements.define('drunk-transaction', DrunkTransaction)
 
+
+let c = 0
+document.getElementById('send-event')!.addEventListener('click', _ => {
+	fetch(`/test/send_event/?counter=${c}`)
+	c += 1
+})
+
+let events = new EventSource('/test/events/')
+events.onmessage = ev => {
+	console.log(ev.data)
+	const li = document.createElement('li')
+	li.append(ev.data)
+	document.getElementById('event-list')!.append(li)
+}
+
+

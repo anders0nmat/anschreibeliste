@@ -1,7 +1,8 @@
-from django_eventstream import send_event
-from django.dispatch import receiver
-from .models import Transaction
 from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+from .eventstream import send_event
+from .models import Transaction
 
 @receiver(post_save, sender=Transaction)
 def notify_clients(instance: Transaction, created: bool, **_):

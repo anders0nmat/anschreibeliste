@@ -41,7 +41,6 @@ ALLOWED_HOSTS = config['allowed-hosts']
 
 INSTALLED_APPS = [
     'daphne',
-    'django_eventstream',
     'ledger.apps.LedgerConfig',
     'django.contrib.admin',
     'django.contrib.auth',
