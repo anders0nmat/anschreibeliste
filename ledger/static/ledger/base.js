@@ -31,7 +31,43 @@ export function _money(balance) {
     money.append(wholes, cents);
     return money;
 }
+export function _set_money(element, amount) {
+    element.toggleAttribute('negative', amount < 0);
+    const amount_string = Math.abs(amount).toString().padStart(3, '0');
+    element.querySelector('.wholes').textContent = amount_string.slice(0, -2);
+    element.querySelector('.cents').textContent = amount_string.slice(-2);
+}
 export function _cloneTemplate(id) {
     const template = document.getElementById(id);
     return template.content.cloneNode(true);
+}
+export class HTMLWrapper {
+    static from(element) {
+        return element !== null ? new this(element) : null;
+    }
+    static template;
+    static create() {
+        const element = _cloneTemplate(this.template).firstElementChild;
+        return new this(element);
+    }
+    static all_selector;
+    static all() {
+        return Array.from(document.querySelectorAll(this.all_selector)).map(e => new this(e));
+    }
+    static get(selector) {
+        const element = document.querySelector(selector);
+        return element !== null ? new this(element) : null;
+    }
+    element;
+    constructor(element) {
+        this.element = element;
+    }
+}
+export class HTMLIdentifierWrapper extends HTMLWrapper {
+    static id_attribute;
+    static byId(id) {
+        return id !== null
+            ? this.get(`${this.all_selector}[${this.id_attribute}="${id}"]`)
+            : null;
+    }
 }

@@ -7,7 +7,7 @@
 */
 const SUBMIT_OVERLAY_DURATION = 1_500
 
-import { _money, _span } from './base.js'
+import { _set_money, HTMLWrapper } from './base.js'
 
 interface ServerEvent {
 	id: number,
@@ -19,15 +19,6 @@ interface ServerEvent {
 	reason: string,
 	related: number | undefined,
 	idempotency_key: string | undefined,
-}
-
-interface TransactionResponse {
-	id?: string,
-	idempotency_key?: string,
-	account_name: string,
-	cost: number,
-	reason: string,
-	can_revert: boolean,
 }
 
 type TransactionKind = "product" | "deposit" | "withdraw"
@@ -56,7 +47,22 @@ interface TransactionAmountRequest extends TransactionRequestBase {
 
 type TransactionRequest = TransactionAmountRequest | TransactionProductRequest
 
-export class Transaction {
+class Status extends HTMLWrapper {
+	error() {
+		this.element.dataset.status = "failure"
+	}
+
+	success() {
+		this.element.dataset.status = "success"
+		setTimeout(_ => this.element.remove(), SUBMIT_OVERLAY_DURATION)
+	}
+}
+
+export class Transaction extends HTMLWrapper {
+	static template: string = 'transaction-template'
+	static all_selector: string = '#transactions .transaction'
+
+	private static csrf_token = document.querySelector<HTMLInputElement>('[name=csrfmiddlewaretoken]')!.value
 	private static async post(url: RequestInfo | URL, body: any, idempotency_key: string | undefined = undefined): ReturnType<typeof fetch> {
 		return fetch(
 			url, {
@@ -70,110 +76,8 @@ export class Transaction {
 		})
 	}
 
-	private static _undo(can_revert: boolean): DocumentFragment {
-		const result = this.undo_template.content.cloneNode(true) as DocumentFragment
-		result.querySelector<HTMLButtonElement>('button')!.disabled = !can_revert
-		return result
-	}
-
-	private static _status(): DocumentFragment {
-		return this.status_template.content.cloneNode(true) as DocumentFragment
-	}
-
-	static add(response: TransactionResponse): Transaction {
-		const account = _span(response.account_name, "account")
-		const reason = _span(response.reason, "reason")
-		const amount = _money(response.cost)
-		const undo = this._undo(response.can_revert)
-
-		let item: HTMLElement | null = null
-		if (response.id) {
-			item = response.idempotency_key !== undefined ? this.container.querySelector<HTMLElement>(`.transaction[data-pending-id="${response.idempotency_key}"]`) : null
-			if (item) {
-				delete item.dataset.pendingId
-				item.querySelectorAll<HTMLElement>(':scope > :not(.status)').forEach(e => e.remove())
-				item.prepend(account, reason, amount, undo)
-			}
-			else {
-				item = document.createElement('li')
-				item.classList.add('transaction')
-				item.dataset.transactionId = response.id
-	
-				this.container.prepend(item)
-				item.append(account, reason, amount, undo)
-			}
-		}
-		else {
-			item = document.createElement('li')
-			item.classList.add('transaction')
-			item.dataset.pendingId = response.idempotency_key!
-			this.container.prepend(item)
-
-			const status = this._status()
-			item.append(account, reason, amount, undo, status)
-		}
-
-		if (response.id) {
-			if (this.objects.has(response.id)) {
-				return this.objects.get(response.id)!
-			}
-			else {
-				const transaction = new this(item)
-				this.objects.set(transaction.id, transaction)
-				return transaction
-			}
-		}
-		else {
-			return new this(item)
-		}
-	}
-
-	static async submit(request: TransactionRequest) {
-		const idempotency_key = Date.now().valueOf().toString()
-
-		const pending_transaction = Transaction.add({
-			account_name: request.account_name,
-			cost: request.kind == "withdraw" ? -request.balance : request.balance,
-			reason: request.reason,
-			idempotency_key: idempotency_key,
-			can_revert: true,
-		})
-
-		let url = ''
-		let body = {}
-		if (request.kind === "product") {
-			url = TRANSACTION_PRODUCT_URL
-			body = {
-				account: request.account_id,
-				product: request.product_id,
-				...(request.amount && {amount: request.amount})
-			}
-		}
-		else {
-			url = TRANSACTION_CUSTOM_URL 
-			body = {
-				account: request.account_id,
-				amount: request.balance,
-				type: request.kind,
-			}
-		}
-
-		const response = await Transaction.post(url, body, idempotency_key)
-		
-		if (!response.ok) {
-			pending_transaction.status!.dataset.status = "failure"
-			pending_transaction.element.toggleAttribute('error', true)
-			return
-		}
-
-		const {transaction_id} = await response.json()
-		
-		pending_transaction.element.dataset.transactionId = transaction_id
-		Transaction.objects.set(pending_transaction.id, pending_transaction)
-		
-		pending_transaction.status!.dataset.status = "success"
-		await delay(SUBMIT_OVERLAY_DURATION)
-		pending_transaction.status?.remove()
+	private static onUndoTransaction(ev: MouseEvent) {
+		Transaction.from((ev.target as HTMLElement).closest<HTMLElement>('.transaction'))?.revert()
 	}
 
 	private static event_source: EventSource | undefined = undefined
@@ -181,18 +85,30 @@ export class Transaction {
 		this.event_source = new EventSource(TRANSACTION_EVENT_URL)
 		this.event_source.addEventListener('create', event => {
 			const data = JSON.parse(event.data) as ServerEvent
-			console.log("received server event: ", data)
+			console.log("received server event:", data)
 
-			Transaction.add({
-				account_name: data.account_name,
-				cost: data.amount,
-				reason: data.reason,
-				id: data.id.toString(),
-				idempotency_key: data.idempotency_key,
-				can_revert: data.related === undefined
-			})
-			if (data.related !== undefined && Transaction.objects.has(data.related.toString())) {
-				Transaction.objects.get(data.related.toString())!.undo_button.disabled = true
+			const confirmed_transaction = data.idempotency_key !== undefined && Transaction.from(document.querySelector<HTMLElement>(`.transaction[data-pending-id="${data.idempotency_key}"]`))
+			if (confirmed_transaction) {
+				confirmed_transaction.pendingId = null
+				confirmed_transaction.account = data.account_name
+				confirmed_transaction.amount = data.amount
+				confirmed_transaction.reason = data.reason
+				confirmed_transaction.can_revert = data.related === undefined
+			}
+			else {
+				const new_transaction = Transaction.create()
+				new_transaction.id = data.id.toString()
+				new_transaction.account = data.account_name
+				new_transaction.amount = data.amount
+				new_transaction.reason = data.reason
+				new_transaction.can_revert = data.related === undefined
+				new_transaction.status?.element.remove()
+				document.getElementById('transactions')!.prepend(new_transaction.element)
+			}
+
+			const related_transaction = data.related !== undefined && Transaction.from(document.querySelector<HTMLElement>(`.transaction[data-transaction-id="${data.related}"]`))
+			if (related_transaction) {
+				related_transaction.can_revert = false
 			}
 
 			if (ontransaction) {
@@ -201,29 +117,95 @@ export class Transaction {
 		})
 	}
 
-	private static status_template = document.getElementById('template-status')! as HTMLTemplateElement
-	private static undo_template = document.getElementById('template-undo')! as HTMLTemplateElement
-	private static csrf_token = document.querySelector<HTMLInputElement>('[name=csrfmiddlewaretoken]')!.value
+	static async submit(request: TransactionRequest) {
+		const idempotency_key = Date.now().valueOf().toString()
 
+		const pending_transaction = Transaction.create()
+		pending_transaction.account = request.account_name
+		pending_transaction.amount = request.kind == "withdraw" ? -request.balance : request.balance
+		pending_transaction.reason = request.reason
+		pending_transaction.can_revert = true
+		pending_transaction.pendingId = idempotency_key
+		document.getElementById('transactions')!.prepend(pending_transaction.element)
 
-	static container = document.getElementById('transactions')!
-	static objects = new Map<string, Transaction>(
-		Array.from(this.container.querySelectorAll<HTMLElement>('.transaction'), element => {
-			const transaction = new this(element)
-			return [transaction.id, transaction]
-		}))
+		let url = ''
+		let body = {}
+		if (request.kind == "product") {
+			url = TRANSACTION_PRODUCT_URL
+			body = {
+				account: request.account_id,
+				product: request.product_id,
+				...(request.amount && {amount: request.amount}),
+			}
+		}
+		else {
+			url = TRANSACTION_CUSTOM_URL
+			body = {
+				account: request.account_id,
+				amount: request.balance,
+				type: request.kind,
+			}
+		}
 
+		const response = await Transaction.post(url, body, idempotency_key)
 
-	element: HTMLElement
+		if (!response.ok) {
+			pending_transaction.status!.error()
+			pending_transaction.element.toggleAttribute("error", true)
+			return
+		}
+
+		const {transaction_id} = await response.json()
+
+		pending_transaction.id = transaction_id
+		pending_transaction.status!.success()
+	}
+
 	constructor(element: HTMLElement) {
-		this.element = element
+		super(element)
 
-		this.undo_button.addEventListener('click', _ => this.revert())
+		this.element.querySelector<HTMLElement>('.undo')!.addEventListener('click', Transaction.onUndoTransaction)
 	}
 
 	get id(): string { return this.element.dataset.transactionId ?? '' }
-	get undo_button(): HTMLButtonElement { return this.element.querySelector<HTMLButtonElement>('.undo')! }
-	get status(): HTMLElement | null { return this.element.querySelector<HTMLElement>('.status') }
+	get pendingId(): string { return this.element.dataset.pendingId ?? '' }
+
+	set id(value: string | null) {
+		if (value === null) {
+			delete this.element.dataset.transactionId
+		}
+		else {
+			this.element.dataset.transactionId = value
+		}
+	}
+	set pendingId(value: string | null) {
+		if (value === null) {
+			delete this.element.dataset.pendingId
+		}
+		else {
+			this.element.dataset.pendingId = value
+		}
+	}
+
+	set account(value: string) {
+		const accountElement = this.element.querySelector<HTMLElement>('.account')!
+		accountElement.textContent = value
+	}
+
+	set reason(value: string) {
+		const reasonElement = this.element.querySelector<HTMLElement>('.reason')!
+		reasonElement.textContent = value
+	}
+
+	set amount(value: number) {
+		_set_money(this.element.querySelector('.money')!, value)
+	}
+
+	set can_revert(value: boolean) {
+		this.element.querySelector<HTMLButtonElement>('.undo')!.disabled = !value
+	}
+
+	get status(): Status | null { return Status.from(this.element.querySelector<HTMLElement>('.status')) }
 
 	revert() {
 		const id = parseInt(this.id)
@@ -231,6 +213,3 @@ export class Transaction {
 		Transaction.post(TRANSACTION_REVERT_URL, {transaction: id})
 	}
 }
-
-async function delay(time: number) { return new Promise<void>(resolve => setTimeout(resolve, time)) }
-

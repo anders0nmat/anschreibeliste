@@ -78,10 +78,5 @@
 
 	& > .undo {
 		grid-area: undo;
-		/* padding: 4px;
-		color: var(--primary-text-color);
-		display: flex;
-		flex-flow: column nowrap;
-		justify-content: center; */
 	}
 }

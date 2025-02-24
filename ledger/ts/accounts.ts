@@ -1,21 +1,15 @@
 
-import { _money } from "./base.js"
+import { _money, HTMLIdentifierWrapper } from "./base.js"
 
-export class Account {
-	static deselectAll() { this.objects.forEach(e => e.selected = false) }
-	static enableAll() { this.objects.forEach(e => e.disabled = false) }
+interface Product {
+	totalCost(member: boolean): number
+}
 
-	static container = document.getElementById('accounts')!
-	static objects = new Map<string, Account>(
-		Array.from(this.container.querySelectorAll<HTMLElement>('.item'), element => {
-			const account = new this(element)
-			return [account.id, account]
-		}))
-
-	element: HTMLElement
-	constructor(element: HTMLElement) {
-		this.element = element
-	}
+export class Account extends HTMLIdentifierWrapper {
+	static all_selector: string = '#accounts .item'
+	static id_attribute: string = 'data-account-id'
+	static deselectAll() { this.all().forEach(acc => acc.selected = false) }
+	static enableAll() { this.all().forEach(acc => acc.disabled = false) }
 
 	get id(): string { return this.element.dataset.accountId ?? '' }
 	get name(): string { return this.element.querySelector('.name')?.textContent ?? '' }
@@ -38,7 +32,6 @@ export class Account {
 	get selected(): boolean { return this.element.hasAttribute('selected') }
 	set selected(value: boolean) { this.element.toggleAttribute('selected', value) }
 	select() { this.selected = true }
-
-	//canAfford(product: Product): boolean { return this.budget >= product.totalCost(this) }
+	canAfford(product: Product): boolean { return this.budget >= product.totalCost(this.isMember) }
 }
 

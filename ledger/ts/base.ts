@@ -1,4 +1,3 @@
-
 /*
 	Allows for conditional classes like
 	`amount > 0 && "positive"`
@@ -46,7 +45,71 @@ export function _money(balance: number): HTMLElement {
 	return money
 }
 
+export function _set_money(element: HTMLElement, amount: number) {
+	element.toggleAttribute('negative', amount < 0)
+
+	const amount_string = Math.abs(amount).toString().padStart(3, '0')
+	element.querySelector('.wholes')!.textContent = amount_string.slice(0, -2)
+	element.querySelector('.cents')!.textContent = amount_string.slice(-2)
+}
+
 export function _cloneTemplate(id: string): DocumentFragment {
 	const template = document.getElementById(id) as HTMLTemplateElement
 	return template.content.cloneNode(true) as DocumentFragment
+}
+
+interface GenericHTMLWrapper<T> {
+	new (_: HTMLElement): T
+	template: string
+	all_selector: string
+
+	from(element: null): null
+	from<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>, element: HTMLElement): T
+	from<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>, element: HTMLElement | null): T | null
+	create<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>): T
+	all<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>): T[]
+	get<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>, selector: string): T | null
+}
+
+interface GenericIdentifierWrapper<T> extends GenericHTMLWrapper<T> {
+	id_attribute: string
+}
+
+export class HTMLWrapper {
+	static from(element: null): null;
+	static from<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>, element: HTMLElement): T;
+	static from<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>, element: HTMLElement | null): T | null;
+	static from<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>, element: HTMLElement | null): T | null {
+		return element !== null ? new this(element) : null
+	}
+
+	static template: string
+	static create<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>): T {
+		const element = _cloneTemplate(this.template).firstElementChild as HTMLElement
+		return new this(element)
+	}
+
+	static all_selector: string
+	static all<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>): T[] {
+		return Array.from(document.querySelectorAll<HTMLElement>(this.all_selector)).map(e => new this(e))
+	}
+
+	static get<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>, selector: string): T | null {
+		const element = document.querySelector<HTMLElement>(selector)
+		return element !== null ? new this(element) : null
+	}
+
+	element: HTMLElement
+	constructor(element: HTMLElement) {
+		this.element = element
+	}
+}
+
+export class HTMLIdentifierWrapper extends HTMLWrapper {
+	static id_attribute: string
+	static byId<T extends HTMLIdentifierWrapper>(this: GenericIdentifierWrapper<T>, id: string | null): T | null {
+		return id !== null
+			? this.get(`${this.all_selector}[${this.id_attribute}="${id}"]`)
+			: null
+	}
 }

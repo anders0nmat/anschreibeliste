@@ -51,13 +51,20 @@ div:has(#transactions) {
 #new-transaction {
 	/* padding: 0.25em; */
 	--bg: color-mix(in srgb, var(--secondary-bg-color), var(--selected-color) 20%);
-	background: linear-gradient(to right, var(--bg) 50%, transparent 50%) left;
+	
+	background: linear-gradient(to right, var(--bg) 50%, transparent 0) left;
+	background-size: 200% 100%;
+	background-position-x: left;
 	margin-right: 0.25em;
 	position: relative;
 	grid-area: new-transaction;
 	border: thin solid var(--selected-color);
-	background: var(--bg);
+	/* background: var(--bg); */
 	grid-template-columns: auto auto max-content;
+
+	&.timeout {
+		animation: both 10s progress-background ease-in-out;
+	}
 	
 	& .overlay {
 		position: absolute;
@@ -116,6 +123,11 @@ div:has(#transactions) {
 	& [empty] {
 		font-style: italic;
 	}
+}
+
+@keyframes progress-background {
+	from { background-position-x: left; }
+	  to { background-position-x: right; }
 }
 
 #transaction-multiplier {

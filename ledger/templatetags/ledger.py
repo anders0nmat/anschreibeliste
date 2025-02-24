@@ -56,7 +56,6 @@ def money(value):
 @register.simple_tag(name="ensure_group_leading")
 def ensure_leading_with(group_list: list[tuple[Any, Any]], *, grouper):
     if not isinstance(group_list, list):
-        print(f"{group_list=}")
         return None
     if not group_list:
         return [(grouper, [])]

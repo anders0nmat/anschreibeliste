@@ -42,8 +42,9 @@ document.querySelectorAll('#withdraw-transaction .button[data-amount]').forEach(
 document.querySelector('#withdraw-transaction #withdraw-all').addEventListener('click', _ => {
     withdraw_amount.value = Math.max(parseInt(selected_account.dataset.balance ?? '0'), 0).toString();
 });
+Transaction.all(); // Register undo buttons
 Transaction.listen(event => {
-    const account = Account.objects.get(event.account.toString());
+    const account = Account.byId(event.account.toString());
     if (!account) {
         return;
     }

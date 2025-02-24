@@ -57,24 +57,5 @@
 		{% include 'ledger/snippets/transaction_history.html' with transactions=transactions only %}
 	</ul>
 </div>
-<template id="template-undo">
-	<button class="undo button" type="button">
-		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo-2"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>	</button>
-</template>
-
-<template id="template-status">
-	<div class="status" data-status="pending">
-		<svg data-status="pending" viewBox="0 0 12 12">
-			<circle cx="6" cy="6" r="5"/>
-		</svg>
-		<svg data-status="success" viewBox="0 0 12 12">
-			<polyline points="1.5 7 4 9 10 2"/>
-		</svg>
-		<svg data-status="failure" viewBox="0 0 12 12">
-			<polyline points="3 9 9 3"/>
-			<polyline points="3 3 9 9"/>
-		</svg>
-	</div>
-</template>
 
 {% endblock content %}

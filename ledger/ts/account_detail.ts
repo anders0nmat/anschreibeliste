@@ -47,8 +47,9 @@ document.querySelector<HTMLElement>('#withdraw-transaction #withdraw-all')!.addE
 	withdraw_amount.value = Math.max(parseInt(selected_account.dataset.balance ?? '0'), 0).toString()
 })
 
+Transaction.all() // Register undo buttons
 Transaction.listen(event => {
-	const account = Account.objects.get(event.account.toString())
+	const account = Account.byId(event.account.toString())
 	if (!account) { return }
 	account.balance = event.balance
 	account.blocked = !event.is_liquid

@@ -5,8 +5,20 @@
     Default value: 1_500
 */
 const SUBMIT_OVERLAY_DURATION = 1_500;
-import { _money, _span } from './base.js';
-export class Transaction {
+import { _set_money, HTMLWrapper } from './base.js';
+class Status extends HTMLWrapper {
+    error() {
+        this.element.dataset.status = "failure";
+    }
+    success() {
+        this.element.dataset.status = "success";
+        setTimeout(_ => this.element.remove(), SUBMIT_OVERLAY_DURATION);
+    }
+}
+export class Transaction extends HTMLWrapper {
+    static template = 'transaction-template';
+    static all_selector = '#transactions .transaction';
+    static csrf_token = document.querySelector('[name=csrfmiddlewaretoken]').value;
     static async post(url, body, idempotency_key = undefined) {
         return fetch(url, {
             method: "POST",
@@ -18,74 +30,59 @@ export class Transaction {
             body: JSON.stringify(body),
         });
     }
-    static _undo(can_revert) {
-        const result = this.undo_template.content.cloneNode(true);
-        result.querySelector('button').disabled = !can_revert;
-        return result;
+    static onUndoTransaction(ev) {
+        Transaction.from(ev.target.closest('.transaction'))?.revert();
     }
-    static _status() {
-        return this.status_template.content.cloneNode(true);
-    }
-    static add(response) {
-        const account = _span(response.account_name, "account");
-        const reason = _span(response.reason, "reason");
-        const amount = _money(response.cost);
-        const undo = this._undo(response.can_revert);
-        let item = null;
-        if (response.id) {
-            item = response.idempotency_key !== undefined ? this.container.querySelector(`.transaction[data-pending-id="${response.idempotency_key}"]`) : null;
-            if (item) {
-                delete item.dataset.pendingId;
-                item.querySelectorAll(':scope > :not(.status)').forEach(e => e.remove());
-                item.prepend(account, reason, amount, undo);
+    static event_source = undefined;
+    static listen(ontransaction) {
+        this.event_source = new EventSource(TRANSACTION_EVENT_URL);
+        this.event_source.addEventListener('create', event => {
+            const data = JSON.parse(event.data);
+            console.log("received server event:", data);
+            const confirmed_transaction = data.idempotency_key !== undefined && Transaction.from(document.querySelector(`.transaction[data-pending-id="${data.idempotency_key}"]`));
+            if (confirmed_transaction) {
+                confirmed_transaction.pendingId = null;
+                confirmed_transaction.account = data.account_name;
+                confirmed_transaction.amount = data.amount;
+                confirmed_transaction.reason = data.reason;
+                confirmed_transaction.can_revert = data.related === undefined;
             }
             else {
-                item = document.createElement('li');
-                item.classList.add('transaction');
-                item.dataset.transactionId = response.id;
-                this.container.prepend(item);
-                item.append(account, reason, amount, undo);
+                const new_transaction = Transaction.create();
+                new_transaction.id = data.id.toString();
+                new_transaction.account = data.account_name;
+                new_transaction.amount = data.amount;
+                new_transaction.reason = data.reason;
+                new_transaction.can_revert = data.related === undefined;
+                new_transaction.status?.element.remove();
+                document.getElementById('transactions').prepend(new_transaction.element);
             }
-        }
-        else {
-            item = document.createElement('li');
-            item.classList.add('transaction');
-            item.dataset.pendingId = response.idempotency_key;
-            this.container.prepend(item);
-            const status = this._status();
-            item.append(account, reason, amount, undo, status);
-        }
-        if (response.id) {
-            if (this.objects.has(response.id)) {
-                return this.objects.get(response.id);
+            const related_transaction = data.related !== undefined && Transaction.from(document.querySelector(`.transaction[data-transaction-id="${data.related}"]`));
+            if (related_transaction) {
+                related_transaction.can_revert = false;
             }
-            else {
-                const transaction = new this(item);
-                this.objects.set(transaction.id, transaction);
-                return transaction;
+            if (ontransaction) {
+                ontransaction(data);
             }
-        }
-        else {
-            return new this(item);
-        }
+        });
     }
     static async submit(request) {
         const idempotency_key = Date.now().valueOf().toString();
-        const pending_transaction = Transaction.add({
-            account_name: request.account_name,
-            cost: request.kind == "withdraw" ? -request.balance : request.balance,
-            reason: request.reason,
-            idempotency_key: idempotency_key,
-            can_revert: true,
-        });
+        const pending_transaction = Transaction.create();
+        pending_transaction.account = request.account_name;
+        pending_transaction.amount = request.kind == "withdraw" ? -request.balance : request.balance;
+        pending_transaction.reason = request.reason;
+        pending_transaction.can_revert = true;
+        pending_transaction.pendingId = idempotency_key;
+        document.getElementById('transactions').prepend(pending_transaction.element);
         let url = '';
         let body = {};
-        if (request.kind === "product") {
+        if (request.kind == "product") {
             url = TRANSACTION_PRODUCT_URL;
             body = {
                 account: request.account_id,
                 product: request.product_id,
-                ...(request.amount && { amount: request.amount })
+                ...(request.amount && { amount: request.amount }),
             };
         }
         else {
@@ -98,55 +95,51 @@ export class Transaction {
         }
         const response = await Transaction.post(url, body, idempotency_key);
         if (!response.ok) {
-            pending_transaction.status.dataset.status = "failure";
-            pending_transaction.element.toggleAttribute('error', true);
+            pending_transaction.status.error();
+            pending_transaction.element.toggleAttribute("error", true);
             return;
         }
         const { transaction_id } = await response.json();
-        pending_transaction.element.dataset.transactionId = transaction_id;
-        Transaction.objects.set(pending_transaction.id, pending_transaction);
-        pending_transaction.status.dataset.status = "success";
-        await delay(SUBMIT_OVERLAY_DURATION);
-        pending_transaction.status?.remove();
+        pending_transaction.id = transaction_id;
+        pending_transaction.status.success();
     }
-    static event_source = undefined;
-    static listen(ontransaction) {
-        this.event_source = new EventSource(TRANSACTION_EVENT_URL);
-        this.event_source.addEventListener('create', event => {
-            const data = JSON.parse(event.data);
-            console.log("received server event: ", data);
-            Transaction.add({
-                account_name: data.account_name,
-                cost: data.amount,
-                reason: data.reason,
-                id: data.id.toString(),
-                idempotency_key: data.idempotency_key,
-                can_revert: data.related === undefined
-            });
-            if (data.related !== undefined && Transaction.objects.has(data.related.toString())) {
-                Transaction.objects.get(data.related.toString()).undo_button.disabled = true;
-            }
-            if (ontransaction) {
-                ontransaction(data);
-            }
-        });
-    }
-    static status_template = document.getElementById('template-status');
-    static undo_template = document.getElementById('template-undo');
-    static csrf_token = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    static container = document.getElementById('transactions');
-    static objects = new Map(Array.from(this.container.querySelectorAll('.transaction'), element => {
-        const transaction = new this(element);
-        return [transaction.id, transaction];
-    }));
-    element;
     constructor(element) {
-        this.element = element;
-        this.undo_button.addEventListener('click', _ => this.revert());
+        super(element);
+        this.element.querySelector('.undo').addEventListener('click', Transaction.onUndoTransaction);
     }
     get id() { return this.element.dataset.transactionId ?? ''; }
-    get undo_button() { return this.element.querySelector('.undo'); }
-    get status() { return this.element.querySelector('.status'); }
+    get pendingId() { return this.element.dataset.pendingId ?? ''; }
+    set id(value) {
+        if (value === null) {
+            delete this.element.dataset.transactionId;
+        }
+        else {
+            this.element.dataset.transactionId = value;
+        }
+    }
+    set pendingId(value) {
+        if (value === null) {
+            delete this.element.dataset.pendingId;
+        }
+        else {
+            this.element.dataset.pendingId = value;
+        }
+    }
+    set account(value) {
+        const accountElement = this.element.querySelector('.account');
+        accountElement.textContent = value;
+    }
+    set reason(value) {
+        const reasonElement = this.element.querySelector('.reason');
+        reasonElement.textContent = value;
+    }
+    set amount(value) {
+        _set_money(this.element.querySelector('.money'), value);
+    }
+    set can_revert(value) {
+        this.element.querySelector('.undo').disabled = !value;
+    }
+    get status() { return Status.from(this.element.querySelector('.status')); }
     revert() {
         const id = parseInt(this.id);
         if (!id) {
@@ -155,4 +148,3 @@ export class Transaction {
         Transaction.post(TRANSACTION_REVERT_URL, { transaction: id });
     }
 }
-async function delay(time) { return new Promise(resolve => setTimeout(resolve, time)); }

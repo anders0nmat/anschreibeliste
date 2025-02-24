@@ -53,6 +53,10 @@ aside {
 			gap: 1ch;
 			margin-bottom: 0.25em;
 
+			&::-webkit-details-marker {
+				display: none;
+			}
+
 			details[open] > & > svg {
 				rotate: 90deg;
 			}

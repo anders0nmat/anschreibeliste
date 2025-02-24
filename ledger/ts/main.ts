@@ -7,107 +7,35 @@
 */
 const TRANSACTION_TIMEOUT = 10_000
 
-import { _money } from './base.js'
+import { _money, HTMLIdentifierWrapper } from './base.js'
 import { Transaction } from './transaction.js'
 import { Account } from './accounts.js'
 
-interface ItemConstructor<T extends Item> { new(element: HTMLElement): T }
-interface ItemContainer<T extends Item> extends ItemConstructor<T> { objects: Map<string, T> }
-
-class Item {
-	static addItem<T extends Item>(this: ItemContainer<T>, element: HTMLElement) {
-		const item = new this(element)
-		this.objects.set(item.id, item)
-	} 
-	static objectsFrom<T extends Item>(this: ItemConstructor<T>, selector: string): Map<string, T> {
-		let result = new Map<string, T>()
-		document.querySelectorAll<HTMLElement>(selector).forEach(element => {
-			const item = new this(element)
-			result.set(item.id, item)
-		})
-		return result
-	}
-
-	element: HTMLElement
-	constructor(element: HTMLElement) {
-		this.element = element
-		this.registerEvents()
-	}
-	get id(): string { return '' }
-	get isDisabled(): boolean { return this.element.getAttribute('disabled') !== null }
-	get isSelected(): boolean { return this.element.getAttribute('selected') !== null }
-
-	registerEvents() { return }
-
-	select(value: boolean = true) { this.element.toggleAttribute('selected', value) }
-	deselect() { this.select(false) }
-	static deselectAll<T extends Item>(this: ItemContainer<T>) { this.objects.forEach(e => e.deselect()) }
-
-	enable(value: boolean = true) { this.element.toggleAttribute('disabled', !value) }
-	disable() { this.enable(false) }
-	static enableAll<T extends Item>(this: ItemContainer<T>) { this.objects.forEach(e => e.enable()) }
-}
-
-class Product extends Item {
-	static objects = this.objectsFrom('#products .item')
-
+class Product extends HTMLIdentifierWrapper {
+	static all_selector: string = '#products .item'
+	static id_attribute: string = 'data-product-id'
+	
 	get id(): string { return this.element.dataset.productId ?? '' }
 	get name(): string { return this.element.querySelector('.name')?.textContent ?? '' }
 	get cost(): number { return parseInt(this.element.dataset.cost ?? '0') }
 	get memberCost(): number { return parseInt(this.element.dataset.memberCost ?? '0') }
+
+	get disabled(): boolean { return this.element.hasAttribute('disabled') }
+	set disabled(value: boolean) { this.element.toggleAttribute('disabled', value) }
+
+	get selected(): boolean { return this.element.hasAttribute('selected') }
+	set selected(value: boolean) { this.element.toggleAttribute('selected', value) }
+	select() { this.selected = true }
 	
 	totalCost(member: boolean): number {
 		const cost = member ? this.memberCost : this.cost
 		const amount = multiplier.value
 		return cost * amount
 	}
-
-	override registerEvents() {
-		this.element.addEventListener("click", _ => {
-			if (this.isDisabled) { return }
-			const alreadySelected = current_transaction.product_id === this.id
-			current_transaction.product = !alreadySelected ? this : null
-			if (!alreadySelected) { changeSlide('accounts') }
-		})
-	}
 }
-
-
-
-/*
-class Account extends Item {
-	static objects = this.objectsFrom('#accounts .item')
-
-	get id(): string { return this.element.dataset.accountId ?? '' }
-	get name(): string { return this.element.querySelector('.name')?.textContent ?? '' }
-	get isMember(): boolean { return 'member' in this.element.dataset }
-	get credit(): number { return parseInt(this.element.dataset.credit ?? '0') }
-	get balance(): number { return parseInt(this.element.dataset.balance ?? '0') }
-	set balance(value: number) {
-		this.element.dataset.balance = value.toString()
-		this.element.querySelector<HTMLElement>('.money')!.replaceWith(_money(value))
-	}
-	get budget(): number { return this.balance + this.credit }
-	set blocked(value: boolean) { this.element.toggleAttribute('blocked', value) }
-	get blocked(): boolean { return this.element.getAttribute('blocked') !== null }
-
-	canAfford(product: Product): boolean { return this.budget >= product.totalCost(this) }
-
-	override registerEvents() {
-		this.element.addEventListener("click", _ => {
-			if (this.blocked || this.isDisabled) { return }
-			const alreadySelected = current_transaction.account_id === this.id
-			current_transaction.account = !alreadySelected ? this : null
-			if (!alreadySelected) { changeSlide('products') }
-		})
-	}
-}
-*/
-
 
 const current_transaction = {
 	element: document.getElementById("new-transaction")!,
-	overlay: document.querySelector<HTMLElement>('#new-transaction .overlay')!,
 	account_name: document.querySelector<HTMLElement>('#new-transaction .account')!,
 	product_name: document.querySelector<HTMLElement>('#new-transaction .product')!,
 	timeout: undefined as number | undefined,
@@ -115,9 +43,7 @@ const current_transaction = {
 	get account_id(): string | null { return current_transaction.element.dataset.accountId ?? null },
 	get product_id(): string | null { return current_transaction.element.dataset.productId ?? null },
 
-	get account(): Account | null {
-		return Account.objects.get(current_transaction.element.dataset.accountId ?? '') ?? null
-	},
+	get account(): Account | null { return Account.byId(current_transaction.account_id) },
 
 	set account(account: Account | null) {
 		Account.deselectAll(); account?.select()
@@ -126,29 +52,27 @@ const current_transaction = {
 
 		if (account) {
 			current_transaction.element.dataset.accountId = account.id
-			Product.objects.forEach(product => { product.enable(account.budget >= product.totalCost(account.isMember)) })
+			Product.all().forEach(product => { product.disabled = !account.canAfford(product) })
 			current_transaction.set_timeout()
 		}
 		else {
 			delete current_transaction.element.dataset.accountId
-			Product.enableAll()
+			Product.all().forEach(e => e.disabled = false)
 			current_transaction.clear_timeout()
 		}
 		current_transaction.try_submit()
 	},
 
-	get product(): Product | null {
-		return Product.objects.get(current_transaction.element.dataset.productId ?? '') ?? null
-	},
+	get product(): Product | null { return Product.byId(current_transaction.product_id) },
 	
 	set product(product: Product | null) {
-		Product.deselectAll(); product?.select()
+		Product.all().forEach(e => e.selected = false); product?.select()
 		current_transaction.product_name.textContent = product?.name ?? 'Select a product'
 		current_transaction.product_name.toggleAttribute('empty', product === null)
 
 		if (product) {
 			current_transaction.element.dataset.productId = product.id
-			Account.objects.forEach(account => { account.disabled = account.budget < product.totalCost(account.isMember) })
+			Account.all().forEach(account => { account.disabled = !account.canAfford(product) })
 			current_transaction.set_timeout()
 		}
 		else {
@@ -159,15 +83,7 @@ const current_transaction = {
 		current_transaction.try_submit()
 	},
 
-	show_overlay(value: string) {
-		current_transaction.overlay.dataset.status = value
-		current_transaction.overlay.toggleAttribute('visible', true)
-	},
-	hide_overlay() { current_transaction.overlay.toggleAttribute('visible', false) },
-
 	try_submit() {
-		const account_id = parseInt(current_transaction.account_id ?? '0')
-		const product_id = parseInt(current_transaction.product_id ?? '0')
 		const account = current_transaction.account
 		const product = current_transaction.product
 		if (!account || !product) { return }
@@ -184,53 +100,6 @@ const current_transaction = {
 			amount: amount,
 		})
 
-		/*const idempotency_key = Date.now().valueOf().toString()
-		const pending_transaction = document.createElement("li")
-		pending_transaction.classList.add("transaction")
-		pending_transaction.dataset.pendingId = idempotency_key
-
-		const amount = multiplier.value
-
-		const account_name = _span(account.name, "account")
-		const transaction_reason = _span(`${amount > 1 ? `${amount}x ` : ''}${product.name}`, "reason")
-		const money = _money(product.totalCost(account))
-		const status = (document.getElementById('template-status')! as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
-		const status_item = status.querySelector<HTMLElement>('.status')!
-		const undo_template = (document.getElementById('template-undo')! as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment							
-
-		pending_transaction.append(account_name, transaction_reason, money, status, undo_template)
-
-		document.getElementById("transactions")?.prepend(pending_transaction)
-
-		//current_transaction.show_overlay('pending')
-
-		Transaction.post("/transaction/", {
-			account: account_id,
-			product: product_id,
-			...(amount > 1 ? {amount: amount} : {})
-		}, idempotency_key)
-		.then(response => {
-			switch (response.status) {
-				case 200:
-					response.json()
-						.then(({transaction_id}) => {
-							pending_transaction.dataset.transactionId = transaction_id
-							Transaction.addItem(pending_transaction)
-
-							status_item.dataset.status = "success"
-							delay(SUBMIT_OVERLAY_DURATION)
-								.then(_ => {
-									status_item.remove()
-								})
-						})
-					break
-				default:
-					status_item.dataset.status = "failure"
-					pending_transaction.toggleAttribute('error', true)
-					break
-			}
-		})*/
-
 		current_transaction.reset()
 		current_transaction.clear_timeout()
 	},
@@ -244,18 +113,18 @@ const current_transaction = {
 	clear_timeout() {
 		clearTimeout(current_transaction.timeout)
 		current_transaction.timeout = undefined
+		current_transaction.element.classList.remove('timeout')
+		current_transaction.element.offsetWidth // trigger recalc to restart animation
 	},
 
 	set_timeout() {
 		current_transaction.clear_timeout()
 		current_transaction.timeout = setTimeout(current_transaction.reset, TRANSACTION_TIMEOUT)
+		current_transaction.element.classList.add('timeout')
 	},
 }
 
-
 function changeSlide(name: string) { document.querySelector<HTMLElement>(`.slide[data-slide="${name}"]`)?.scrollIntoView({block: "nearest"}) }
-
-
 
 const slideshow = document.querySelector<HTMLElement>('.slideshow')
 const observer = new IntersectionObserver((entries) => {
@@ -274,21 +143,12 @@ document.querySelectorAll<HTMLElement>('.slide-indicator').forEach(e => {
 	e.addEventListener('click', _ => { changeSlide(e.dataset.slide ?? '') })
 })
 
-interface ServerEvent {
-	id: number,
-	account: number,
-	balance: number,
-	is_liquid: boolean,
-	amount: number,
-	reason: string,
-	related: number | undefined,
-	idempotency_key: string | undefined,
-}
-
 document.querySelector<HTMLButtonElement>('#new-transaction .undo')?.addEventListener('click', _ => {
 	current_transaction.reset()
 	current_transaction.clear_timeout()
 })
+
+current_transaction.element.style.animationDuration = TRANSACTION_TIMEOUT.toString()
 
 const multiplier = {
 	element: document.getElementById('transaction-multiplier')! as HTMLElement,
@@ -353,50 +213,26 @@ multiplier.element.addEventListener('input', _ => {
 		current_transaction.product = current_transaction.product
 	}
 })
-multiplier.element.closest('div')?.addEventListener('click', e => {multiplier.selectAll()})
+multiplier.element.closest('div')?.addEventListener('click', _ => {multiplier.selectAll()})
 
+Transaction.all() // registers undo buttons
 Transaction.listen(event => {
-	const account = Account.objects.get(event.account.toString())
+	const account = Account.byId(event.account.toString())
 	if (!account) { return }
 	account.balance = event.balance
 	account.blocked = !event.is_liquid
 })
-/*
-const server_events = new EventSource("/transaction/events/")
-server_events.addEventListener("create", ev => {
-	try {
-		const {id, account: account_id, balance, is_liquid, amount, reason, related, idempotency_key: key} = JSON.parse(ev.data) as ServerEvent
-		const account = Account.objects.get(account_id.toString())
-		if (!account) { return }
 
-		console.log("server event: ", JSON.parse(ev.data))
+Account.all().forEach(account => account.element.addEventListener('click', _ => {
+	if (account.blocked || account.disabled) { return }
+	const alreadySelected = current_transaction.account_id === account.id
+	current_transaction.account = !alreadySelected ? account : null
+	if (!alreadySelected) { changeSlide('products') }
+}))
 
-		account.balance = balance
-		account.blocked = !is_liquid
-		//Transaction.accept(key, id.toString(), account.name, amount, reason ?? '', related === undefined)
-		Transaction.add({
-			account_name: account.name,
-			cost: amount,
-			reason: reason,
-			id: id.toString(),
-			idempotency_key: key,
-			can_revert: related === undefined
-		})
-		if (related !== undefined && Transaction.objects.has(related.toString())) {
-			Transaction.objects.get(related.toString())!.undo_button.disabled = true
-		}
-	}
-	catch (e) {
-		// Do not do anything on message errors because what should happen anyways
-	}
-})
-*/
-
-Account.objects.forEach(account => {
-	account.element.addEventListener("click", _ => {
-		if (account.blocked || account.disabled) { return }
-		const alreadySelected = current_transaction.account_id === account.id
-		current_transaction.account = !alreadySelected ? account : null
-		if (!alreadySelected) { changeSlide('products') }
-	})
-})
+Product.all().forEach(product => product.element.addEventListener('click', _ => {
+	if (product.disabled) { return }
+	const alreadySelected = current_transaction.product_id === product.id
+	current_transaction.product = !alreadySelected ? product : null
+	if (!alreadySelected) { changeSlide('accounts') }
+}))
