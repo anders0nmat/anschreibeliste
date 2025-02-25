@@ -34,6 +34,7 @@
 {% block item %}
 {% with account=item %}
 {% with current_balance=account.current_balance %}
+{% comment %} {% with current_balance=400 %} {% endcomment %}
 
 {% if url %}
 	<a href="{% url url account.pk %}"
@@ -45,7 +46,7 @@ data-account-id={{ account.pk }}
 data-balance={{ current_balance }}
 data-credit={{ account.credit }}
 {% if account.member %}data-member{% endif %}
-{% if not account.is_liquid %}blocked{% endif %}
+{% if current_balance|add:account.credit <= 0 %}blocked{% endif %}
 {% if selected.pk == account.pk %}selected{% endif %}>
 
 	<h3 class="name">

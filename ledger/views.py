@@ -114,7 +114,7 @@ class IndexView(LoginRequiredMixin, TemplateView):
 		return super().get_context_data(**kwargs) | {
 			"accounts": Account.objects.grouped(),
 			"products": Product.objects.grouped(),
-			"transactions": Transaction.objects.recent(user=self.request.user)
+			"transactions": Transaction.objects.recent()
 		}
 
 def test(request: HttpRequest):

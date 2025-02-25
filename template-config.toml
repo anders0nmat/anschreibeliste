@@ -17,4 +17,16 @@ allowed-hosts=[
 	'127.0.0.1',
 ]
 
+# Database connection parameters
+# 
+# Passed as is to django
+# All top-level keys are uppercased
+[database]
+engine=''
+name=''
+user=''
+password=''
+host=''
+port=''
+
 

@@ -1,7 +1,7 @@
 from typing import Any, Optional
 from django.db import models, transaction
 from django.contrib.auth.models import User
-from .managers import TransactionManager, AccountManager, ProductManager
+from .managers import TransactionManager, ProductManager
 from datetime import timedelta, datetime
 from django.core.exceptions import PermissionDenied
 # Create your models here.
@@ -25,6 +25,28 @@ class AccountGroup(models.Model):
 
     class Meta:
         ordering = ['order']
+
+class AccountManager(models.Manager):
+    def grouped(self):
+        return self.filter(active=True)\
+            .order_by(models.F("group__order").asc(nulls_first=True), 'name')\
+            .annotate(
+                _last_balance=models.Subquery(
+                    AccountBalance.objects\
+                        .filter(account=models.OuterRef('pk'))\
+                        .order_by('-timestamp')\
+                        .values_list('closing_balance', flat=True)),
+                _summed_transactions=models.Subquery(
+                    Transaction.objects\
+                        .filter(closing_balance=None, account=models.OuterRef('pk'))\
+                        .values('account__pk')
+                        .annotate(
+                            sum=models.Sum('amount', default=0)
+                        )
+                        .values('sum')
+                )
+            )\
+            .select_related('group')
 
 class Account(models.Model):
     class NotEnoughFunds(Exception): pass
@@ -50,6 +72,10 @@ class Account(models.Model):
             ('add_permanent_account', 'Can add permanent accounts'),
             ('change_permanent_account', 'Can change permanent accounts'),
         ]
+        indexes = [
+            models.Index('active', models.F('group').asc(nulls_first=True), 'name', name='idx_grouped_accounts'),
+            models.Index('active', name='idx_active_account'),
+        ]
 
     def __str__(self) -> str:
         return self.name
@@ -61,7 +87,10 @@ class Account(models.Model):
     @property
     @transaction.atomic
     def current_balance(self) -> int:
-        last_balance = self.last_balance
+        if hasattr(self, '_last_balance'):
+            last_balance = self._last_balance
+        else:
+            last_balance = self.last_balance.closing_balance
         last_balance = last_balance.closing_balance if last_balance is not None else 0
         transactions_since = self.transactions  \
             .filter(closing_balance=None)       \
@@ -118,6 +147,10 @@ class Transaction(models.Model):
         permissions = [
             ('add_custom_transaction', 'Can make arbitrary deposits and withdrawls'),
             ('add_permanent_custom_transaction', 'Can make arbitrary deposits and withdrawls for permanent accounts'),
+        ]
+        indexes = [
+            models.Index('closing_balance', models.F('timestamp').desc(), name="idx_recent_transactions"),
+            models.Index('closing_balance', name='idx_balance_transaction'),
         ]
 
     def __init__(self, *args: Any, idempotency_key=None, **kwargs: Any) -> None:
@@ -185,6 +218,9 @@ class Product(models.Model):
 
     class Meta:
         ordering = ['group', 'order']
+        indexes = [
+            models.Index(models.F('group').asc(nulls_first=True), 'order', name="idx_grouped_products")
+        ]
 
     def __str__(self) -> str:
         return self.name

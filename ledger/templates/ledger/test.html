@@ -43,6 +43,29 @@
 
 </ul>
 
+<div>
+	{% include 'ledger/snippets/accounts.html' with items=accounts only %}
+	{% comment %} {% include 'ledger/snippets/products.html' with items=products only %} {% endcomment %}
+	{% comment %} {% include 'ledger/snippets/transaction_history.html' with transactions=transactions only %} {% endcomment %}
+
+	{% comment %} {% for tr in transactions %}
+	{{ tr.pk }}
+	{% endfor %} {% endcomment %}
+
+</div>
+{% comment %} 
+<ul>
+	{% for product in products %}
+	<li>{{ product.name }}</li>
+	{% endfor %}
+	{% for account in accounts %}
+	<li>{{ account.name }}</li>
+	{% endfor %}
+	{% for transaction in transactions %}
+	<li>{{ transaction.reason }}</li>
+	{% endfor %}
+</ul> {% endcomment %}
+
 
 {% comment %} <main style="grid-area: content">
 	<drunk-money class="money" amount="1450">
