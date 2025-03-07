@@ -34,7 +34,6 @@
 {% block item %}
 {% with account=item %}
 {% with current_balance=account.current_balance %}
-{% comment %} {% with current_balance=400 %} {% endcomment %}
 
 {% if url %}
 	<a href="{% url url account.pk %}"

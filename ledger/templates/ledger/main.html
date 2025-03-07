@@ -40,7 +40,7 @@
 		</div>
 		
 		<div class="slide group-list" id="accounts" data-slide="accounts">
-			{% comment %} {% include 'ledger/snippets/accounts.html' with items=accounts only %} {% endcomment %}
+			{% include 'ledger/snippets/accounts.html' with items=accounts only %}
 		</div>
 	</div>
 </main>
@@ -54,7 +54,7 @@
 </div>
 <div>
 	<ul id="transactions">
-		{% comment %} {% include 'ledger/snippets/transaction_history.html' with transactions=transactions only %} {% endcomment %}
+		{% include 'ledger/snippets/transaction_history.html' with transactions=transactions only %}
 	</ul>
 </div>
 

@@ -44,9 +44,9 @@
 </ul>
 
 <div>
-	{% include 'ledger/snippets/accounts.html' with items=accounts only %}
+	{% comment %} {% include 'ledger/snippets/accounts.html' with items=accounts only %} {% endcomment %}
 	{% comment %} {% include 'ledger/snippets/products.html' with items=products only %} {% endcomment %}
-	{% comment %} {% include 'ledger/snippets/transaction_history.html' with transactions=transactions only %} {% endcomment %}
+	{% include 'ledger/snippets/transaction_history.html' with transactions=transactions only %}
 
 	{% comment %} {% for tr in transactions %}
 	{{ tr.pk }}

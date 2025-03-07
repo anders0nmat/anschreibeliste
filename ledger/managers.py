@@ -36,11 +36,11 @@ class TransactionManager(models.Manager):
             timejump = self.default_timejump
         if timejump is not False:
             manager = manager.annotate(
-                _previous_timestamp=Window(expression=Lag("timestamp", offset=1, default=None)),
+                _previous_timestamp=Window(expression=Lag("timestamp", offset=1, default=None), order_by='timestamp'),
                 _timedelta_before=F("timestamp") - F("_previous_timestamp"),
                 timejump_before=Q(_timedelta_before__gt=timejump),
 
-                _next_timestamp=Window(expression=Lead("timestamp", offset=1, default=Now())),
+                _next_timestamp=Window(expression=Lead("timestamp", offset=1, default=Now()), order_by='timestamp'),
                 _timedelta_after=F("_next_timestamp") - F("timestamp"),
                 timejump_after=Q(_timedelta_after__gt=timejump),
             )

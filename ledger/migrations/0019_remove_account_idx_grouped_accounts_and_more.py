@@ -20,10 +20,10 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='account',
-            index=models.Index(models.F('active'), models.OrderBy(models.F('group'), nulls_first=True), models.F('name'), name='idx_grouped_accounts'),
+            index=models.Index(models.F('active'), models.OrderBy(models.F('group')), models.F('name'), name='idx_grouped_accounts'),
         ),
         migrations.AddIndex(
             model_name='product',
-            index=models.Index(models.OrderBy(models.F('group'), nulls_first=True), models.F('order'), name='idx_grouped_products'),
+            index=models.Index(models.OrderBy(models.F('group')), models.F('order'), name='idx_grouped_products'),
         ),
     ]

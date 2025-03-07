@@ -12,7 +12,7 @@ from django.views.generic import ListView, UpdateView, CreateView, TemplateView
 
 from .decorators import idempotent, json_body, require_POST_fields, one_of, satisfies, chain
 from .eventstream import send_event, EventstreamResponse
-from .mixins import EnableFieldsMixin, ExtraFormMixin, ContextQuerysetMixin
+from .mixins import EnableFieldsMixin, ExtraFormMixin
 from .models import Account, Transaction, Product
 
 

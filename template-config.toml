@@ -11,6 +11,10 @@
 #   print(get_random_secret_key())
 secret-key=''
 
+# Enables django debug mode with verbose error pages
+# Should always be `false` in production environments
+debug=false
+
 
 # List of hostnames the server will accept
 allowed-hosts=[
