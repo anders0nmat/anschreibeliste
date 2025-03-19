@@ -2,14 +2,56 @@
 
 body {
 	display: grid;
-	grid-template-columns: 4fr 1fr;
-	grid-template-rows: max-content max-content auto;
-	grid-template-areas: 
+	/* grid-template-columns: 4fr 1fr; */
+	/* grid-template-rows: max-content max-content auto; */
+	/* grid-template-areas: 
 		"head head"
 		"content new-transaction"
-		"content transactions";
+		"content transactions"; */
+	grid-template-rows: max-content max-content auto max-content;
+	grid-template-areas: 
+		"head"
+		"content"
+		"content"
+		"new-transaction";
 	gap: 0.5em;
 	height: 100vh;
+
+
+	@media screen and (max-width: 899px) {
+		&:has(#expand input:checked) {
+			grid-template-rows: max-content max-content auto;
+			grid-template-areas: 
+				"head"
+				"new-transaction"
+				"transactions";
+
+			& main {
+				display: none;
+			}
+
+			& div:has(#transactions) {
+				display: unset;
+			}
+		}
+	}
+
+
+	@media screen and (min-width: 900px) {
+		& {
+			grid-template-columns: 3fr minmax(min-content, 1fr);
+			grid-template-rows: max-content max-content auto;
+			grid-template-areas: 
+				"head head"
+				"content new-transaction"
+				"content transactions";
+			/* gap: 0.25em; */
+		}
+
+		#expand {
+			display: none;
+		}
+	}
 }
 
 header {
@@ -21,8 +63,16 @@ main {
 	grid-area: content;
 	grid-template-rows: subgrid;
 	overflow: hidden;
-	padding-left: 0.25em;
-	padding-bottom: 0.25em;
+	/* padding-left: 0.25em;
+	padding-bottom: 0.25em; */
+	padding-inline: 0.5em;
+
+
+	@media screen and (min-width: 900px) {
+		& {
+			padding: 0 0 0.5em 0.5em;
+		}
+	}
 }
 
 /* #transactions {
@@ -45,7 +95,15 @@ main {
 
 div:has(#transactions) {
 	overflow: hidden auto;
+	scrollbar-width: thin;
 	grid-area: transactions;
+
+
+	@media screen and (max-width: 899px) {
+		& {
+			display: none;
+		}
+	}
 }
 
 #new-transaction {
@@ -55,12 +113,16 @@ div:has(#transactions) {
 	background: linear-gradient(to right, var(--bg) 50%, transparent 0) left;
 	background-size: 200% 100%;
 	background-position-x: left;
-	margin-right: 0.25em;
+	/* margin-right: 0.25em; */
+	margin: 0 0.25em 0.25em;
 	position: relative;
 	grid-area: new-transaction;
 	border: thin solid var(--selected-color);
 	/* background: var(--bg); */
-	grid-template-columns: auto auto max-content;
+	grid-template-columns: auto auto max-content max-content;
+	grid-template-areas: 
+		"account price undo expand"
+		"reason  price undo expand";
 
 	&.timeout {
 		animation: both 10s progress-background ease-in-out;
@@ -123,11 +185,37 @@ div:has(#transactions) {
 	& [empty] {
 		font-style: italic;
 	}
+
+	& #expand {
+		grid-area: expand;
+
+		& input[type="checkbox"] {
+			display: none;
+		}
+
+		&:has(input:checked) svg {
+			rotate: 180deg;
+		}
+	}
+
+
+	@media screen and (min-width: 900px) {
+		& {
+			margin: 0 0.5em 0 0;
+		}
+	}
 }
 
 @keyframes progress-background {
 	from { background-position-x: left; }
 	  to { background-position-x: right; }
+}
+
+
+@media screen and (max-width: 899px) {
+	div:has(> #transaction-multiplier) {
+		display: none;
+	}
 }
 
 #transaction-multiplier {
@@ -196,6 +284,7 @@ div:has(#transactions) {
 
 .slideshow {
 	overflow-x: auto;
+	scrollbar-width: thin;
 	display: flex;
 	flex-flow: row nowrap;
 

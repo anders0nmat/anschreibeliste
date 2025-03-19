@@ -2,10 +2,21 @@
 
 {% block header %}
 <header>
-	{% block links %}
-	<h1>{% block title %}{% endblock title %}</h1>
-	{% endblock links %}
-	<div style="flex-grow:1"></div>
+	<nav id="links">
+		<ul>
+			{% block links %}
+			<li>
+				<h1>
+					<label id="link-hamburger" class="slim transparent center button">
+						<input type="checkbox">
+						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+					</label>
+					{% block title %}{% endblock title %}
+				</h1>
+			</li>
+			{% endblock links %}
+		</ul>
+	</nav>
 	<div id="user-info">
 		<span id="user-name">{{ user.username }}</span>
 		{% if user.is_staff %}

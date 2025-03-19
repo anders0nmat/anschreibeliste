@@ -4,8 +4,9 @@
 	gap: 0.25em;
 	padding: 0;
 	margin: 0;
-	padding-right: 0.25em;
-	padding-bottom: 0.25em;
+	/* padding-right: 0.25em;
+	padding-bottom: 0.25em; */
+	padding: 0.25em;
 	list-style: none;
 
 	& .separator {
@@ -16,15 +17,25 @@
 		
 		&.before {
 			padding-top: 0.25em;
-			border-top: thin solid var(--secondary-bg-color);
+			border-top: thin solid var(--separator-color);
 			text-align: right;
+		}
+	}
+
+
+	@media screen and (min-width: 900px) {
+		& {
+			padding: 0;
+			margin-right: 0.5em;
+			margin-bottom: 0.5em;
 		}
 	}
 }
 
 .transaction {
 	background: var(--secondary-bg-color);
-	padding: 0.5em 0.75em;
+	/* padding: 0.5em 0.75em; */
+	padding: 0.5em 0.5em 0.5em 0.75em;
 
 	display: grid;
 	grid-column: span 3;

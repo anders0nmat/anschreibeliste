@@ -30,6 +30,8 @@ const current_transaction = {
     element: document.getElementById("new-transaction"),
     account_name: document.querySelector('#new-transaction .account'),
     product_name: document.querySelector('#new-transaction .product'),
+    placeholder_account_name: "",
+    placeholder_product_name: "",
     timeout: undefined,
     get account_id() { return current_transaction.element.dataset.accountId ?? null; },
     get product_id() { return current_transaction.element.dataset.productId ?? null; },
@@ -37,7 +39,7 @@ const current_transaction = {
     set account(account) {
         Account.deselectAll();
         account?.select();
-        current_transaction.account_name.textContent = account?.name ?? 'Select an account';
+        current_transaction.account_name.textContent = account?.name ?? current_transaction.placeholder_account_name;
         current_transaction.account_name.toggleAttribute('empty', account === null);
         if (account) {
             current_transaction.element.dataset.accountId = account.id;
@@ -55,7 +57,7 @@ const current_transaction = {
     set product(product) {
         Product.all().forEach(e => e.selected = false);
         product?.select();
-        current_transaction.product_name.textContent = product?.name ?? 'Select a product';
+        current_transaction.product_name.textContent = product?.name ?? current_transaction.placeholder_product_name;
         current_transaction.product_name.toggleAttribute('empty', product === null);
         if (product) {
             current_transaction.element.dataset.productId = product.id;
@@ -105,6 +107,8 @@ const current_transaction = {
         current_transaction.element.classList.add('timeout');
     },
 };
+current_transaction.placeholder_account_name = current_transaction.account_name.textContent ?? "";
+current_transaction.placeholder_product_name = current_transaction.product_name.textContent ?? "";
 function changeSlide(name) { document.querySelector(`.slide[data-slide="${name}"]`)?.scrollIntoView({ block: "nearest" }); }
 const slideshow = document.querySelector('.slideshow');
 const observer = new IntersectionObserver((entries) => {

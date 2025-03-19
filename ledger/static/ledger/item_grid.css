@@ -1,6 +1,7 @@
 
 .item-grid {
-	--item-size: 16ch;
+	--item-size: 12ch;
+
 	display: grid;
 	grid-template-columns: repeat(auto-fill, var(--item-size));
 	grid-auto-rows: var(--item-size);
@@ -9,6 +10,13 @@
 	padding: 0;
 	margin: 0;
 	list-style: none;
+
+
+	@media screen and (min-width: 700px) {
+		& {
+			--item-size: 16ch;
+		}
+	}
 }
 
 .item {
@@ -16,7 +24,7 @@
 	--border: var(--secondary-bg-color);
 
 	background-color: var(--bg);
-	padding: 0.5em;
+	padding: 0.25em 0.5em;
 
 	display: flex;
 	flex-flow: column nowrap;
@@ -34,31 +42,45 @@
 		opacity: 50%;
 	}
 
-	&:not([disabled], [blocked]):hover {
-		background-color: color-mix(in srgb, var(--bg), var(--highlight-color) 10%);
-		border-color: color-mix(in srgb, var(--border), var(--highlight-color) 10%);
+	@media (hover: hover) {
+		&:not([disabled], [blocked]):hover {
+			background-color: color-mix(in srgb, var(--bg), var(--highlight-color) 10%);
+			border-color: color-mix(in srgb, var(--border), var(--highlight-color) 10%);
+		}
 	}
 	
 	& h3 {
 		padding: 0;
 		margin: 0;
-		font-size: 1.25em;
+		font-size: 100%;
 		font-weight: 600;
 		color: var(--headline-text-color);
 		display: flex;
 		flex-flow: row wrap;
 		align-items: center;
 		gap: 4px;
-	}
 
-	& .badge {
-		color: color-mix(in srgb, var(--selected-color), var(--highlight-color) 25%);
+		overflow: hidden;
+		overflow-wrap: break-word;
+		hyphens: auto;
+		text-overflow: ellipsis;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		/* display: -webkit-inline-box; */
+		-webkit-box-orient: vertical;
+
+		
+		@media screen and (min-width: 700px) {
+			& {
+				font-size: 110%;
+			}
+		}
 	}
 	
 	& .price {
 		display: flex;
 		flex-flow: row wrap;
-		column-gap: 2ch;
+		column-gap: 1ch;
 		
 		& > span {
 			display: inline-block;

@@ -1,12 +1,38 @@
 body {
 	display: grid;
-	grid-template-columns: 3fr 1fr;
+	/* grid-template-columns: 3fr 1fr; */
+	/* grid-template-rows: max-content auto; */
 	grid-template-rows: max-content auto;
 	grid-template-areas: 
-		"head head"
-		"content editor";
+		"head"
+		"content";
 	gap: 0.5em;
 	height: 100vh;
+
+	@media screen and (max-width: 899px) {
+		&:has(aside) {
+			grid-template-areas: 
+				"head"
+				"editor";
+			
+			main {
+				display: none;
+			}
+
+			aside {
+				display: flex;
+			}
+		}
+	
+	}
+
+
+	@media screen and (min-width: 900px) {
+		& {
+			grid-template-areas: 
+				"head head"
+				"content editor";
+		}
 }
 
 header {
@@ -15,6 +41,7 @@ header {
 
 main {
 	grid-area: content;
+	/* display: none; */
 }
 
 a.item {
@@ -28,14 +55,22 @@ aside {
 	flex-flow: column nowrap;
 	align-items: stretch;
 	gap: 1.5em;
-	padding-right: 0.25em;
-	padding-bottom: 0.25em;
+	/* padding-right: 0.25em;
+	padding-bottom: 0.25em; */
+	padding: 0 0.5em 0.25em;
 	overflow: hidden auto;
 
 	& h2 {
 		display: block;
 		font-weight: 600;
 		font-size: 120%;
+	}
+
+	& .title {
+		display: flex;
+		flex-flow: row;
+		align-items: center;
+		gap: 0.5em;
 	}
 
 	& h3 {
@@ -117,6 +152,25 @@ aside {
 		& .balance {
 			padding: 0.25em 0.5em;
 			color: var(--secondary-text-color);
+		}
+	}
+}
+
+@media screen and (max-width: 899px) {
+	body {
+		background: red;
+	}
+	body:has( aside) {
+		grid-template-areas: 
+			"head"
+			"editor";
+	
+		& main {
+			display: none;
+		}
+	
+		& aside {
+			display: flex;
 		}
 	}
 }
@@ -307,6 +361,3 @@ aside {
 		} */
 	}
 } 
-
-
-
