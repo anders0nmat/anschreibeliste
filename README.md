@@ -40,6 +40,10 @@
         ```bash
         python manage.py createsuperuser
         ```
+    2. Collect Staticfiles
+        ```bash
+        python manage.py collectstatic
+        ```
 
 ## Running
 
