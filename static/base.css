@@ -148,8 +148,12 @@ header {
 		grid-auto-rows: auto; */
 		gap: 0.5em 2em;
 
-		& #link-hamburger input[type="checkbox"] {
-			display: none;
+		& #link-hamburger {
+			order: -1;
+
+			input[type="checkbox"] {
+				display: none;
+			}
 		}
 
 		& ul {
@@ -175,7 +179,7 @@ header {
 		}
 
 		@media screen and (max-width: 699px) {
-			&:has(#link-hamburger input:not(:checked)) li:has(a) {
+			&:has(#link-hamburger input:not(:checked)) li {
 				display: none;
 			}
 

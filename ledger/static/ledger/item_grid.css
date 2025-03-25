@@ -49,7 +49,7 @@
 		}
 	}
 	
-	& h3 {
+	& h4 {
 		padding: 0;
 		margin: 0;
 		font-size: 100%;
@@ -106,7 +106,7 @@
 	overflow-y: auto;
 	gap: 1em;
 
-	& h2 {
+	& h3 {
 		font-size: 110%;
 		font-weight: 500;
 		font-variant: small-caps;

@@ -32,7 +32,7 @@ data-cost={{ product.cost }}
 data-member-cost={{ product.member_cost }}
 {% if selected.pk == product.pk %}selected{% endif %}>
 
-	<h3 class="name">{{ product.name }}</h3>
+	<h4 class="name">{{ product.name }}</h4>
 	<div class="price">
 		{{ product.cost|money }}
 		{% if product.cost != product.member_cost %}

@@ -26,8 +26,8 @@
 	</style>
 
 	<div class="slide-bar">
-		<h2 class="slide-indicator transparent button" data-slide="products">Getränke</h2>
-		<h2 class="slide-indicator transparent button" data-slide="accounts">Accounts</h2>
+		<button class="slide-indicator transparent button" data-slide="products">Getränke</button>
+		<button class="slide-indicator transparent button" data-slide="accounts">Accounts</button>
 		<div style="flex-grow:1"></div>
 		<div>
 			<span id="transaction-multiplier" inputmode="numeric" contenteditable>1</span>
@@ -36,10 +36,12 @@
 
 	<div class="slideshow">
 		<div class="slide group-list" id="products" data-slide="products">
+			<h2>Getränke</h2>
 			{% include 'ledger/snippets/products.html' with items=products only %}
 		</div>
 		
 		<div class="slide group-list" id="accounts" data-slide="accounts">
+			<h2>Accounts</h2>
 			{% include 'ledger/snippets/accounts.html' with items=accounts only %}
 		</div>
 	</div>

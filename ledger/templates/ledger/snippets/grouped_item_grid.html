@@ -30,7 +30,7 @@
 {% for group, items in item_groups %}
 <div>
 	{% if group is not None %}
-	<h2>{{ group.name }}</h2>
+	<h3>{{ group.name }}</h3>
 	{% endif %}
 	<ul class="item-grid">
 	{% if group is None %}{% block unnamed_items %}{% endblock unnamed_items %}{% endif %}
