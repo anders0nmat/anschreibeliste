@@ -61,7 +61,10 @@ aside {
 	overflow: hidden auto;
 
 	& h2 {
-		display: block;
+		display: flex;
+		flex-direction: row;
+		gap: 0.25em;
+		align-items: center;
 		font-weight: 600;
 		font-size: 120%;
 	}
@@ -192,6 +195,7 @@ aside {
 	grid-template-areas: 
 		"amount"
 		"buttons"
+		"reason"
 		"confirm";
 	background: var(--bg);
 	gap: 0.5em;
@@ -249,9 +253,16 @@ aside {
 	& > button {
 		grid-area: confirm;
 	}
+	
+	& div:has(input[name="amount"]) {
+		grid-area: amount;
+	}
+
+	& div:has(input[name="reason"]) {
+		grid-area: reason;
+	}
 
 	& input {
-		grid-area: amount;
 		border: none;
 		padding: 0.25em 0.5em;
 		background: var(--secondary-bg-color);
@@ -262,6 +273,11 @@ aside {
 		&:hover {
 			background-color: var(--secondary-bg-color);
 		}
+	}
+
+	& label {
+		justify-self: start;
+		padding: 0;
 	}
 
 	& .buttons {

@@ -119,10 +119,10 @@ div:has(#transactions) {
 	grid-area: new-transaction;
 	border: thin solid var(--selected-color);
 	/* background: var(--bg); */
-	grid-template-columns: auto auto max-content max-content;
+	grid-template-columns: auto auto max-content max-content max-content;
 	grid-template-areas: 
-		"account price undo expand"
-		"reason  price undo expand";
+		"account price undo expand submit"
+		"reason  price undo expand submit";
 
 	&.timeout {
 		animation: both 10s progress-background ease-in-out;
@@ -198,6 +198,10 @@ div:has(#transactions) {
 		}
 	}
 
+	& button[type="submit"] {
+		grid-area: submit;
+	}
+
 
 	@media screen and (min-width: 900px) {
 		& {
@@ -219,27 +223,31 @@ div:has(#transactions) {
 }
 
 #transaction-multiplier {
-	&::after {
+	margin: 0;
+	padding: 0.25em 0.5em;
+	/* margin-right:2ch; */
+
+	cursor: default;
+	align-self: center;
+	
+	font-weight: normal;
+	font-size: 125%;
+
+	background-color: var(--secondary-bg-color);
+
+	& input[type="number"] {
+		width: 3em;
+		background: none;
+		border: none;
+		text-align: right;
+	}
+
+	& > span::after,
+	& label::after {
 		content: 'x';
 		color: var(--secondary-text-color);
 		font-size: 80%;
 		margin-left: 2px;
-	}
-	
-	div:has(> &) {
-		margin: 0;
-		padding: 0.25em 0.5em;
-		/* margin-right:2ch; */
-
-		cursor: default;
-		align-self: center;
-		
-		font-weight: normal;
-		font-size: 125%;
-
-		background-color: var(--secondary-bg-color);
-
-		
 	}
 }
 
@@ -283,15 +291,21 @@ div:has(#transactions) {
 }
 
 .slideshow {
-	overflow-x: auto;
+	overflow: hidden auto;
 	scrollbar-width: thin;
 	display: flex;
-	flex-flow: row nowrap;
+	flex-flow: column nowrap;
 
-	scroll-snap-type: x mandatory;
+	scroll-snap-type: y mandatory;
 	scroll-behavior: smooth;
 	width: 100%;
 	position: relative;
+
+	&.horizontal {
+		flex-flow: row nowrap;
+		overflow: auto hidden;
+		scroll-snap-type: x mandatory;
+	}
 
 	& .slide {
 		scroll-snap-align: center;

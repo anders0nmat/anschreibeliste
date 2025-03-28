@@ -19,20 +19,23 @@ from dataclasses import dataclass
 from django.http import StreamingHttpResponse
 from asyncio import Queue, QueueFull, CancelledError
 from json import dumps
-from typing import Any, Iterable
+from typing import Any, Iterable, Callable
 from collections import defaultdict
 
 @dataclass
 class StreamEvent:
-    event: str | None
-    data: str | None
+    event: str | None = None
+    # eventstream specifies than an event must at least contain a data field
+    data: str = ""
+    id: str | None = None
 
     def __str__(self) -> str:
         result = ''
         if self.event is not None:
-            result += f'event:{self.event}\n'
-        if self.data is not None:
-            result += f'data:{self.data}\n'
+            result += f'event: {self.event}\n'
+        if self.id is not None:
+            result += f'id: {self.id}\n'
+        result += f'data: {self.data}\n'
         result += '\n'
         return result
 
@@ -68,7 +71,7 @@ eventstream_channels: defaultdict[str, EventstreamChannel] = defaultdict(Eventst
 def get_eventstream_channel(channel: str) -> EventstreamChannel:
     return eventstream_channels[channel]
 
-def send_event(channel: str, event: str | None, data: Any | None):
+def send_event(channel: str, event: str | None, data: Any | None, id: str | None = None):
     """
     Send an event to all listeners of specified channel.
     
@@ -76,19 +79,27 @@ def send_event(channel: str, event: str | None, data: Any | None):
     """
     eventstream_channels[channel].post_event(
        StreamEvent(
-			event=event,
-			data=dumps(data) if data is not None else None,
-		) 
-	)
+            event=event,
+            data=dumps(data) if data is not None else None,
+            id=id
+        ) 
+    )
 
-async def listen(channel: str | Iterable[str]):
+async def listen(channel: str | Iterable[str], initial_event: Callable[[], StreamEvent] | StreamEvent = None):
+    if isinstance(initial_event, StreamEvent):
+        _initial_event = initial_event
+        initial_event = lambda: _initial_event
     if isinstance(channel, str):
         channel = [channel]
+
     ev_channels = [get_eventstream_channel(ch) for ch in channel]
     try:
         listener = StreamListener()
+        if initial_event:
+            await listener.events.put(initial_event())
         for ch in ev_channels:
             ch.add_listener(listener)
+
         while True:
             event = await listener.get_event()
             yield str(event)
@@ -100,11 +111,11 @@ class EventstreamResponse(StreamingHttpResponse):
     """
     Http response for connecting client to channels of a eventstream
     """
-    def __init__(self, channel: str | Iterable[str], *args, **kwargs) -> None:
+    def __init__(self, channel: str | Iterable[str], *args, initial_event: Callable[[], StreamEvent] | StreamEvent = None, **kwargs) -> None:
         """
         Requires a list of channels the client will receive events from
         """
-        super().__init__(listen(channel), *args, content_type="text/event-stream", **kwargs)
+        super().__init__(listen(channel, initial_event=initial_event), *args, content_type="text/event-stream", **kwargs)
         self['Cache-Control'] = 'no-cache'
         self['X-Accel-Buffering'] = 'no'
 

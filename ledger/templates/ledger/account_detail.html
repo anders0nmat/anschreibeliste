@@ -12,12 +12,12 @@
 {% block editor %}
 <aside>
 	<div class="title">
-		{% if account.member %}
-		<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="badge lucide lucide-settings">
-			<use href="{% static 'ledger/badge.svg' %}#badge" width="24" height="24" />
-		</svg>
-		{% endif %}
 		<h2>
+			{% if account.member %}
+			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="badge lucide lucide-settings">
+				<use href="{% static 'ledger/badge.svg' %}#badge" width="24" height="24" />
+			</svg>
+			{% endif %}
 			{{ account.name }}
 		</h2>
 		<div style="flex-grow: 1"></div>
@@ -44,7 +44,19 @@
 			<h3>Einzahlung</h3>
 			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
 		</summary>
-		<div id="deposit-transaction" class="transaction">
+		<form method="POST" id="deposit-transaction" class="transaction">
+			{% csrf_token %}
+			<input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
+			{{ deposit_form }}
+
+			<div class="buttons">
+				<button type="button" class="button" data-amount="1000">+10€</button>
+				<button type="button" class="button" data-amount="5000">+50€</button>
+			</div>
+			<button type="submit" id="confirm-deposit" class="primary button" name="deposit">Bestätigen</button>
+		</form>
+
+		{% comment %} <div id="deposit-transaction" class="transaction">
 			{% csrf_token %}
 			<input type="hidden" id="account-id" value="{{ account.pk }}">
 			<input type="hidden" id="account-name" value="{{ account.name }}">
@@ -63,14 +75,29 @@
 			<button type="button" id="confirm-deposit" class="primary button">
 				Bestätigen
 			</button>
-		</div>
+		</div> {% endcomment %}
 	</details>
 	<details open>
 		<summary>
 			<h3>Auszahlung</h3>
 			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
 		</summary>
-		<div id="withdraw-transaction" class="transaction">
+
+		<form method="post" id="withdraw-transaction" class="transaction">
+			{% csrf_token %}
+			<input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
+			{{ withdraw_form }}
+
+			<div class="buttons">
+				<button type="button" class="button" data-amount="1000">+10€</button>
+				<button type="button" class="button" data-amount="5000">+50€</button>
+				<button type="button" class="button" id="withdraw-all">Alles</button>
+			</div>
+			<button type="submit" id="confirm-withdraw" class="primary button" name="withdraw">Bestätigen</button>
+		</form>
+
+
+		{% comment %} <div id="withdraw-transaction" class="transaction">
 			{% csrf_token %}
 			<input type="hidden" id="account-id" value="{{ account.pk }}">
 			<input type="hidden" id="account-name" value="{{ account.name }}">
@@ -90,7 +117,7 @@
 			<button type="button" id="confirm-withdraw" class="primary button">
 				Bestätigen
 			</button>
-		</div>
+		</div> {% endcomment %}
 	</details>
 	{% endif %}
 

@@ -33,13 +33,17 @@
 
 	border: 1px solid var(--border);
 	
-	&[selected] {
+	&[selected], &:has(input:checked) {
 		--border: var(--selected-color);
 		--bg: color-mix(in srgb, var(--secondary-bg-color), var(--selected-color) 20%);
 	}
 
 	&[disabled], &[blocked] {
 		opacity: 50%;
+	}
+
+	& input[type="radio"] {
+		display: none;
 	}
 
 	@media (hover: hover) {

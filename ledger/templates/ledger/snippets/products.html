@@ -23,27 +23,45 @@
 
 {% if url %}
 	<a href="{% url url product.pk %}"
+	class="item"
+	role="listitem"
+	data-product-id={{ product.pk }}
+	data-cost={{ product.cost }}
+	data-member-cost={{ product.member_cost }}
+	{% if selected.pk == product.pk %}selected{% endif %}>	
+		<h4 class="name">{{ product.name }}</h4>
+		<div class="price">
+			{{ product.cost|money }}
+			{% if product.cost != product.member_cost %}
+			{{ product.member_cost|money }}
+			{% endif %}
+		</div>
+	</a>
 {% else %}
-	<li
-{% endif %}
-class="item"
-data-product-id={{ product.pk }}
-data-cost={{ product.cost }}
-data-member-cost={{ product.member_cost }}
-{% if selected.pk == product.pk %}selected{% endif %}>
+	<label
+	class="item"
+	role="listitem"
+	data-product-id={{ product.pk }}
+	data-cost={{ product.cost }}
+	data-member-cost={{ product.member_cost }}>
+		
 
-	<h4 class="name">{{ product.name }}</h4>
-	<div class="price">
-		{{ product.cost|money }}
-		{% if product.cost != product.member_cost %}
-		{{ product.member_cost|money }}
-		{% endif %}
-	</div>
-
-{% if url %}
-</a>
-{% else %}
-</li>
+		<h4 class="name">
+			<input
+				type="radio"
+				name="product"
+				value="{{ product.pk }}"
+				{% if selected.pk == product.pk %}checked{% endif %}
+				{% if target_form %}form="{{ target_form }}"{% endif %}>
+			{{ product.name }}
+		</h4>
+		<span class="price">
+			{{ product.cost|money }}
+			{% if product.cost != product.member_cost %}
+			{{ product.member_cost|money }}
+			{% endif %}
+		</span>
+	</label>
 {% endif %}
 
 {% endwith %}

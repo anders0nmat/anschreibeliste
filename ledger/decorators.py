@@ -11,12 +11,12 @@ from django.core.exceptions import ImproperlyConfigured
 class HttpResponseLocked(HttpResponse):
     status_code = HTTPStatus.LOCKED
 
-def idempotent(function=None, header_name: str = "Idempotency-Key", required: bool = False, cache: str = 'default', timeout=600):
+def idempotent(function=None, header_name: str = "Idempotency-Key", required: bool = False, post_field=None, cache: str = 'default', timeout=600):
     def _idempotent(view_func):
         @wraps(view_func)
         def _check_idempotent(request: HttpRequest, *args, **kwargs):
             _cache = caches[cache]
-            key = request.headers.get(header_name)
+            key = request.headers.get(header_name) or (post_field and request.POST.get(post_field))
             if key:				
                 cache_key = blake2b(f"{request.session.session_key}-{key}".encode()).hexdigest()
                 obtained_key = _cache.add(cache_key, HttpResponseLocked(), timeout=timeout)
@@ -32,7 +32,7 @@ def idempotent(function=None, header_name: str = "Idempotency-Key", required: bo
 
                 return response
             elif required:
-                return HttpResponseBadRequest()
+                return HttpResponseBadRequest('Missing required idempotency key')
             else:
                 return view_func(request, *args, **kwargs)
 

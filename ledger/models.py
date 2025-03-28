@@ -2,6 +2,7 @@ from typing import Any, Optional
 from django.db import models, transaction
 from django.contrib.auth.models import User
 from .managers import TransactionManager, ProductManager
+from .modelfield import PositiveFixedPrecisionField, FixedPrecisionField
 from datetime import timedelta, datetime
 from django.core.exceptions import PermissionDenied
 # Create your models here.
@@ -53,7 +54,7 @@ class Account(models.Model):
     objects = AccountManager()
 
     name = models.CharField(max_length=255)
-    credit = models.PositiveIntegerField()
+    credit = PositiveFixedPrecisionField(decimal_places=2)
     member = models.BooleanField()
     active = models.BooleanField(default=True)
     
@@ -121,7 +122,7 @@ class Account(models.Model):
 class AccountBalance(models.Model):
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='balances')
     timestamp = models.DateTimeField(auto_now_add=True)
-    closing_balance = models.IntegerField()
+    closing_balance = FixedPrecisionField(decimal_places=2)
 
     class Meta:
         ordering = ['-timestamp']
@@ -138,7 +139,7 @@ class Transaction(models.Model):
 
     closing_balance = models.ForeignKey(AccountBalance, on_delete=models.CASCADE, related_name='transactions', null=True, default=None)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='transactions')
-    amount = models.IntegerField()
+    amount = FixedPrecisionField(decimal_places=2)
     timestamp = models.DateTimeField(auto_now_add=True)
     reason = models.CharField(max_length=255)
     issuer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
@@ -209,8 +210,8 @@ class Product(models.Model):
     objects = ProductManager()
 
     name = models.CharField(max_length=255)
-    cost = models.PositiveIntegerField()
-    member_cost = models.PositiveIntegerField()
+    cost = PositiveFixedPrecisionField(decimal_places=2)
+    member_cost = PositiveFixedPrecisionField(decimal_places=2)
     
     group = models.ForeignKey(ProductGroup, on_delete=models.SET_NULL, null=True, default=None, blank=True)
     order = models.PositiveIntegerField(

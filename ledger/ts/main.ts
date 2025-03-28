@@ -36,12 +36,13 @@ class Product extends HTMLIdentifierWrapper {
 
 const current_transaction = {
 	element: document.getElementById("new-transaction")!,
+	form: document.getElementById('new-transaction')! as HTMLFormElement,
 	account_name: document.querySelector<HTMLElement>('#new-transaction .account')!,
 	product_name: document.querySelector<HTMLElement>('#new-transaction .product')!,
 	placeholder_account_name: "",
 	placeholder_product_name: "",
 	timeout: undefined as number | undefined,
-	
+	/*
 	get account_id(): string | null { return current_transaction.element.dataset.accountId ?? null },
 	get product_id(): string | null { return current_transaction.element.dataset.productId ?? null },
 
@@ -83,14 +84,14 @@ const current_transaction = {
 			current_transaction.clear_timeout()
 		}
 		current_transaction.try_submit()
-	},
+	},*/
 
 	try_submit() {
-		const account = current_transaction.account
-		const product = current_transaction.product
+		const account = Account.byId(current_transaction.form.elements['account'].value)
+		const product = Product.byId(current_transaction.form.elements['product'].value)
 		if (!account || !product) { return }
-
-		const amount = multiplier.value
+	
+		const amount = parseInt(current_transaction.form.elements['amount'].value)
 
 		Transaction.submit({
 			kind: "product",
@@ -107,9 +108,10 @@ const current_transaction = {
 	},
 
 	reset() {
-		current_transaction.account = null
-		current_transaction.product = null
+		current_transaction.form.reset()
+		current_transaction.clear_timeout()
 		multiplier.value = 1
+		current_transaction.update()
 	},
 
 	clear_timeout() {
@@ -123,6 +125,45 @@ const current_transaction = {
 		current_transaction.clear_timeout()
 		current_transaction.timeout = setTimeout(current_transaction.reset, TRANSACTION_TIMEOUT)
 		current_transaction.element.classList.add('timeout')
+	},
+
+	update() {
+		const current_account = Account.byId(current_transaction.form.elements['account'].value)
+		const current_product = Product.byId(current_transaction.form.elements['product'].value)
+		
+		const account_name = current_account?.name ?? current_transaction.placeholder_account_name
+		const current_multiplier = current_transaction.form.elements['amount'].value
+		const multiplier_text = current_multiplier !== "1" ? current_multiplier + 'x ' : ''
+
+		const product_name = current_product ? multiplier_text + current_product.name : current_transaction.placeholder_product_name
+
+		current_transaction.account_name.textContent = account_name
+		current_transaction.product_name.textContent = product_name
+		current_transaction.account_name.toggleAttribute('empty', current_account === null)
+		current_transaction.product_name.toggleAttribute('empty', current_product === null)
+
+		const products = current_transaction.form.elements['product'] as RadioNodeList
+		products.forEach((e: HTMLInputElement) => {
+			const product = Product.byId(e.value)
+			if (product) {
+				e.disabled = current_account ? !current_account.canAfford(product) : false
+			}
+		})
+
+		const accounts = current_transaction.form.elements['account'] as RadioNodeList
+		accounts.forEach((e: HTMLInputElement) => {
+			const account = Account.byId(e.value)
+			if (account) {
+				e.disabled = account.blocked || (current_product ? !account.canAfford(current_product) : false)
+			}
+		})
+
+		if (current_account || current_product) {
+			current_transaction.set_timeout()
+		}
+		if (current_account && current_product) {
+			current_transaction.try_submit()
+		}
 	},
 }
 
@@ -155,8 +196,41 @@ document.querySelector<HTMLButtonElement>('#new-transaction .undo')?.addEventLis
 
 current_transaction.element.style.animationDuration = TRANSACTION_TIMEOUT.toString()
 
+Transaction.all() // registers undo buttons
+Transaction.listen(event => {
+	const account = Account.byId(event.account.toString())
+	if (!account) { return }
+	account.balance = event.balance
+	account.blocked = !event.is_liquid
+})
+
+Account.all().forEach(account => account.element.addEventListener('click', _ => {
+	if (account.blocked || account.disabled) { return }
+	if (current_transaction.form.elements['account'].value === account.id) {
+		current_transaction.form.elements['account'].value = ""
+	}
+	else {
+		changeSlide('products')
+	}
+}))
+
+Product.all().forEach(product => product.element.addEventListener('click', _ => {
+	if (product.disabled) { return }
+	if (current_transaction.form.elements['product'].value === product.id) {
+		current_transaction.form.elements['product'].value = ""
+	}
+	else {
+		changeSlide('accounts')
+	}
+}))
+
+/* ===== Progressive enhancement ===== */
+
+// Better transaction multiplier
+
 const multiplier = {
-	element: document.getElementById('transaction-multiplier')! as HTMLElement,
+	element: document.querySelector('#transaction-multiplier > span')! as HTMLElement,
+	input: document.querySelector('#transaction-multiplier input')! as HTMLInputElement,
 
 	get value(): number {
 		const amount = parseInt(multiplier.element.textContent ?? '1')
@@ -178,7 +252,6 @@ const multiplier = {
 	}
 }
 multiplier.element.addEventListener('beforeinput', (e: InputEvent) => {
-	console.log(e)
 	if (e.inputType.startsWith('format')) {
 		e.preventDefault()
 	}
@@ -211,33 +284,31 @@ multiplier.element.addEventListener('beforeinput', (e: InputEvent) => {
 	}
 })
 multiplier.element.addEventListener('input', _ => {
-	if (current_transaction.account) {
-		current_transaction.account = current_transaction.account
-	}
-	if (current_transaction.product) {
-		current_transaction.product = current_transaction.product
-	}
+	multiplier.input.value = multiplier.value.toString()
+	current_transaction.update()
 })
 multiplier.element.closest('div')?.addEventListener('click', _ => {multiplier.selectAll()})
+multiplier.input.parentElement?.classList.add('visually-hidden')
+multiplier.element.classList.remove('css-hidden')
 
-Transaction.all() // registers undo buttons
-Transaction.listen(event => {
-	const account = Account.byId(event.account.toString())
-	if (!account) { return }
-	account.balance = event.balance
-	account.blocked = !event.is_liquid
-})
+// Hide submit button (because of auto-submit)
 
-Account.all().forEach(account => account.element.addEventListener('click', _ => {
-	if (account.blocked || account.disabled) { return }
-	const alreadySelected = current_transaction.account_id === account.id
-	current_transaction.account = !alreadySelected ? account : null
-	if (!alreadySelected) { changeSlide('products') }
-}))
+current_transaction.element.querySelector('button[type="submit"]')!.classList.add('css-hidden')
 
-Product.all().forEach(product => product.element.addEventListener('click', _ => {
-	if (product.disabled) { return }
-	const alreadySelected = current_transaction.product_id === product.id
-	current_transaction.product = !alreadySelected ? product : null
-	if (!alreadySelected) { changeSlide('accounts') }
-}))
+// Show form selection & auto-submit
+
+Array.from(current_transaction.form.elements)
+	.filter((element: HTMLInputElement) => ['product', 'account', 'amount'].includes(element.name))
+	.forEach((element: HTMLInputElement) => {
+		element.addEventListener('change', ev => {
+			current_transaction.update()
+		})
+	})
+
+// Horizontal Items
+
+document.querySelector('.slideshow')!.classList.add('horizontal')
+
+// Dont preserve selection between page refresh
+
+current_transaction.form.reset()

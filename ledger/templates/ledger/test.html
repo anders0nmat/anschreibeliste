@@ -35,18 +35,25 @@
 
 {% comment %} <svg width="20" height="20"><use href="{% static 'ledger/icons/badge.svg' %}#badge"/></svg> {% endcomment %}
 
-<button id="send-event">
+{% comment %} <button id="send-event">
 	Send Event
 </button>
 
 <ul id="event-list">
 
-</ul>
+</ul> {% endcomment %}
 
 <div>
+	<input type="text" list="reasons">
+
+	<datalist id="reasons">
+		<option value="Einzahlung"></option>
+		<option value="Auszahlung"></option>
+	</datalist>
+
 	{% comment %} {% include 'ledger/snippets/accounts.html' with items=accounts only %} {% endcomment %}
 	{% comment %} {% include 'ledger/snippets/products.html' with items=products only %} {% endcomment %}
-	{% include 'ledger/snippets/transaction_history.html' with transactions=transactions only %}
+	{% comment %} {% include 'ledger/snippets/transaction_history.html' with transactions=transactions only %} {% endcomment %}
 
 	{% comment %} {% for tr in transactions %}
 	{{ tr.pk }}

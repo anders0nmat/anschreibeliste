@@ -26,6 +26,7 @@ export class Transaction extends HTMLWrapper {
                 "Content-Type": "application/json",
                 "X-CSRFToken": this.csrf_token,
                 "Idempotency-Key": idempotency_key ?? Date.now().valueOf().toString(),
+                "Accept": "application/json",
             },
             body: JSON.stringify(body),
         });
@@ -33,9 +34,19 @@ export class Transaction extends HTMLWrapper {
     static onUndoTransaction(ev) {
         Transaction.from(ev.target.closest('.transaction'))?.revert();
     }
+    static reconnect_interval = undefined;
     static event_source = undefined;
     static listen(ontransaction) {
-        this.event_source = new EventSource(TRANSACTION_EVENT_URL);
+        const latest_known_transaction = Math.max(...this.all().map(t => parseInt(t.id))).toString();
+        console.log("Trying to open connection", latest_known_transaction);
+        this.event_source = new EventSource(TRANSACTION_EVENT_URL + '?' + new URLSearchParams({ last_transaction: latest_known_transaction }).toString());
+        this.event_source.addEventListener('message', ev => {
+            console.log("Server sent an event", ev);
+        });
+        this.event_source.addEventListener('reload', ev => {
+            console.log("Server wants reload", ev);
+            location.reload();
+        });
         this.event_source.addEventListener('create', event => {
             const data = JSON.parse(event.data);
             console.log("received server event:", data);
@@ -65,6 +76,27 @@ export class Transaction extends HTMLWrapper {
                 ontransaction(data);
             }
         });
+        this.event_source.addEventListener('open', ev => {
+            // Successful connection, do not try to reconnect anymore
+            console.log("opened connection", ev);
+            clearInterval(this.reconnect_interval);
+            this.reconnect_interval = undefined;
+        });
+        this.event_source.addEventListener('error', ev => {
+            if (this.event_source?.readyState == EventSource.CLOSED) {
+                console.log("Closed connection permanently", ev);
+                // Browser will not retry on its own
+                // Retry every 10s
+                if (this.reconnect_interval === undefined) {
+                    this.reconnect_interval = setInterval(() => {
+                        this.listen(ontransaction);
+                    }, 10_000);
+                }
+            }
+            else {
+                console.log("Closed connection", ev);
+            }
+        });
     }
     static async submit(request) {
         const idempotency_key = Date.now().valueOf().toString();
@@ -90,7 +122,8 @@ export class Transaction extends HTMLWrapper {
             body = {
                 account: request.account_id,
                 amount: request.balance,
-                type: request.kind,
+                action: request.kind,
+                reason: request.reason,
             };
         }
         const response = await Transaction.post(url, body, idempotency_key);
