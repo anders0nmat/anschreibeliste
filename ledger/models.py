@@ -137,14 +137,14 @@ class Transaction(models.Model):
         timejump_threshold=timedelta(hours=6),
         revert_threshold=timedelta(hours=12))
 
-    closing_balance = models.ForeignKey(AccountBalance, on_delete=models.CASCADE, related_name='transactions', null=True, default=None)
+    closing_balance = models.ForeignKey(AccountBalance, on_delete=models.CASCADE, related_name='transactions', null=True, default=None, blank=True)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='transactions')
     amount = FixedPrecisionField(decimal_places=2)
     timestamp = models.DateTimeField(auto_now_add=True)
     reason = models.CharField(max_length=255)
     issuer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     
-    related_transaction: "Transaction" = models.OneToOneField(to="self", on_delete=models.CASCADE, null=True, default=None)
+    related_transaction: "Transaction" = models.OneToOneField(to="self", on_delete=models.CASCADE, null=True, default=None, blank=True)
 
     idempotency_key: str | None
 
@@ -211,7 +211,7 @@ class Product(models.Model):
 
     name = models.CharField(max_length=255)
     cost = PositiveFixedPrecisionField(decimal_places=2)
-    member_cost = PositiveFixedPrecisionField(decimal_places=2)
+    member_cost = PositiveFixedPrecisionField(decimal_places=2, blank=True)
     
     group = models.ForeignKey(ProductGroup, on_delete=models.SET_NULL, null=True, default=None, blank=True)
     order = models.PositiveIntegerField(
@@ -229,6 +229,10 @@ class Product(models.Model):
 
     def __str__(self) -> str:
         return self.name
+    
+    def clean(self) -> None:
+        if self.member_cost is None:
+            self.member_cost = self.cost
 
 
 # https://stackoverflow.com/questions/29688982/derived-account-balance-vs-stored-account-balance-for-a-simple-bank-account/29713230#29713230

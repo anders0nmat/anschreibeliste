@@ -31,7 +31,7 @@ class FixedPrecisionField(forms.IntegerField):
             wholes, cents = divmod(value, 10 ** self.decimal_places)
             if cents == 0: return number_format(wholes)
             cents = str(cents).rjust(self.decimal_places, '0')
-            return number_format(f"{sign}{wholes}.{cents}", self.decimal_places)
+            return f"{sign}{wholes}.{cents}"
         return value
 
     def to_python(self, value: Any | None) -> int | None:
@@ -65,7 +65,7 @@ class FixedPrecisionField(forms.IntegerField):
             pattern = '\\d+'
             if self.decimal_places > 0:
                 pattern += '('
-                pattern += '[' + ('\\\\' if decimal_separator == '\\' else decimal_separator) + ']'
+                pattern += '[' + ('\\\\' if decimal_separator == '\\' else decimal_separator) + '.]'
                 pattern += f'\\d{{1,{self.decimal_places}}}'
                 pattern += ')?'
             attrs.setdefault('pattern', pattern)

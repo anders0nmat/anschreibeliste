@@ -2,6 +2,8 @@ from django.contrib import admin
 from . import models
 from adminsortable2.admin import SortableAdminMixin, SortableTabularInline, SortableStackedInline, SortableAdminBase
 
+from .forms import AccountForm
+
 class ProductTabularInline(SortableTabularInline):
     model = models.Product
     readonly_fields = ["order"]
@@ -17,11 +19,11 @@ class ProductAdmin(SortableAdminMixin, admin.ModelAdmin):
 
 @admin.register(models.Account)
 class AccountAdmin(admin.ModelAdmin):
-    list_display = ["name", "active", "member", "is_liquid", "group", "last_balance", "current_balance", "credit"]
+    list_display = ["name", "active", "member", "is_liquid", "group", "last_balance", "credit"]
 
 @admin.register(models.AccountGroup)
 class AccountGroupAdmin(SortableAdminMixin, admin.ModelAdmin):
-    list_display = ["name"]
+    list_display = ["name"]    
     
 @admin.register(models.ProductGroup)
 class ProductGroupAdmin(SortableAdminMixin, admin.ModelAdmin):
@@ -30,3 +32,4 @@ class ProductGroupAdmin(SortableAdminMixin, admin.ModelAdmin):
 
 # Register your models here.
 admin.site.register(models.AccountBalance)
+

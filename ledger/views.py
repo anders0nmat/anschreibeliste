@@ -343,20 +343,20 @@ def revert_transaction(request: HttpRequest, transaction: int):
 
 def transaction_event(request: HttpRequest):
     initial_event = None
-    last_transaction = request.GET.get('last_transaction', None)
-    if last_transaction:
+
+    latest_client_transaction_id = request.GET.get('last_transaction', None)
+    if latest_client_transaction_id:
         try:
-            last_transaction = int(last_transaction)
             latest_transaction = Transaction.objects.latest('timestamp')
-            if not latest_transaction or last_transaction != latest_transaction.pk:
+            if latest_transaction and latest_client_transaction_id != latest_transaction.pk:
                 raise ValueError()
-        except:
+        except Transaction.DoesNotExist:
+            pass
+        except ValueError:
             # client has not the latest transactions
-            # or something unexpected happened
             # -> command client to reload page
             initial_event = StreamEvent(event='reload')
 
-    #print(f"New Event subscription {initial_event=}")
     return EventstreamResponse(channel='transaction', initial_event=initial_event)
 
 

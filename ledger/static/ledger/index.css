@@ -119,10 +119,11 @@ div:has(#transactions) {
 	grid-area: new-transaction;
 	border: thin solid var(--selected-color);
 	/* background: var(--bg); */
-	grid-template-columns: auto auto max-content max-content max-content;
+	grid-template-columns: auto auto max-content;
 	grid-template-areas: 
-		"account price undo expand submit"
-		"reason  price undo expand submit";
+		"account price undo"
+		"reason  price undo";
+	grid-auto-columns: max-content;
 
 	&.timeout {
 		animation: both 10s progress-background ease-in-out;
@@ -187,7 +188,8 @@ div:has(#transactions) {
 	}
 
 	& #expand {
-		grid-area: expand;
+		grid-row: 1 / -1;
+		grid-column: 4;
 
 		& input[type="checkbox"] {
 			display: none;
@@ -199,7 +201,9 @@ div:has(#transactions) {
 	}
 
 	& button[type="submit"] {
-		grid-area: submit;
+		
+		grid-row: 1 / -1;
+		grid-column: 4;
 	}
 
 

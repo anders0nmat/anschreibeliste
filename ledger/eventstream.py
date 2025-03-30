@@ -10,7 +10,7 @@ See https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events
 
 
 Q: Why not django-eventstream package?
-A: It is quite bloated for our use-case, providing more features regarding
+A: It is quite bloated for this simple use-case, providing more features regarding
    syncing events across multiple server instances (e.g. with redis).
    It also has a lot of dependencies which seems unnecessary.
 """

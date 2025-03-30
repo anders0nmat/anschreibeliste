@@ -85,18 +85,16 @@ export class Transaction extends HTMLWrapper {
 	private static reconnect_interval?: number = undefined
 	private static event_source: EventSource | undefined = undefined
 	static listen(ontransaction?: (event: ServerEvent) => void) {
-		const latest_known_transaction = Math.max(...this.all().map(t => parseInt(t.id))).toString()
+		const url = new URL(TRANSACTION_EVENT_URL, document.location.origin)
+		
+		const all_transaction_ids = this.all().map(t => parseInt(t.id))
+		if (all_transaction_ids) {
+			const max_transaction_id = Math.max(...all_transaction_ids).toString()
+			url.searchParams.set('last_transaction', max_transaction_id)
+		}
 
-
-		console.log("Trying to open connection", latest_known_transaction)
-		this.event_source = new EventSource(TRANSACTION_EVENT_URL + '?' + new URLSearchParams({last_transaction: latest_known_transaction}).toString())
-		this.event_source.addEventListener('message', ev => {
-			console.log("Server sent an event", ev)
-		})
-		this.event_source.addEventListener('reload', ev => {
-			console.log("Server wants reload", ev)
-			location.reload()
-		})
+		this.event_source = new EventSource(url)
+		this.event_source.addEventListener('reload', _ => { location.reload() })
 		this.event_source.addEventListener('create', event => {
 			const data = JSON.parse(event.data) as ServerEvent
 			console.log("received server event:", data)
@@ -130,16 +128,14 @@ export class Transaction extends HTMLWrapper {
 			}
 		})
 
-		this.event_source.addEventListener('open', ev => {
+		this.event_source.addEventListener('open', _ => {
 			// Successful connection, do not try to reconnect anymore
-			console.log("opened connection", ev)
 			clearInterval(this.reconnect_interval)
 			this.reconnect_interval = undefined	
 		})
 		
-		this.event_source.addEventListener('error', ev => {
+		this.event_source.addEventListener('error', _ => {
 			if (this.event_source?.readyState == EventSource.CLOSED) {
-				console.log("Closed connection permanently", ev)
 				// Browser will not retry on its own
 				// Retry every 10s
 				if (this.reconnect_interval === undefined) {
@@ -147,9 +143,6 @@ export class Transaction extends HTMLWrapper {
 						this.listen(ontransaction)
 					}, 10_000);
 				}
-			}
-			else {
-				console.log("Closed connection", ev)
 			}
 		})
 	}
