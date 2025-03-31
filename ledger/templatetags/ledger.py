@@ -1,6 +1,8 @@
 from django import template
 from django.utils.safestring import mark_safe
 from typing import Any
+from time import time_ns
+from decimal import Decimal
 
 register = template.Library()
 
@@ -51,6 +53,14 @@ def money(value):
         sign = "negative" if neg else ""
         
         return mark_safe(f'<span class="money" {sign}><span class="wholes">{wholes}</span><span class="cents">{cents:02d}</span></span>')
+    if isinstance(value, Decimal):
+        value: Decimal
+        neg, value = value < 0, abs(value)
+        wholes, cents = divmod(value, 1)
+        cents = int(cents * 100)
+        sign = "negative" if neg else ""
+        
+        return mark_safe(f'<span class="money" {sign}><span class="wholes">{wholes}</span><span class="cents">{cents:02d}</span></span>')
     return value
 
 @register.simple_tag(name="ensure_group_leading")
@@ -62,3 +72,7 @@ def ensure_leading_with(group_list: list[tuple[Any, Any]], *, grouper):
     if group_list[0][0] != grouper:
         return [(grouper, [])] + group_list
     return group_list
+
+@register.simple_tag(name="idempotency_key")
+def idempotency_key(name:str='idempotency-key'):
+    return mark_safe(f'<input type="hidden" name="{name}" value="{time_ns()}">')

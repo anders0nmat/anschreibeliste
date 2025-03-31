@@ -50,34 +50,35 @@ Transaction.listen(event => {
 	if (!account) { return }
 	account.balance = event.balance
 	account.blocked = !event.is_liquid
-})
+}, false)
 
 /* ===== Progressive Enhancement ===== */
 
 // Submit without reload
 
-function submit_custom_transaction(ev: SubmitEvent) {
-	ev.preventDefault()
-	const form = ev.target as HTMLFormElement
-	const form_data = new FormData(form)
+function submit_custom_transaction(action: "deposit" | "withdraw") {
+	return (ev: SubmitEvent) => {
+		ev.preventDefault()
+		const form = ev.target as HTMLFormElement
+		const form_data = new FormData(form)
 
-	const action = form_data.get('action') as ("deposit" | "withdraw")
-	const account = form_data.get('account') as string
-	const amount = parseInt(form_data.get('amount') as string)
-	const reason = form_data.get('reason') as string ?? ''
+		const account = form_data.get('account') as string
+		const amount = parseInt(form_data.get('amount') as string)
+		const reason = form_data.get('reason') as string ?? ''
 
-	Transaction.submit({
-		kind: action,
-		account_id: account,
-		account_name: Account.byId(account)?.name ?? 'Unknown',
-		balance: amount,
-		reason: reason,
-	})
+		Transaction.submit({
+			kind: action,
+			account_id: account,
+			account_name: Account.byId(account)?.name ?? 'Unknown',
+			balance: amount,
+			reason: reason,
+		})
 
-	form.reset()
+		form.reset()
+	}
 }
 
-document.getElementById('withdraw-transaction')!.addEventListener('submit', submit_custom_transaction)
-document.getElementById('deposit-transaction')!.addEventListener('submit', submit_custom_transaction)
+document.getElementById('withdraw-transaction')!.addEventListener('submit', submit_custom_transaction("withdraw"))
+document.getElementById('deposit-transaction')!.addEventListener('submit', submit_custom_transaction("deposit"))
 
 

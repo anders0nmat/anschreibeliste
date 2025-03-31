@@ -5,6 +5,8 @@ from .managers import TransactionManager, ProductManager
 from .modelfield import PositiveFixedPrecisionField, FixedPrecisionField
 from datetime import timedelta, datetime
 from django.core.exceptions import PermissionDenied
+from django.core.validators import MinValueValidator
+from decimal import Decimal
 # Create your models here.
 # TODO : Better terminologiy regarding money:
 # TODO : User A has amount k and additionally is allowed to go amount n into debt
@@ -54,7 +56,7 @@ class Account(models.Model):
     objects = AccountManager()
 
     name = models.CharField(max_length=255)
-    credit = PositiveFixedPrecisionField(decimal_places=2)
+    credit = PositiveFixedPrecisionField(decimal_places=2, default=0)
     member = models.BooleanField()
     active = models.BooleanField(default=True)
     
@@ -174,22 +176,25 @@ class Transaction(models.Model):
         return has_permissions
 
     @transaction.atomic
-    def revert(self, issuer: User | None):
+    def revert(self, issuer: User | None, idempotency_key=None) -> "Transaction":
         if not self.can_revert:
             return Transaction.AlreadyReverted()
         
         if not self.user_can_revert(issuer):
             return PermissionDenied()        
         
+        kwargs = {'idempotency_key': idempotency_key} if idempotency_key else {}
         revert_transaction = Transaction.objects.create(
             account=self.account,
             amount=-self.amount,
             reason=f"Storno: {self.reason}",
             issuer=issuer,
-            related_transaction=self
+            related_transaction=self,
+            **kwargs
         )
         self.related_transaction = revert_transaction
         self.save()
+        return revert_transaction
 
 class ProductGroup(models.Model):
     name = models.CharField(max_length=255)

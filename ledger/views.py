@@ -1,39 +1,35 @@
-from typing import Any, Dict, Literal, Mapping, Optional, Type, Union
+from typing import Any, Dict, Literal
 from http import HTTPStatus
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.contrib.auth.decorators import permission_required, login_required
-from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
-from django.core.files.base import File
-from django.db.models.base import Model
-from django.forms.utils import ErrorList
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpResponseForbidden, JsonResponse, HttpResponseRedirect, HttpResponseBadRequest
-from django.forms.fields import CharField, ChoiceField, IntegerField
-from django.forms.widgets import HiddenInput
-from django.forms.models import modelform_factory, ModelForm
-from django.forms import Form
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, UpdateView, CreateView, TemplateView, View
-from django.views.generic.detail import SingleObjectMixin
-from django.views.generic.edit import FormMixin
-
-from django.utils.decorators import method_decorator
 
 from time import time_ns
 from json import loads
 
-from .decorators import idempotent, json_body, require_POST_fields, one_of, satisfies, chain
+from .decorators import idempotent, json_body
 from .eventstream import send_event, EventstreamResponse, StreamEvent
-from .mixins import EnableFieldsMixin, ExtraFormKwargsMixin, MultiFormMixin, MultiFormView, ExtraFormMixin
+from .mixins import EnableFieldsMixin
 from .models import Account, Transaction, Product
-from .formfield import FixedPrecisionField
-from .forms import AccountForm, TransactionForm, ProductTransactionForm
+from .forms import AccountForm, TransactionForm, ProductTransactionForm, RevertTransactionForm
 
+
+def api_object() -> dict[str, Any]:
+    return {
+        'deposit': reverse('api_deposit'),
+        'withdraw': reverse('api_withdraw'),
+        'order': reverse('api_order'),
+        'revert': reverse('api_revert'),
+        'events': reverse('api_events'),
+    }
 
 class AccountList(ListView):
     queryset = Account.objects.grouped()
-    context_object_name = 'accounts'
 
 class AccountDetail(EnableFieldsMixin, UpdateView):
     model = Account
@@ -45,13 +41,15 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
         return reverse('account_detail', kwargs={'pk': self.object.pk})
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        custom_transaction_permission = 'ledger.add_permanent_custom_transaction' if self.object.permanent else 'ledger.add_custom_transaction'
+
         kwargs |= {
+            'account_list': Account.objects.grouped(),
             'transactions': Transaction.objects.recent(account=self.object, user=self.request.user),
-            'accounts': Account.objects.grouped(),
-            'allow_custom_transaction': self.can_do_custom_transaction(),
+            'allow_custom_transaction': self.request.user.has_perm(custom_transaction_permission),
             'deposit_form': TransactionForm(initial={'account': self.object, 'action': 'deposit'}),
             'withdraw_form': TransactionForm(initial={'account': self.object, 'action': 'withdraw'}),
-            'idempotency_key': time_ns(),
+            'api': api_object(),
         }
         return super().get_context_data(**kwargs)
     
@@ -68,27 +66,6 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
             return ['member', 'permanent']
         else:
             return '__all__'
-        
-    def can_do_custom_transaction(self) -> bool:
-        account_is_permanent = self.object.permanent
-        user_can_custom_temporary = self.request.user.has_perm('ledger.add_custom_transaction')
-        user_can_custom_permanent = self.request.user.has_perm('ledger.add_permanent_custom_transaction')
-        return user_can_custom_permanent if account_is_permanent else user_can_custom_temporary
-
-class AccountDetailView(View):
-    def get(self, request, *args, **kwargs):
-        view = AccountDetail.as_view()
-        return view(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        form = TransactionForm(self.request.POST)
-        if form.is_valid():
-            return custom_transaction(request)
-        
-        extra_context = {f'{form.cleaned_data["action"]}_form': form} if 'action' in form.cleaned_data else {}
-        view = AccountDetail.as_view(extra_context=extra_context)
-        return view(request, *args, **kwargs)
-
 
 class AccountCreate(PermissionRequiredMixin, EnableFieldsMixin, CreateView):
     model = Account
@@ -110,7 +87,7 @@ class AccountCreate(PermissionRequiredMixin, EnableFieldsMixin, CreateView):
     
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         return super().get_context_data(**kwargs) | {
-            'accounts': Account.objects.grouped(),
+            'account_list': Account.objects.grouped(),
         }
 
     def get_success_url(self) -> str:
@@ -132,17 +109,12 @@ class IndexView(TemplateView):
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         return super().get_context_data(**kwargs) | {
-            "accounts": Account.objects.grouped(),
-            "products": Product.objects.grouped(),
-            "transactions": Transaction.objects.recent(user=self.request.user),
-            "idempotency_key": time_ns(),
+            "account_list": Account.objects.grouped(),
+            "product_list": Product.objects.grouped(),
+            "transaction_list": Transaction.objects.recent(user=self.request.user),
+            'api': api_object(),
         }
-    
-    def post(self, request, *args, **kwargs):
-        form = ProductTransactionForm(self.request.POST)
-        if not form.is_valid():
-            return self.get(request, *args, **kwargs)
-        return product_transaction(self.request)
+
 
 def test(request: HttpRequest):
     return render(request, "ledger/test.html", {
@@ -154,7 +126,7 @@ def test(request: HttpRequest):
 @require_POST
 @permission_required(["ledger.add_transaction"], raise_exception=True)
 @idempotent(required=True, post_field='idempotency_key')
-def product_transaction(request: HttpRequest):
+def yyproduct_transaction(request: HttpRequest):
     try:
         if request.content_type == 'application/json':
             data = loads(request.body)
@@ -201,9 +173,153 @@ def product_transaction(request: HttpRequest):
         return HttpResponseBadRequest(f'Invalid http form: {form.errors}')
 
 
+@idempotent(required=True, post_field='idempotency-key')
+def _product_transaction(request: HttpRequest, form: ProductTransactionForm) -> Transaction | None:
+    if form.is_valid():
+        try:
+            account: Account = form.cleaned_data['account']
+            product: Product = form.cleaned_data['product']
+            amount: int = form.cleaned_data['amount']
+
+            price = product.member_cost if account.member else product.cost
+            price *= amount
+
+            if account.current_budget < price:
+                raise ValidationError('The account has not enough money', code='out_of_money')
+            
+            reason = product.name
+            if amount > 1:
+                reason = f'{amount}x {reason}'
+
+            return Transaction.objects.create(
+                account=account,
+                amount=-price,
+                reason=reason,
+                issuer=request.user,
+                idempotency_key=request.idempotency_key)
+        except ValidationError as error:
+            form.add_error(None, error)
+    return None
+
+@idempotent(required=True, post_field='idempotency-key')
+def _custom_transaction(request: HttpRequest, form: TransactionForm, action: Literal['deposit', 'withdraw']) -> Transaction | None:
+    if form.is_valid():
+        try:
+            account: Account = form.cleaned_data['account']
+            amount: int = form.cleaned_data['amount']
+            reason: str = form.cleaned_data['reason']
+
+            required_permission = 'ledger.add_permanent_custom_transaction' if account.permanent else 'ledger.add_custom_transaction'
+            if not request.user.has_perm(required_permission):
+                raise ValidationError('Not authorized to withdraw from this account', code='user_permission')
+            
+            if not reason:
+                amount_str = str(amount)
+                wholes, cents = amount_str[:-2], amount_str[-2:]
+                reason = f"{action.capitalize()}: {wholes},{cents}€"
+
+            if action == 'withdraw':
+                amount = -amount
+                if account.current_budget + amount < 0:
+                    raise ValidationError('The account has not enough money', code='out_of_money')
+
+            return Transaction.objects.create(
+                account=account,
+                amount=amount,
+                reason=reason,
+                issuer=request.user,
+                idempotency_key=request.idempotency_key)
+        except ValidationError as error:
+            form.add_error(None, error)
+
+@idempotent(required=True, post_field='idempotency-key')
+def _revert_transaction(request: HttpRequest, form: RevertTransactionForm) -> Transaction | None:
+    if form.is_valid():
+        transaction: Transaction = form.cleaned_data['transaction']
+        try:
+            return transaction.revert(issuer=request.user, idempotency_key=request.idempotency_key)
+        except Transaction.AlreadyReverted:
+            form.add_error(None, ValidationError('Transaction already reverted', code='already_reverted'))
+        except PermissionDenied:
+            form.add_error(None, ValidationError('Not authorized to revert this transaction', code='user_permission'))        
+    return None
+
+
+@require_POST
+@permission_required('ledger.add_transaction', raise_exception=True)
+def product_transaction(request: HttpRequest):
+    form = ProductTransactionForm(request.POST)
+
+    if _product_transaction(request, form):
+        return HttpResponseRedirect(reverse('main'))
+
+    return HttpResponseBadRequest(form.errors.as_ul())
+
+@require_POST
+@permission_required('ledger.add_transaction', raise_exception=True)
+def product_transaction_ajax(request: HttpRequest):
+    try:
+        data = loads(request.body)
+    except:
+        return JsonResponse({"error": "Invalid JSON body"}, status=HTTPStatus.BAD_REQUEST)
+    
+    form = ProductTransactionForm(data)
+
+    new_transaction = _product_transaction(request, form)
+    if new_transaction:
+        return JsonResponse({"transaction_id": new_transaction.pk})
+
+    return JsonResponse(form.errors.as_json(), safe=False, status=HTTPStatus.BAD_REQUEST)
+
+@require_POST
+def custom_transaction(request: HttpRequest, action: Literal['deposit', 'withdraw']):
+    form = TransactionForm(request.POST)
+    new_transaction = _custom_transaction(request, form, action)
+    if new_transaction:
+        return HttpResponseRedirect(reverse('account_detail', kwargs={"pk": new_transaction.account.pk}))
+        
+    return HttpResponseBadRequest(form.errors.as_ul())
+
+@require_POST
+def custom_transaction_ajax(request: HttpRequest, action: Literal['deposit', 'withdraw']):
+    try:
+        data = loads(request.body)
+    except:
+        return JsonResponse({"error": "Invalid JSON body"}, status=HTTPStatus.BAD_REQUEST)
+    
+    form = TransactionForm(data)
+
+    new_transaction = _custom_transaction(request, form, action)
+    if new_transaction:
+        return JsonResponse({"transaction_id": new_transaction.pk})
+
+    return JsonResponse(form.errors.as_json(), safe=False, status=HTTPStatus.BAD_REQUEST)
+
+@require_POST
+def revert_transaction(request: HttpRequest):
+    form = RevertTransactionForm(request.POST)
+    if _revert_transaction(request, form):
+        return HttpResponseRedirect(reverse('main'))
+    return HttpResponseBadRequest(form.errors.as_ul())
+
+@require_POST
+def revert_transaction_ajax(request: HttpRequest):
+    try:
+        data = loads(request.body)
+    except:
+        return JsonResponse({"error": "Invalid JSON body"}, status=HTTPStatus.BAD_REQUEST)
+    
+    form = RevertTransactionForm(data)
+    new_transaction = _revert_transaction(request, form)
+    if new_transaction:
+        return JsonResponse({"transaction_id": new_transaction.pk})
+
+    return JsonResponse(form.errors.as_json(), safe=False, status=HTTPStatus.BAD_REQUEST)
+
+
 @require_POST
 @idempotent(required=True, post_field='idempotency_key')
-def custom_transaction(request: HttpRequest):
+def yycustom_transaction(request: HttpRequest):
     try:		
         if request.content_type == 'application/json':
             data = loads(request.body)
@@ -331,7 +447,7 @@ def test_product_transaction(request: HttpRequest, account: int, product: int, a
 @permission_required(["ledger.add_transaction"], raise_exception=True)
 @idempotent
 @json_body(patterns=[("transaction", int)])
-def revert_transaction(request: HttpRequest, transaction: int):
+def yyrevert_transaction(request: HttpRequest, transaction: int):
     try:
         transaction: Transaction = Transaction.objects.get(pk=transaction)
         transaction.revert(issuer=request.user)
@@ -341,21 +457,20 @@ def revert_transaction(request: HttpRequest, transaction: int):
     except Transaction.AlreadyReverted:
         return HttpResponse('Already reverted', status=HTTPStatus.CONFLICT)
 
-def transaction_event(request: HttpRequest):
+def transaction_events(request: HttpRequest):
     initial_event = None
 
     latest_client_transaction_id = request.GET.get('last_transaction', None)
     if latest_client_transaction_id:
         try:
-            latest_transaction = Transaction.objects.latest('timestamp')
-            if latest_transaction and latest_client_transaction_id != latest_transaction.pk:
-                raise ValueError()
-        except Transaction.DoesNotExist:
+            latest_client_transaction_id = int(latest_client_transaction_id)
+            latest_transaction: Transaction = Transaction.objects.latest('timestamp')
+            if latest_client_transaction_id != latest_transaction.pk:
+                # client has not the latest transactions
+                # -> command client to reload page
+                initial_event = StreamEvent(event='reload')
+        except (ValueError, Transaction.DoesNotExist):
             pass
-        except ValueError:
-            # client has not the latest transactions
-            # -> command client to reload page
-            initial_event = StreamEvent(event='reload')
 
     return EventstreamResponse(channel='transaction', initial_event=initial_event)
 

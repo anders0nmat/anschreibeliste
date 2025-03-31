@@ -8,7 +8,6 @@
 const SUBMIT_OVERLAY_DURATION = 1_500
 
 import { _set_money, HTMLWrapper } from './base.js'
-import { Account } from './accounts.js'
 
 interface ServerEvent {
 	id: number,
@@ -22,11 +21,27 @@ interface ServerEvent {
 	idempotency_key: string | undefined,
 }
 
+export interface Product {
+	readonly name: string
+	totalCost(member: boolean): number
+}
+
+export interface Account {
+	readonly name: string
+	readonly blocked: boolean
+
+	canAfford(_: Product): boolean
+}
+
 type TransactionKind = "product" | "deposit" | "withdraw"
-declare const TRANSACTION_PRODUCT_URL: string
-declare const TRANSACTION_CUSTOM_URL: string
-declare const TRANSACTION_REVERT_URL: string
-declare const TRANSACTION_EVENT_URL: string
+
+interface TransactionApi {
+	deposit: string
+	withdraw: string
+	order: string
+	revert: string
+	events: string
+}
 
 interface TransactionRequestBase {
 	kind: TransactionKind
@@ -62,6 +77,7 @@ class Status extends HTMLWrapper {
 export class Transaction extends HTMLWrapper {
 	static template: string = 'transaction-template'
 	static all_selector: string = '#transactions .transaction'
+	static api = JSON.parse(document.getElementById('api')?.textContent ?? '') as TransactionApi
 
 	private static csrf_token = document.querySelector<HTMLInputElement>('[name=csrfmiddlewaretoken]')!.value
 	private static async post(url: RequestInfo | URL, body: any, idempotency_key: string | undefined = undefined): ReturnType<typeof fetch> {
@@ -78,17 +94,13 @@ export class Transaction extends HTMLWrapper {
 		})
 	}
 
-	private static onUndoTransaction(ev: MouseEvent) {
-		Transaction.from((ev.target as HTMLElement).closest<HTMLElement>('.transaction'))?.revert()
-	}
-
 	private static reconnect_interval?: number = undefined
 	private static event_source: EventSource | undefined = undefined
-	static listen(ontransaction?: (event: ServerEvent) => void) {
-		const url = new URL(TRANSACTION_EVENT_URL, document.location.origin)
+	static listen(ontransaction?: (event: ServerEvent) => void, reconnect: boolean = false) {
+		const url = new URL(this.api.events, document.location.origin)
 		
 		const all_transaction_ids = this.all().map(t => parseInt(t.id))
-		if (all_transaction_ids) {
+		if (reconnect && all_transaction_ids) {
 			const max_transaction_id = Math.max(...all_transaction_ids).toString()
 			url.searchParams.set('last_transaction', max_transaction_id)
 		}
@@ -118,7 +130,7 @@ export class Transaction extends HTMLWrapper {
 				document.getElementById('transactions')!.prepend(new_transaction.element)
 			}
 
-			const related_transaction = data.related !== undefined && Transaction.from(document.querySelector<HTMLElement>(`.transaction[data-transaction-id="${data.related}"]`))
+			const related_transaction = data.related !== undefined && Transaction.from(document.querySelector<HTMLElement>(`.transaction:has([name="transaction"][value="${data.related}"])`))
 			if (related_transaction) {
 				related_transaction.can_revert = false
 			}
@@ -161,7 +173,7 @@ export class Transaction extends HTMLWrapper {
 		let url = ''
 		let body = {}
 		if (request.kind == "product") {
-			url = TRANSACTION_PRODUCT_URL
+			url = this.api.order
 			body = {
 				account: request.account_id,
 				product: request.product_id,
@@ -169,11 +181,10 @@ export class Transaction extends HTMLWrapper {
 			}
 		}
 		else {
-			url = TRANSACTION_CUSTOM_URL
+			url = request.kind == 'deposit' ? this.api.deposit : this.api.withdraw
 			body = {
 				account: request.account_id,
 				amount: request.balance,
-				action: request.kind,
 				reason: request.reason,
 			}
 		}
@@ -192,21 +203,83 @@ export class Transaction extends HTMLWrapper {
 		pending_transaction.status!.success()
 	}
 
-	constructor(element: HTMLElement) {
-		super(element)
 
-		this.element.querySelector<HTMLElement>('.undo')!.addEventListener('click', Transaction.onUndoTransaction)
+	static attachNew(
+	form_element: HTMLFormElement,
+	account_getter: (_: string) => Account | null,
+	product_getter: (_: string) => Product | null,
+	onInputChange?: (_: HTMLInputElement) => void) {
+		const account_radios = form_element.elements['account'] as RadioNodeList
+		const product_radios = form_element.elements['product'] as RadioNodeList
+		const amount_input = form_element.elements['amount'] as HTMLInputElement
+
+		const selected_account = form_element.elements['selected_account'] as HTMLOutputElement
+		const selected_product = form_element.elements['selected_product'] as HTMLOutputElement
+
+		[...account_radios, ...product_radios, amount_input].forEach((e: HTMLInputElement) => {
+			e.addEventListener('change', _ => {
+				const account = account_getter(account_radios.value)
+				const product = product_getter(product_radios.value)
+
+				// Update selection display
+				selected_account.value = account?.name ?? ''
+				
+				const amount_string = amount_input.valueAsNumber > 1 ? amount_input.value + 'x ' : ''
+				selected_product.value = product ? amount_string + product.name : ''
+
+				// Disable products & accounts according to price/budget
+				product_radios.forEach((e: HTMLInputElement) => {
+					const product = product_getter(e.value)
+					e.disabled = account && product ? !account.canAfford(product) : false
+				})
+
+				account_radios.forEach((e: HTMLInputElement) => {
+					const account = account_getter(e.value)
+					if (account) {
+						e.disabled = account.blocked || (product ? !account.canAfford(product) : false)
+					}
+					else {
+						e.disabled = false
+					}
+				})
+
+				if (onInputChange) {
+					onInputChange(e)
+				}
+
+				// Auto-submit if both are present
+				if (account && product) {
+					form_element.requestSubmit()
+				}
+			})
+		})
 	}
 
-	get id(): string { return this.element.dataset.transactionId ?? '' }
+	static attachRevert(form_element?: HTMLFormElement) {
+		if (!form_element) {
+			form_element = document.getElementById('transaction-revert') as HTMLFormElement
+		}
+
+		form_element.addEventListener('submit', ev => {
+			ev.preventDefault()
+			const transaction = (ev.submitter as HTMLButtonElement).value
+			Transaction.post(this.api.revert, {transaction: transaction})
+		})
+	}
+
+	static attachCustom(form_element: HTMLFormElement) {
+
+	}
+
+	get id(): string { return this.element.querySelector<HTMLInputElement>('button[name="transaction"]')!.value }
 	get pendingId(): string { return this.element.dataset.pendingId ?? '' }
 
 	set id(value: string | null) {
 		if (value === null) {
-			delete this.element.dataset.transactionId
+			this.element.querySelector<HTMLInputElement>('button[name="transaction"]')!.value = ""
 		}
 		else {
-			this.element.dataset.transactionId = value
+			this.element.querySelector<HTMLInputElement>('button[name="transaction"]')!.value = value
 		}
 	}
 	set pendingId(value: string | null) {
@@ -237,10 +310,4 @@ export class Transaction extends HTMLWrapper {
 	}
 
 	get status(): Status | null { return Status.from(this.element.querySelector<HTMLElement>('.status')) }
-
-	revert() {
-		const id = parseInt(this.id)
-		if (!id) { return }
-		Transaction.post(TRANSACTION_REVERT_URL, {transaction: id})
-	}
 }

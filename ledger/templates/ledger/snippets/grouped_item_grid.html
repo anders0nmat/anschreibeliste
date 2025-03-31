@@ -19,9 +19,9 @@
 {% load static %}
 {% load ledger %}
 
-{% if not headless %}
+{% comment %} {% if not headless %}
 <link rel="stylesheet" href="{% static 'ledger/item_grid.css' %}">
-{% endif %}
+{% endif %} {% endcomment %}
 
 {% regroup items by group as item_groups %}
 {% if require_empty_group %}

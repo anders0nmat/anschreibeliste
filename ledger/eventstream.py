@@ -95,6 +95,7 @@ async def listen(channel: str | Iterable[str], initial_event: Callable[[], Strea
     ev_channels = [get_eventstream_channel(ch) for ch in channel]
     try:
         listener = StreamListener()
+        await listener.events.put(StreamEvent(event='open'))
         if initial_event:
             await listener.events.put(initial_event())
         for ch in ev_channels:

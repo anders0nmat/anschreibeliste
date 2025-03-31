@@ -27,9 +27,9 @@
 {% load static %}
 {% load ledger %}
 
-{% if not headless %}
+{% comment %} {% if not headless %}
 <script type="module" src="{% static 'ledger/accounts.js' %}"></script>
-{% endif %}
+{% endif %} {% endcomment %}
 
 {% block item %}
 {% with account=item %}
@@ -65,6 +65,7 @@
 				type="radio"
 				name="account"
 				value="{{ account.pk }}"
+				autocomplete="off"
 				{% if selected.pk == account.pk %}checked{% endif %}
 				{% if target_form %}form="{{ target_form }}"{% endif %}
 				{% if current_balance|add:account.credit <= 0 %}disabled{% endif %}>

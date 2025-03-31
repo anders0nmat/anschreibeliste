@@ -9,12 +9,16 @@
 	<span class="reason">{{ transaction.reason }}</span>
 	{{ transaction.amount|default:0|money }}
 	<span class="time">{{ transaction.timestamp }}</span>
-	<button 
+
+	<button
+	type="submit"
+	form="transaction-revert"
+	name="transaction" value="{{ transaction.pk }}"
 	class="undo transparent slim center button"
-	type="button"
-	{% if transaction.allow_revert is not None and not transaction.allow_revert %}disabled{% endif %}>
+	{% if transaction.allow_revert == False %}disabled{% endif %}>
 		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo-2"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>
 	</button>
+
 	{% if transaction is None %}
 	<div class="status" data-status="pending">
 		<svg data-status="pending" viewBox="0 0 12 12">

@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 
-{% block tab_title %}Anschreibeliste{% endblock tab_title %}
 {% block title %}Anschreibeliste{% endblock title %}
 
 {% block import %}
@@ -44,12 +43,34 @@
 </ul> {% endcomment %}
 
 <div>
-	<input type="text" list="reasons">
+	
+	<style>
+		#account-form output {
+			font-style: italic;
 
-	<datalist id="reasons">
-		<option value="Einzahlung"></option>
-		<option value="Auszahlung"></option>
-	</datalist>
+			&[value]:not([value=""]) {
+				font-style: unset;
+			}
+		}
+	</style>
+
+	<form id="account-form">
+		<output name="selected_account" placeholder="Select account"></output>
+		
+		<button type="button" onclick="onSet()">Set to Arian</button>
+		<button type="button" onclick="onClear()">Clear</button>
+	</form>
+
+	<script>
+		function onSet() {
+			const output = document.getElementById('account-form').elements.namedItem('selected_account')
+			output.value = 'Arian'
+		}
+		function onClear() {
+			const output = document.getElementById('account-form').elements.namedItem('selected_account')
+			output.value = ''
+		}
+	</script>
 
 	{% comment %} {% include 'ledger/snippets/accounts.html' with items=accounts only %} {% endcomment %}
 	{% comment %} {% include 'ledger/snippets/products.html' with items=products only %} {% endcomment %}

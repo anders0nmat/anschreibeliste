@@ -16,20 +16,14 @@
 {% load ledger %}
 {% load static %}
 
-{% if not headless %}
-<script>
-	const TRANSACTION_PRODUCT_URL = "{% url 'product_transaction' %}"
-	const TRANSACTION_CUSTOM_URL = "{% url 'custom_transaction' %}"
-	const TRANSACTION_REVERT_URL = "{% url 'revert_transaction' %}"
-	const TRANSACTION_EVENT_URL = "{% url 'transaction_event' %}"
-</script>
-<script type="module" src="{% static 'ledger/transaction.js' %}"></script>
-<link rel="stylesheet" href="{% static 'ledger/transaction_history.css' %}">
-{% endif %}
-
 <template id="transaction-template">
 	{% include 'ledger/snippets/transaction.html' with transaction=None only %}
 </template>
+
+<form id="transaction-revert" action="{% url 'transaction_revert' %}" method="POST" >
+	{% csrf_token %}
+	{% idempotency_key %}
+</form>
 
 {% for transaction in transactions %}
 	{% include 'ledger/snippets/transaction.html' with transaction=transaction only %}

@@ -1,5 +1,3 @@
-@import url('./transaction_history.css');
-
 body {
 	display: grid;
 	/* grid-template-columns: 4fr 1fr; */
@@ -183,7 +181,7 @@ div:has(#transactions) {
 		background-color: color-mix(in srgb, var(--bg), var(--highlight-color) 10%);
 	}
 
-	& [empty] {
+	& .empty {
 		font-style: italic;
 	}
 
@@ -211,6 +209,10 @@ div:has(#transactions) {
 		& {
 			margin: 0 0.5em 0 0;
 		}
+	}
+
+	& .empty:has(~ output:not(:empty)) {
+		display: none;
 	}
 }
 

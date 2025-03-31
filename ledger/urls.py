@@ -1,18 +1,28 @@
-from django.urls import path
 from django.conf import settings
+from django.urls import path, include
 
 from . import views
 
 urlpatterns = [
     path("", views.IndexView.as_view(), name="main"),
     path("accounts/", views.AccountList.as_view(), name="account_list"),
-    path("accounts/new", views.AccountCreate.as_view(), name="account_create"),
-    path("accounts/<pk>/", views.AccountDetailView.as_view(), name="account_detail"),
+    path("accounts/new/", views.AccountCreate.as_view(), name="account_create"),
+    path("accounts/<pk>/", views.AccountDetail.as_view(), name="account_detail"),
     
-	path("transaction/product/", views.product_transaction, name="product_transaction"),
-    path("transaction/custom/", views.custom_transaction, name="custom_transaction"),
-    path("transaction/revert/", views.revert_transaction, name="revert_transaction"),
-	path("transaction/events/", views.transaction_event, name="transaction_event"),
+	path("transaction/", include([
+		path("deposit/", views.custom_transaction, {'action': 'deposit'}),
+		path("withdraw/", views.custom_transaction, {'action': 'withdraw'}),
+		path("order/", views.product_transaction),
+		path("revert/", views.revert_transaction, name="transaction_revert"),
+	])),
+    
+	path("api/transaction/", include([
+		path("deposit/", views.custom_transaction_ajax, {'action': 'deposit'}, name='api_deposit'),
+		path("withdraw/", views.custom_transaction_ajax, {'action': 'withdraw'}, name="api_withdraw"),
+		path("order/", views.product_transaction_ajax, name='api_order'),
+		path("revert/", views.revert_transaction_ajax, name='api_revert'),
+		path("events/", views.transaction_events, name="api_events"),
+	])),
 ]
 
 if settings.DEBUG:

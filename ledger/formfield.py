@@ -29,9 +29,9 @@ class FixedPrecisionField(forms.IntegerField):
         if isinstance(value, int):
             sign, value = '-' if value < 0 else '', abs(value)
             wholes, cents = divmod(value, 10 ** self.decimal_places)
-            if cents == 0: return number_format(wholes)
+            #if cents == 0: return number_format(wholes)
             cents = str(cents).rjust(self.decimal_places, '0')
-            return f"{sign}{wholes}.{cents}"
+            return number_format(f"{sign}{wholes}.{cents}", self.decimal_places)
         return value
 
     def to_python(self, value: Any | None) -> int | None:

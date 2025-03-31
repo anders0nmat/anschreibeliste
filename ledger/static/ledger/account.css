@@ -23,7 +23,6 @@ body {
 				display: flex;
 			}
 		}
-	
 	}
 
 
@@ -33,6 +32,7 @@ body {
 				"head head"
 				"content editor";
 		}
+	}
 }
 
 header {
@@ -367,7 +367,7 @@ aside {
 		display: flex;
 		flex-flow: column nowrap;
 		justify-content: center;
-/* 
+		/* 
 		&[disabled] {
 			opacity: 30%;
 		}

@@ -18,6 +18,7 @@ class Status extends HTMLWrapper {
 export class Transaction extends HTMLWrapper {
     static template = 'transaction-template';
     static all_selector = '#transactions .transaction';
+    static api = JSON.parse(document.getElementById('api')?.textContent ?? '');
     static csrf_token = document.querySelector('[name=csrfmiddlewaretoken]').value;
     static async post(url, body, idempotency_key = undefined) {
         return fetch(url, {
@@ -31,20 +32,17 @@ export class Transaction extends HTMLWrapper {
             body: JSON.stringify(body),
         });
     }
-    static onUndoTransaction(ev) {
-        Transaction.from(ev.target.closest('.transaction'))?.revert();
-    }
     static reconnect_interval = undefined;
     static event_source = undefined;
-    static listen(ontransaction) {
-        const url = new URL(TRANSACTION_EVENT_URL, document.location.origin);
+    static listen(ontransaction, reconnect = false) {
+        const url = new URL(this.api.events, document.location.origin);
         const all_transaction_ids = this.all().map(t => parseInt(t.id));
-        if (all_transaction_ids) {
+        if (reconnect && all_transaction_ids) {
             const max_transaction_id = Math.max(...all_transaction_ids).toString();
             url.searchParams.set('last_transaction', max_transaction_id);
         }
         this.event_source = new EventSource(url);
-        this.event_source.addEventListener('reload', _ => { });
+        this.event_source.addEventListener('reload', _ => { location.reload(); });
         this.event_source.addEventListener('create', event => {
             const data = JSON.parse(event.data);
             console.log("received server event:", data);
@@ -66,7 +64,7 @@ export class Transaction extends HTMLWrapper {
                 new_transaction.status?.element.remove();
                 document.getElementById('transactions').prepend(new_transaction.element);
             }
-            const related_transaction = data.related !== undefined && Transaction.from(document.querySelector(`.transaction[data-transaction-id="${data.related}"]`));
+            const related_transaction = data.related !== undefined && Transaction.from(document.querySelector(`.transaction:has([name="transaction"][value="${data.related}"])`));
             if (related_transaction) {
                 related_transaction.can_revert = false;
             }
@@ -103,7 +101,7 @@ export class Transaction extends HTMLWrapper {
         let url = '';
         let body = {};
         if (request.kind == "product") {
-            url = TRANSACTION_PRODUCT_URL;
+            url = this.api.order;
             body = {
                 account: request.account_id,
                 product: request.product_id,
@@ -111,11 +109,10 @@ export class Transaction extends HTMLWrapper {
             };
         }
         else {
-            url = TRANSACTION_CUSTOM_URL;
+            url = request.kind == 'deposit' ? this.api.deposit : this.api.withdraw;
             body = {
                 account: request.account_id,
                 amount: request.balance,
-                action: request.kind,
                 reason: request.reason,
             };
         }
@@ -129,18 +126,64 @@ export class Transaction extends HTMLWrapper {
         pending_transaction.id = transaction_id;
         pending_transaction.status.success();
     }
-    constructor(element) {
-        super(element);
-        this.element.querySelector('.undo').addEventListener('click', Transaction.onUndoTransaction);
+    static attachNew(form_element, account_getter, product_getter, onInputChange) {
+        const account_radios = form_element.elements['account'];
+        const product_radios = form_element.elements['product'];
+        const amount_input = form_element.elements['amount'];
+        const selected_account = form_element.elements['selected_account'];
+        const selected_product = form_element.elements['selected_product'];
+        [...account_radios, ...product_radios, amount_input].forEach((e) => {
+            e.addEventListener('change', _ => {
+                const account = account_getter(account_radios.value);
+                const product = product_getter(product_radios.value);
+                // Update selection display
+                selected_account.value = account?.name ?? '';
+                const amount_string = amount_input.valueAsNumber > 1 ? amount_input.value + 'x ' : '';
+                selected_product.value = product ? amount_string + product.name : '';
+                // Disable products & accounts according to price/budget
+                product_radios.forEach((e) => {
+                    const product = product_getter(e.value);
+                    e.disabled = account && product ? !account.canAfford(product) : false;
+                });
+                account_radios.forEach((e) => {
+                    const account = account_getter(e.value);
+                    if (account) {
+                        e.disabled = account.blocked || (product ? !account.canAfford(product) : false);
+                    }
+                    else {
+                        e.disabled = false;
+                    }
+                });
+                if (onInputChange) {
+                    onInputChange(e);
+                }
+                // Auto-submit if both are present
+                if (account && product) {
+                    form_element.requestSubmit();
+                }
+            });
+        });
     }
-    get id() { return this.element.dataset.transactionId ?? ''; }
+    static attachRevert(form_element) {
+        if (!form_element) {
+            form_element = document.getElementById('transaction-revert');
+        }
+        form_element.addEventListener('submit', ev => {
+            ev.preventDefault();
+            const transaction = ev.submitter.value;
+            Transaction.post(this.api.revert, { transaction: transaction });
+        });
+    }
+    static attachCustom(form_element) {
+    }
+    get id() { return this.element.querySelector('button[name="transaction"]').value; }
     get pendingId() { return this.element.dataset.pendingId ?? ''; }
     set id(value) {
         if (value === null) {
-            delete this.element.dataset.transactionId;
+            this.element.querySelector('button[name="transaction"]').value = "";
         }
         else {
-            this.element.dataset.transactionId = value;
+            this.element.querySelector('button[name="transaction"]').value = value;
         }
     }
     set pendingId(value) {
@@ -166,11 +209,4 @@ export class Transaction extends HTMLWrapper {
         this.element.querySelector('.undo').disabled = !value;
     }
     get status() { return Status.from(this.element.querySelector('.status')); }
-    revert() {
-        const id = parseInt(this.id);
-        if (!id) {
-            return;
-        }
-        Transaction.post(TRANSACTION_REVERT_URL, { transaction: id });
-    }
 }

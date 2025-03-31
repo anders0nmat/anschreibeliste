@@ -1,6 +1,5 @@
 {% extends 'index.html' %}
 
-{% block tab_title %}Anschreibeliste{% endblock tab_title %}
 {% block title %}Anschreibeliste{% endblock title %}
 
 {% block import %}
@@ -8,12 +7,20 @@
 	{% load ledger %}
 
 	<link rel="stylesheet" href="{% static 'ledger/index.css' %}">
-	<script src="{% static 'ledger/main.js' %}" type="module"></script>
+	<link rel="stylesheet" href="{% static 'ledger/transaction_history.css' %}">
+	<link rel="stylesheet" href="{% static 'ledger/item_grid.css' %}">
+	
+
+	<script type="module" src="{% static 'ledger/main.js' %}"></script>
+	<script type="module" src="{% static 'ledger/accounts.js' %}"></script>
+	<script type="module" src="{% static 'ledger/transaction.js' %}"></script>
+
+	{{ api|json_script:"api" }}
 {% endblock import %}
 
 {% block links %}
-{{ block.super }}
-<li><a href="{% url 'account_list' %}">Account-Liste</a></li>
+	{{ block.super }}
+	<li><a href="{% url 'account_list' %}">Account-Liste</a></li>
 {% endblock links %}
 
 {% block content %}
@@ -41,24 +48,32 @@
 	<div class="slideshow">
 		<div class="slide group-list" id="products" data-slide="products">
 			<h2 class="visually-hidden">Getränke</h2>
-			{% include 'ledger/snippets/products.html' with items=products target_form="new-transaction" only %}
+			{% include 'ledger/snippets/products.html' with items=product_list target_form="new-transaction" only %}
 		</div>
 		
 		<div class="slide group-list" id="accounts" data-slide="accounts">
 			<h2 class="visually-hidden">Accounts</h2>
-			{% include 'ledger/snippets/accounts.html' with items=accounts target_form="new-transaction" only %}
+			{% include 'ledger/snippets/accounts.html' with items=account_list target_form="new-transaction" only %}
 		</div>
 	</div>
 </main>
-<form id="new-transaction" class="transaction" method="POST">
+<form action="/transaction/order/" id="new-transaction" class="transaction" method="POST">
 	{% csrf_token %}
-	<input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
+	<input type="hidden" name="idempotency-key" value="{{ idempotency_key }}">
 
-	<span class="account" empty>Select account</span>
-	<span class="product reason" empty> Select product</span>
+	<span class="account">
+		<span class="empty">Select account</span>
+		<output name="selected_account" value=""></output>
+	</span>
+	<span class="product reason">
+		<span class="empty">Select product</span>
+		<output name="selected_product" value=""></output>
+	</span>
+
 	<button type="reset" class="undo transparent slim center button">
 		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
 	</button>
+
 	<label class="transparent slim center button" id="expand">
 		<input type="checkbox">
 		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up"><path d="m18 15-6-6-6 6"/></svg>
@@ -71,7 +86,7 @@
 <div>
 	<h2 class="visually-hidden">Transactions</h2>
 	<ul id="transactions">
-		{% include 'ledger/snippets/transaction_history.html' with transactions=transactions only %}
+		{% include 'ledger/snippets/transaction_history.html' with transactions=transaction_list %}
 	</ul>
 </div>
 
