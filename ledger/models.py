@@ -165,7 +165,9 @@ class Transaction(models.Model):
         self.idempotency_key = idempotency_key
 
     def __str__(self) -> str:
-        return f"Transaction {self.account.name}"
+        amount_str = str(self.amount)
+        wholes, cents = amount_str[:-2], amount_str[-2:].ljust(2, '0')
+        return f"{self.account.name}: {self.reason} ({wholes},{cents}€)"
     
     @property
     def can_revert(self) -> bool:
