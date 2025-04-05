@@ -11,6 +11,13 @@ export class Account extends HTMLIdentifierWrapper {
 	static deselectAll() { this.all().forEach(acc => acc.selected = false) }
 	static enableAll() { this.all().forEach(acc => acc.disabled = false) }
 
+	radio: HTMLInputElement
+	constructor(element: HTMLElement) {
+		super(element)
+
+		this.radio = element.querySelector<HTMLInputElement>('input[name="account"]')!
+	}
+
 	get id(): string { return this.element.dataset.accountId ?? '' }
 	get name(): string { return this.element.querySelector('.name')?.textContent ?? '' }
 	get isMember(): boolean { return 'member' in this.element.dataset }
@@ -22,12 +29,9 @@ export class Account extends HTMLIdentifierWrapper {
 		this.element.dataset.balance = value.toString()
 		this.element.querySelector<HTMLElement>('.money')!.replaceWith(_money(value))
 	}
-	
-	get blocked(): boolean { return this.element.hasAttribute('blocked') }
-	set blocked(value: boolean) { this.element.toggleAttribute('blocked', value) }
 
-	get disabled(): boolean { return this.element.hasAttribute('disabled') }
-	set disabled(value: boolean) { this.element.toggleAttribute('disabled', value) }
+	get disabled(): boolean { return this.radio.disabled }
+	set disabled(value: boolean) { this.radio.disabled = value }
 	
 	get selected(): boolean { return this.element.hasAttribute('selected') }
 	set selected(value: boolean) { this.element.toggleAttribute('selected', value) }

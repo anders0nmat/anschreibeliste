@@ -1,12 +1,10 @@
 from django.contrib import admin
 from . import models
-from adminsortable2.admin import SortableAdminMixin, SortableTabularInline, SortableStackedInline, SortableAdminBase
-
-from .forms import AccountForm
+from adminsortable2.admin import SortableAdminMixin, SortableTabularInline
 
 class ProductTabularInline(SortableTabularInline):
     model = models.Product
-    readonly_fields = ["order"]
+    ordering = ['order']
     
 @admin.register(models.Transaction)
 class TransactionAdmin(admin.ModelAdmin):

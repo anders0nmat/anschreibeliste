@@ -58,6 +58,23 @@ export function _cloneTemplate(id: string): DocumentFragment {
 	return template.content.cloneNode(true) as DocumentFragment
 }
 
+interface ServerConfig {
+	transaction: {
+		deposit: string
+		withdraw: string
+		order: string
+		revert: string
+		events: string
+	}
+
+	submit_overlay: number
+	transaction_timeout: number
+}
+
+export function config(): ServerConfig {
+	return JSON.parse(document.getElementById('js-config')?.textContent ?? '{}') as ServerConfig
+}
+
 interface GenericHTMLWrapper<T> {
 	new (_: HTMLElement): T
 	template: string

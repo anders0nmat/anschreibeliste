@@ -76,3 +76,4 @@ def ensure_leading_with(group_list: list[tuple[Any, Any]], *, grouper):
 @register.simple_tag(name="idempotency_key")
 def idempotency_key(name:str='idempotency-key'):
     return mark_safe(f'<input type="hidden" name="{name}" value="{time_ns()}">')
+

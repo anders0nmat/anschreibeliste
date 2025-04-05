@@ -6,10 +6,9 @@ body {
 		"head head"
 		"content new-transaction"
 		"content transactions"; */
-	grid-template-rows: max-content max-content auto max-content;
+	grid-template-rows: max-content auto max-content;
 	grid-template-areas: 
 		"head"
-		"content"
 		"content"
 		"new-transaction";
 	gap: 0.5em;

@@ -1,10 +1,7 @@
-from time import time_ns
-from decimal import Decimal
-from django.forms import ModelForm, Form, CharField, IntegerField, HiddenInput, ModelChoiceField, ChoiceField, DecimalField
-from django.forms.widgets import TextInput
+from django.forms import ModelForm, Form, CharField, IntegerField, HiddenInput, ModelChoiceField
 
 from .models import Account, Product, Transaction
-from .formfield import FixedPrecisionField, DecimalInput
+from .formfield import FixedPrecisionField
 
 class AccountForm(ModelForm):
     label_suffix = ''

@@ -1,4 +1,4 @@
-from typing import Any, Optional, Literal
+from typing import Any, Literal
 from django import forms
 from django.forms.widgets import Widget, NumberInput, Input
 from django.utils.formats import sanitize_separators, number_format, get_format
@@ -29,9 +29,13 @@ class FixedPrecisionField(forms.IntegerField):
         if isinstance(value, int):
             sign, value = '-' if value < 0 else '', abs(value)
             wholes, cents = divmod(value, 10 ** self.decimal_places)
-            #if cents == 0: return number_format(wholes)
             cents = str(cents).rjust(self.decimal_places, '0')
-            return number_format(f"{sign}{wholes}.{cents}", self.decimal_places)
+            
+            formatting = f"{sign}{wholes}.{cents}"
+            if isinstance(self.widget, DecimalInput):
+                return number_format(formatting, self.decimal_places)
+            else:
+                return formatting
         return value
 
     def to_python(self, value: Any | None) -> int | None:

@@ -49,7 +49,7 @@ Transaction.listen(event => {
 	const account = Account.byId(event.account.toString())
 	if (!account) { return }
 	account.balance = event.balance
-	account.blocked = !event.is_liquid
+	account.disabled = account.budget <= 0
 }, false)
 
 /* ===== Progressive Enhancement ===== */

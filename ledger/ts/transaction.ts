@@ -1,47 +1,31 @@
+import { _set_money, config, HTMLWrapper } from './base.js'
 
-/*
-	Controls how long the confirmation/error overlay is shown after submitting a transaction.
-
-	Unit: ms (milliseconds)
-	Default value: 1_500
-*/
-const SUBMIT_OVERLAY_DURATION = 1_500
-
-import { _set_money, HTMLWrapper } from './base.js'
+const SUBMIT_OVERLAY_DURATION = config().submit_overlay
 
 interface ServerEvent {
 	id: number,
 	account: number,
 	account_name: string,
 	balance: number,
-	is_liquid: boolean,
 	amount: number,
 	reason: string,
 	related: number | undefined,
 	idempotency_key: string | undefined,
 }
 
-export interface Product {
+interface Product {
 	readonly name: string
 	totalCost(member: boolean): number
 }
 
-export interface Account {
+interface Account {
 	readonly name: string
-	readonly blocked: boolean
+	readonly budget: number
 
 	canAfford(_: Product): boolean
 }
 
 type TransactionKind = "product" | "deposit" | "withdraw"
-
-interface TransactionApi {
-	deposit: string
-	withdraw: string
-	order: string
-	revert: string
-	events: string
-}
 
 interface TransactionRequestBase {
 	kind: TransactionKind
@@ -63,10 +47,30 @@ interface TransactionAmountRequest extends TransactionRequestBase {
 
 type TransactionRequest = TransactionAmountRequest | TransactionProductRequest
 
-class Status extends HTMLWrapper {
-	error() {
-		this.element.dataset.status = "failure"
+function getRadioGroup(formElements: HTMLFormControlsCollection, name: string): { elements: HTMLElement[], readonly value: string; } {
+	const elements: RadioNodeList | HTMLInputElement | null = formElements[name]
+
+	if (elements instanceof RadioNodeList) {
+		return {
+			elements: Array.from(elements) as HTMLInputElement[],
+			get value(): string { return elements.value }
+		}
 	}
+
+	if (elements instanceof HTMLInputElement) {
+		return {
+			elements: [elements],
+			get value(): string { return elements.value }
+		}
+	}
+	return {
+		elements: [],
+		get value(): string { return '' }
+	}
+}
+
+class Status extends HTMLWrapper {
+	error() { this.element.dataset.status = "failure" }
 
 	success() {
 		this.element.dataset.status = "success"
@@ -77,7 +81,7 @@ class Status extends HTMLWrapper {
 export class Transaction extends HTMLWrapper {
 	static template: string = 'transaction-template'
 	static all_selector: string = '#transactions .transaction'
-	static api = JSON.parse(document.getElementById('api')?.textContent ?? '') as TransactionApi
+	static api = config().transaction
 
 	private static csrf_token = document.querySelector<HTMLInputElement>('[name=csrfmiddlewaretoken]')!.value
 	private static async post(url: RequestInfo | URL, body: any, idempotency_key: string | undefined = undefined): ReturnType<typeof fetch> {
@@ -100,7 +104,7 @@ export class Transaction extends HTMLWrapper {
 		const url = new URL(this.api.events, document.location.origin)
 		
 		const all_transaction_ids = this.all().map(t => parseInt(t.id))
-		if (reconnect && all_transaction_ids) {
+		if (reconnect && all_transaction_ids.length > 0) {
 			const max_transaction_id = Math.max(...all_transaction_ids).toString()
 			url.searchParams.set('last_transaction', max_transaction_id)
 		}
@@ -209,14 +213,15 @@ export class Transaction extends HTMLWrapper {
 	account_getter: (_: string) => Account | null,
 	product_getter: (_: string) => Product | null,
 	onInputChange?: (_: HTMLInputElement) => void) {
-		const account_radios = form_element.elements['account'] as RadioNodeList
-		const product_radios = form_element.elements['product'] as RadioNodeList
+
+		const account_radios = getRadioGroup(form_element.elements, 'account')
+		const product_radios = getRadioGroup(form_element.elements, 'product')
 		const amount_input = form_element.elements['amount'] as HTMLInputElement
 
 		const selected_account = form_element.elements['selected_account'] as HTMLOutputElement
 		const selected_product = form_element.elements['selected_product'] as HTMLOutputElement
 
-		[...account_radios, ...product_radios, amount_input].forEach((e: HTMLInputElement) => {
+		[...account_radios.elements, ...product_radios.elements, amount_input].forEach((e: HTMLInputElement) => {
 			e.addEventListener('change', _ => {
 				const account = account_getter(account_radios.value)
 				const product = product_getter(product_radios.value)
@@ -228,18 +233,17 @@ export class Transaction extends HTMLWrapper {
 				selected_product.value = product ? amount_string + product.name : ''
 
 				// Disable products & accounts according to price/budget
-				product_radios.forEach((e: HTMLInputElement) => {
+				product_radios.elements.forEach((e: HTMLInputElement) => {
 					const product = product_getter(e.value)
-					e.disabled = account && product ? !account.canAfford(product) : false
+					if (product) {
+						e.disabled = account !== null && !account.canAfford(product)
+					}
 				})
 
-				account_radios.forEach((e: HTMLInputElement) => {
+				account_radios.elements.forEach((e: HTMLInputElement) => {
 					const account = account_getter(e.value)
 					if (account) {
-						e.disabled = account.blocked || (product ? !account.canAfford(product) : false)
-					}
-					else {
-						e.disabled = false
+						e.disabled = product ? !account.canAfford(product) : account.budget <= 0
 					}
 				})
 
@@ -250,6 +254,23 @@ export class Transaction extends HTMLWrapper {
 				// Auto-submit if both are present
 				if (account && product) {
 					form_element.requestSubmit()
+				}
+			})
+		})
+
+		form_element.addEventListener('reset', _ => {
+			// Disable products & accounts according to price/budget
+			product_radios.elements.forEach((e: HTMLInputElement) => {
+				const product = product_getter(e.value)
+				if (product) {
+					e.disabled = false
+				}
+			})
+
+			account_radios.elements.forEach((e: HTMLInputElement) => {
+				const account = account_getter(e.value)
+				if (account) {
+					e.disabled = account.budget <= 0
 				}
 			})
 		})

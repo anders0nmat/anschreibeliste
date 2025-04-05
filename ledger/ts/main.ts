@@ -1,15 +1,9 @@
-
-/*
-	How long a unfinished transaction will exist before being discarded.
-
-	Unit: ms (milliseconds)
-	Default value: 10_000
-*/
-const TRANSACTION_TIMEOUT = 10_000
-
-import { HTMLIdentifierWrapper } from './base.js'
+import { config, HTMLIdentifierWrapper } from './base.js'
 import { Transaction } from './transaction.js'
 import { Account } from './accounts.js'
+
+
+const TRANSACTION_TIMEOUT = config().transaction_timeout
 
 class Product extends HTMLIdentifierWrapper {
 	static all_selector: string = '#products .item'
@@ -54,7 +48,7 @@ Transaction.listen(event => {
 	const account = Account.byId(event.account.toString())
 	if (!account) { return }
 	account.balance = event.balance
-	account.blocked = !event.is_liquid
+	account.disabled = account.budget <= 0
 }, true)
 
 // Better transaction multiplier

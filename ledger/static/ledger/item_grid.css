@@ -38,7 +38,7 @@
 		--bg: color-mix(in srgb, var(--secondary-bg-color), var(--selected-color) 20%);
 	}
 
-	&[disabled], &[blocked] {
+	&:has(input:disabled) {
 		opacity: 50%;
 	}
 
@@ -47,7 +47,7 @@
 	}
 
 	@media (hover: hover) {
-		&:not([disabled], [blocked]):hover {
+		&:not(:has(input:disabled)):hover {
 			background-color: color-mix(in srgb, var(--bg), var(--highlight-color) 10%);
 			border-color: color-mix(in srgb, var(--border), var(--highlight-color) 10%);
 		}

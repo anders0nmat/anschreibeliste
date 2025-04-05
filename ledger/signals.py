@@ -14,7 +14,6 @@ def notify_clients(instance: Transaction, created: bool, **_):
 		"account": instance.account.pk,
 		"account_name": instance.account.name,
 		"balance": instance.account.current_balance,
-		"is_liquid": instance.account.is_liquid,
 		"amount": instance.amount,
 		"reason": instance.reason,
 	}

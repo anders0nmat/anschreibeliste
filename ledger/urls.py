@@ -27,7 +27,5 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += [
-		path("test/", views.test, name='test_detail'),
-		path("test/events/", views.event),
-		path("test/send_event/", views.send)
+		path("test/", views.test, name='test_detail')
 	]

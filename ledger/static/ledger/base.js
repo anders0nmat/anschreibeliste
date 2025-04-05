@@ -41,6 +41,9 @@ export function _cloneTemplate(id) {
     const template = document.getElementById(id);
     return template.content.cloneNode(true);
 }
+export function config() {
+    return JSON.parse(document.getElementById('js-config')?.textContent ?? '{}');
+}
 export class HTMLWrapper {
     static from(element) {
         return element !== null ? new this(element) : null;

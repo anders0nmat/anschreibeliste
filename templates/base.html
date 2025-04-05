@@ -17,6 +17,9 @@
 		content="rgb(30, 30, 30)"
 		media="(prefers-color-scheme: dark)" />
 
+	{% if js_config %}
+	{{ js_config|json_script:"js-config" }}
+	{% endif %}
 	{% block import %}{% endblock import %}
 </head>
 <body>

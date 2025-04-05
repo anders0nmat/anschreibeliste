@@ -4,6 +4,11 @@ export class Account extends HTMLIdentifierWrapper {
     static id_attribute = 'data-account-id';
     static deselectAll() { this.all().forEach(acc => acc.selected = false); }
     static enableAll() { this.all().forEach(acc => acc.disabled = false); }
+    radio;
+    constructor(element) {
+        super(element);
+        this.radio = element.querySelector('input[name="account"]');
+    }
     get id() { return this.element.dataset.accountId ?? ''; }
     get name() { return this.element.querySelector('.name')?.textContent ?? ''; }
     get isMember() { return 'member' in this.element.dataset; }
@@ -14,10 +19,10 @@ export class Account extends HTMLIdentifierWrapper {
         this.element.dataset.balance = value.toString();
         this.element.querySelector('.money').replaceWith(_money(value));
     }
-    get blocked() { return this.element.hasAttribute('blocked'); }
-    set blocked(value) { this.element.toggleAttribute('blocked', value); }
-    get disabled() { return this.element.hasAttribute('disabled'); }
-    set disabled(value) { this.element.toggleAttribute('disabled', value); }
+    //get blocked(): boolean { return this.element.hasAttribute('blocked') }
+    //set blocked(value: boolean) { this.element.toggleAttribute('blocked', value) }
+    get disabled() { return this.radio.disabled; }
+    set disabled(value) { this.radio.disabled = value; }
     get selected() { return this.element.hasAttribute('selected'); }
     set selected(value) { this.element.toggleAttribute('selected', value); }
     select() { this.selected = true; }

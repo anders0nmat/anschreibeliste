@@ -5,8 +5,6 @@ from .managers import TransactionManager, ProductManager
 from .modelfield import PositiveFixedPrecisionField, FixedPrecisionField
 from datetime import timedelta, datetime
 from django.core.exceptions import PermissionDenied
-from django.core.validators import MinValueValidator
-from decimal import Decimal
 # Create your models here.
 # TODO : Better terminologiy regarding money:
 # TODO : User A has amount k and additionally is allowed to go amount n into debt
@@ -75,7 +73,7 @@ class Account(models.Model):
             ('change_permanent_account', 'Can change permanent accounts'),
         ]
         indexes = [
-            models.Index('active', models.F('group').asc(nulls_first=True), 'name', name='idx_grouped_accounts'),
+            models.Index('active', models.F('group').asc(), 'name', name='idx_grouped_accounts'),
             models.Index('active', name='idx_active_account'),
         ]
 
@@ -231,7 +229,7 @@ class Product(models.Model):
     class Meta:
         ordering = ['group', 'order']
         indexes = [
-            models.Index(models.F('group').asc(nulls_first=True), 'order', name="idx_grouped_products")
+            models.Index(models.F('group'), 'order', name="idx_grouped_products")
         ]
 
     def __str__(self) -> str:

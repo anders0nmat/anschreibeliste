@@ -1,15 +1,26 @@
-/*
-    Controls how long the confirmation/error overlay is shown after submitting a transaction.
-
-    Unit: ms (milliseconds)
-    Default value: 1_500
-*/
-const SUBMIT_OVERLAY_DURATION = 1_500;
-import { _set_money, HTMLWrapper } from './base.js';
-class Status extends HTMLWrapper {
-    error() {
-        this.element.dataset.status = "failure";
+import { _set_money, config, HTMLWrapper } from './base.js';
+const SUBMIT_OVERLAY_DURATION = config().submit_overlay;
+function getRadioGroup(formElements, name) {
+    const elements = formElements[name];
+    if (elements instanceof RadioNodeList) {
+        return {
+            elements: Array.from(elements),
+            get value() { return elements.value; }
+        };
     }
+    if (elements instanceof HTMLInputElement) {
+        return {
+            elements: [elements],
+            get value() { return elements.value; }
+        };
+    }
+    return {
+        elements: [],
+        get value() { return ''; }
+    };
+}
+class Status extends HTMLWrapper {
+    error() { this.element.dataset.status = "failure"; }
     success() {
         this.element.dataset.status = "success";
         setTimeout(_ => this.element.remove(), SUBMIT_OVERLAY_DURATION);
@@ -18,7 +29,7 @@ class Status extends HTMLWrapper {
 export class Transaction extends HTMLWrapper {
     static template = 'transaction-template';
     static all_selector = '#transactions .transaction';
-    static api = JSON.parse(document.getElementById('api')?.textContent ?? '');
+    static api = config().transaction;
     static csrf_token = document.querySelector('[name=csrfmiddlewaretoken]').value;
     static async post(url, body, idempotency_key = undefined) {
         return fetch(url, {
@@ -37,7 +48,7 @@ export class Transaction extends HTMLWrapper {
     static listen(ontransaction, reconnect = false) {
         const url = new URL(this.api.events, document.location.origin);
         const all_transaction_ids = this.all().map(t => parseInt(t.id));
-        if (reconnect && all_transaction_ids) {
+        if (reconnect && all_transaction_ids.length > 0) {
             const max_transaction_id = Math.max(...all_transaction_ids).toString();
             url.searchParams.set('last_transaction', max_transaction_id);
         }
@@ -127,12 +138,12 @@ export class Transaction extends HTMLWrapper {
         pending_transaction.status.success();
     }
     static attachNew(form_element, account_getter, product_getter, onInputChange) {
-        const account_radios = form_element.elements['account'];
-        const product_radios = form_element.elements['product'];
+        const account_radios = getRadioGroup(form_element.elements, 'account');
+        const product_radios = getRadioGroup(form_element.elements, 'product');
         const amount_input = form_element.elements['amount'];
         const selected_account = form_element.elements['selected_account'];
         const selected_product = form_element.elements['selected_product'];
-        [...account_radios, ...product_radios, amount_input].forEach((e) => {
+        [...account_radios.elements, ...product_radios.elements, amount_input].forEach((e) => {
             e.addEventListener('change', _ => {
                 const account = account_getter(account_radios.value);
                 const product = product_getter(product_radios.value);
@@ -141,17 +152,16 @@ export class Transaction extends HTMLWrapper {
                 const amount_string = amount_input.valueAsNumber > 1 ? amount_input.value + 'x ' : '';
                 selected_product.value = product ? amount_string + product.name : '';
                 // Disable products & accounts according to price/budget
-                product_radios.forEach((e) => {
+                product_radios.elements.forEach((e) => {
                     const product = product_getter(e.value);
-                    e.disabled = account && product ? !account.canAfford(product) : false;
+                    if (product) {
+                        e.disabled = account !== null && !account.canAfford(product);
+                    }
                 });
-                account_radios.forEach((e) => {
+                account_radios.elements.forEach((e) => {
                     const account = account_getter(e.value);
                     if (account) {
-                        e.disabled = account.blocked || (product ? !account.canAfford(product) : false);
-                    }
-                    else {
-                        e.disabled = false;
+                        e.disabled = product ? !account.canAfford(product) : account.budget <= 0;
                     }
                 });
                 if (onInputChange) {
@@ -160,6 +170,21 @@ export class Transaction extends HTMLWrapper {
                 // Auto-submit if both are present
                 if (account && product) {
                     form_element.requestSubmit();
+                }
+            });
+        });
+        form_element.addEventListener('reset', _ => {
+            // Disable products & accounts according to price/budget
+            product_radios.elements.forEach((e) => {
+                const product = product_getter(e.value);
+                if (product) {
+                    e.disabled = false;
+                }
+            });
+            account_radios.elements.forEach((e) => {
+                const account = account_getter(e.value);
+                if (account) {
+                    e.disabled = account.budget <= 0;
                 }
             });
         });
