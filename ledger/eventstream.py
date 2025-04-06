@@ -21,6 +21,10 @@ from asyncio import Queue, QueueFull, CancelledError
 from json import dumps
 from typing import Any, Iterable, Callable
 from collections import defaultdict
+from logging import getLogger
+from functools import cached_property
+
+logger = getLogger(__name__)
 
 @dataclass
 class StreamEvent:
@@ -52,26 +56,39 @@ class EventstreamChannel:
     
     def __init__(self) -> None:
         self.listeners = []
+        
+    @cached_property
+    def name(self):
+        names = [ch_name for ch_name, ch in eventstream_channels.items() if ch is self]
+        return names[0] if names else '<Unknown>'
+    
+    @property
+    def logging_prefix(self):
+        return f"[Eventstream Channel '{self.name}']"
 
     def add_listener(self, listener: StreamListener):
         self.listeners.append(listener)
+        logger.info(f"{self.logging_prefix}: Added listener")
     
     def remove_listener(self, listener: StreamListener):
         self.listeners.remove(listener)
+        logger.info(f"{self.logging_prefix}: Removed listener")
 
     def post_event(self, event: StreamEvent):
         for listener in self.listeners:
             try:
                 listener.events.put_nowait(event)
             except QueueFull:
-                pass
+                logger.warning(f"{self.logging_prefix}: Dropped event {event!r} for listener because queue is full")
+        else:
+            logger.info(f"{self.logging_prefix}: Posting event {event!r} to channel with no listeners")
 
 eventstream_channels: defaultdict[str, EventstreamChannel] = defaultdict(EventstreamChannel)
 
 def get_eventstream_channel(channel: str) -> EventstreamChannel:
     return eventstream_channels[channel]
 
-def send_event(channel: str, event: str | None, data: Any | None, id: str | None = None):
+def send_event(channel: str, event: str | None = None, data: Any | str = '', id: str | None = None):
     """
     Send an event to all listeners of specified channel.
     
@@ -80,7 +97,7 @@ def send_event(channel: str, event: str | None, data: Any | None, id: str | None
     eventstream_channels[channel].post_event(
        StreamEvent(
             event=event,
-            data=dumps(data) if data is not None else None,
+            data=data if isinstance(data, str) else dumps(data),
             id=id
         ) 
     )

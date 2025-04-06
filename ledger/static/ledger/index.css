@@ -383,3 +383,31 @@ div:has(#transactions) {
 		}
 	}
 }
+
+label:has(#item-search) {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+
+	background-color: var(--secondary-bg-color);
+	padding: 0.25em 0.5em;
+	gap: 0.5em;
+
+	input {
+		background: none;
+		border: none;
+		color: inherit;
+		padding: 0.25em;
+	}
+}
+
+label:has(input[name="invert_member"]) {
+	margin-right: 0.5em;
+	padding: 0.375em;
+	font-size: 125%;
+	color: var(--secondary-text-color);
+	
+	&:has(input:checked) {
+		color: color-mix(in srgb, var(--selected-color), var(--highlight-color) 25%);
+	}
+}

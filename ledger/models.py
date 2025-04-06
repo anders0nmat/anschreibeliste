@@ -1,6 +1,7 @@
 from typing import Any, Optional
 from django.db import models, transaction
 from django.contrib.auth.models import User
+from django.utils.timezone import now
 from .managers import TransactionManager, ProductManager
 from .modelfield import PositiveFixedPrecisionField, FixedPrecisionField
 from datetime import timedelta, datetime
@@ -169,28 +170,31 @@ class Transaction(models.Model):
     
     @property
     def can_revert(self) -> bool:
-        return self.related_transaction == None
+       return self.related_transaction is None
     
     def user_can_revert(self, user: User | None) -> bool:
-        has_permissions = user.is_staff or (user == self.issuer and datetime.now() - self.timestamp < self.objects.revert_threshold)
+        if user is None:
+            return False
+    
+        is_stale = now() - self.timestamp >= Transaction.objects.revert_threshold
+        has_permissions = user.is_staff or (user == self.issuer and not is_stale)
         return has_permissions
 
     @transaction.atomic
     def revert(self, issuer: User | None, idempotency_key=None) -> "Transaction":
-        if not self.can_revert:
-            return Transaction.AlreadyReverted()
-        
         if not self.user_can_revert(issuer):
-            return PermissionDenied()        
+            raise PermissionDenied()
         
-        kwargs = {'idempotency_key': idempotency_key} if idempotency_key else {}
+        if not self.can_revert:
+            raise Transaction.AlreadyReverted()
+
         revert_transaction = Transaction.objects.create(
             account=self.account,
             amount=-self.amount,
             reason=f"Storno: {self.reason}",
             issuer=issuer,
             related_transaction=self,
-            **kwargs
+            idempotency_key=idempotency_key
         )
         self.related_transaction = revert_transaction
         self.save()

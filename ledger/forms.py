@@ -1,4 +1,4 @@
-from django.forms import ModelForm, Form, CharField, IntegerField, HiddenInput, ModelChoiceField
+from django.forms import ModelForm, Form, CharField, IntegerField, HiddenInput, ModelChoiceField, BooleanField
 
 from .models import Account, Product, Transaction
 from .formfield import FixedPrecisionField
@@ -28,6 +28,7 @@ class ProductTransactionForm(Form):
     account = ModelChoiceField(Account.objects.filter(active=True))
     product = ModelChoiceField(Product.objects)
     amount = IntegerField(min_value=1, initial=1, required=False)
+    invert_member = BooleanField(initial=False, required=False)
     
 class RevertTransactionForm(Form):
     transaction = ModelChoiceField(Transaction.objects) 

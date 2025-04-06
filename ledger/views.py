@@ -136,8 +136,9 @@ def _product_transaction(request: HttpRequest, form: ProductTransactionForm) -> 
             account: Account = form.cleaned_data['account']
             product: Product = form.cleaned_data['product']
             amount: int = form.cleaned_data['amount']
+            invert_member: bool = form.cleaned_data['invert_member']
 
-            price = product.member_cost if account.member else product.cost
+            price = product.member_cost if account.member != invert_member else product.cost
             price *= amount
 
             if account.current_budget < price:
@@ -146,6 +147,8 @@ def _product_transaction(request: HttpRequest, form: ProductTransactionForm) -> 
             reason = product.name
             if amount > 1:
                 reason = f'{amount}x {reason}'
+            if invert_member:
+                reason = f'Für {"Extern" if account.member else "Clubbi"}: {reason}'
 
             return Transaction.objects.create(
                 account=account,

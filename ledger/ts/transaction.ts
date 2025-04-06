@@ -21,6 +21,7 @@ interface Product {
 interface Account {
 	readonly name: string
 	readonly budget: number
+	readonly isMember: boolean
 
 	canAfford(_: Product): boolean
 }
@@ -39,6 +40,7 @@ interface TransactionProductRequest extends TransactionRequestBase {
 	kind: "product",
 	product_id: string
 	amount?: number
+	invert_member?: boolean
 }
 
 interface TransactionAmountRequest extends TransactionRequestBase {
@@ -182,6 +184,7 @@ export class Transaction extends HTMLWrapper {
 				account: request.account_id,
 				product: request.product_id,
 				...(request.amount && {amount: request.amount}),
+				...(request.invert_member && {invert_member: request.invert_member})
 			}
 		}
 		else {
@@ -217,11 +220,12 @@ export class Transaction extends HTMLWrapper {
 		const account_radios = getRadioGroup(form_element.elements, 'account')
 		const product_radios = getRadioGroup(form_element.elements, 'product')
 		const amount_input = form_element.elements['amount'] as HTMLInputElement
+		const invert_input = form_element.elements['invert_member'] as HTMLInputElement
 
 		const selected_account = form_element.elements['selected_account'] as HTMLOutputElement
 		const selected_product = form_element.elements['selected_product'] as HTMLOutputElement
 
-		[...account_radios.elements, ...product_radios.elements, amount_input].forEach((e: HTMLInputElement) => {
+		[...account_radios.elements, ...product_radios.elements, amount_input, invert_input].forEach((e: HTMLInputElement) => {
 			e.addEventListener('change', _ => {
 				const account = account_getter(account_radios.value)
 				const product = product_getter(product_radios.value)
@@ -230,7 +234,8 @@ export class Transaction extends HTMLWrapper {
 				selected_account.value = account?.name ?? ''
 				
 				const amount_string = amount_input.valueAsNumber > 1 ? amount_input.value + 'x ' : ''
-				selected_product.value = product ? amount_string + product.name : ''
+				const invert_string = invert_input.checked ? account?.isMember ? 'Für Extern: ' : 'Für Clubbi: ' : ''
+				selected_product.value = product ? invert_string + amount_string + product.name : ''
 
 				// Disable products & accounts according to price/budget
 				product_radios.elements.forEach((e: HTMLInputElement) => {

@@ -19,8 +19,6 @@ export class Account extends HTMLIdentifierWrapper {
         this.element.dataset.balance = value.toString();
         this.element.querySelector('.money').replaceWith(_money(value));
     }
-    //get blocked(): boolean { return this.element.hasAttribute('blocked') }
-    //set blocked(value: boolean) { this.element.toggleAttribute('blocked', value) }
     get disabled() { return this.radio.disabled; }
     set disabled(value) { this.radio.disabled = value; }
     get selected() { return this.element.hasAttribute('selected'); }

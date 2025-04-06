@@ -41,7 +41,6 @@ Transaction.listen(event => {
         return;
     }
     account.balance = event.balance;
-    //account.blocked = !event.is_liquid
     account.disabled = account.budget <= 0;
 }, false);
 /* ===== Progressive Enhancement ===== */

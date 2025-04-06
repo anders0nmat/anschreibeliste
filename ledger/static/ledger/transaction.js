@@ -117,6 +117,7 @@ export class Transaction extends HTMLWrapper {
                 account: request.account_id,
                 product: request.product_id,
                 ...(request.amount && { amount: request.amount }),
+                ...(request.invert_member && { invert_member: request.invert_member })
             };
         }
         else {
@@ -141,16 +142,18 @@ export class Transaction extends HTMLWrapper {
         const account_radios = getRadioGroup(form_element.elements, 'account');
         const product_radios = getRadioGroup(form_element.elements, 'product');
         const amount_input = form_element.elements['amount'];
+        const invert_input = form_element.elements['invert_member'];
         const selected_account = form_element.elements['selected_account'];
         const selected_product = form_element.elements['selected_product'];
-        [...account_radios.elements, ...product_radios.elements, amount_input].forEach((e) => {
+        [...account_radios.elements, ...product_radios.elements, amount_input, invert_input].forEach((e) => {
             e.addEventListener('change', _ => {
                 const account = account_getter(account_radios.value);
                 const product = product_getter(product_radios.value);
                 // Update selection display
                 selected_account.value = account?.name ?? '';
                 const amount_string = amount_input.valueAsNumber > 1 ? amount_input.value + 'x ' : '';
-                selected_product.value = product ? amount_string + product.name : '';
+                const invert_string = invert_input.checked ? account?.isMember ? 'Für Extern: ' : 'Für Clubbi: ' : '';
+                selected_product.value = product ? invert_string + amount_string + product.name : '';
                 // Disable products & accounts according to price/budget
                 product_radios.elements.forEach((e) => {
                     const product = product_getter(e.value);

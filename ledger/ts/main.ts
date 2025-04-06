@@ -1,4 +1,4 @@
-import { config, HTMLIdentifierWrapper } from './base.js'
+import { config, HTMLIdentifierWrapper, HTMLWrapper } from './base.js'
 import { Transaction } from './transaction.js'
 import { Account } from './accounts.js'
 
@@ -15,7 +15,8 @@ class Product extends HTMLIdentifierWrapper {
 	get memberCost(): number { return parseInt(this.element.dataset.memberCost ?? '0') }
 	
 	totalCost(member: boolean): number {
-		const cost = member ? this.memberCost : this.cost
+		const invert_member = new_transaction.form.elements['invert_member'].checked
+		const cost = (invert_member != member) ? this.memberCost : this.cost
 		const amount = multiplier.value
 		return cost * amount
 	}
@@ -23,7 +24,10 @@ class Product extends HTMLIdentifierWrapper {
 
 // Working slide indicators
 
-function changeSlide(name: string) { document.querySelector<HTMLElement>(`.slide[data-slide="${name}"]`)?.scrollIntoView({block: "nearest"}) }
+function changeSlide(name: string) {
+	document.querySelector<HTMLElement>(`.slide[data-slide="${name}"]`)?.scrollIntoView({block: "nearest"})
+	clearSearch()
+}
 
 const slideshow = document.querySelector<HTMLElement>('.slideshow')
 const observer = new IntersectionObserver((entries) => {
@@ -160,6 +164,7 @@ Transaction.attachRevert()
 new_transaction.form.addEventListener('reset', _ => {
 	new_transaction.clear_timeout()
 	multiplier.value = 1
+	clearSearch()
 })
 new_transaction.form.addEventListener('submit', ev => {
 	ev.preventDefault()
@@ -168,6 +173,8 @@ new_transaction.form.addEventListener('submit', ev => {
 	if (!account || !product) { return }
 
 	const amount = new_transaction.form.elements['amount'].valueAsNumber
+	const invert_member = new_transaction.form.elements['invert_member'].checked
+	const invert_str = invert_member ? account.isMember ? 'Für Extern: ' : 'Für Clubbi: ' : ''
 
 	Transaction.submit({
 		kind: "product",
@@ -175,8 +182,9 @@ new_transaction.form.addEventListener('submit', ev => {
 		account_name: account.name,
 		balance: -product.totalCost(account.isMember),
 		product_id: product.id,
-		reason: `${amount > 1 ? `${amount}x ` : ''}${product.name}`,
+		reason: `${invert_str}${amount > 1 ? `${amount}x ` : ''}${product.name}`,
 		amount: amount,
+		invert_member: invert_member,
 	})
 
 	new_transaction.form.reset()
@@ -194,4 +202,42 @@ new_transaction.form.style.animationDuration = TRANSACTION_TIMEOUT.toString()
 
 document.querySelector('.slideshow')!.classList.add('horizontal')
 
+// Activate search bar
 
+document.querySelector<HTMLElement>('div[hidden]')!.hidden = false
+const search_bar = document.querySelector<HTMLInputElement>('#item-search')!
+const SEARCH_DEBOUNCE_DELAY = 50
+
+function debounce<Args extends any[], F extends (...args: Args) => any>(func: F, wait: number, immediate: boolean = false) {
+    var timeout: ReturnType<typeof setTimeout> | null
+    return function(this: ThisParameterType<F>, ...args: Parameters<F>) {
+		var context = this
+        var later = function() {
+            timeout = null
+            if (!immediate) func.apply(context, args)
+        }
+        var callNow = immediate && !timeout
+        clearTimeout(timeout ?? undefined)
+        timeout = setTimeout(later, wait)
+        if (callNow) func.apply(context, args)
+    }
+}
+
+// An array of [name, element] pairs, for faster search
+const search_items: [string, HTMLElement][] = [...Account.all(), ...Product.all()].map(e => [e.name, e.element])
+
+search_bar.addEventListener('input', debounce(_ => {
+	const searchTerms = search_bar.value.toLowerCase().split(' ')
+
+	search_items.forEach(([name, element]) => {
+		const matches = searchTerms.every(term => name.toLocaleLowerCase().includes(term))
+		element.style.display = matches ? '' : 'none'
+	})
+}, SEARCH_DEBOUNCE_DELAY))
+
+function clearSearch() {
+	search_bar.value = ''
+	search_bar.dispatchEvent(new Event('input'))
+}
+
+document.querySelector<HTMLButtonElement>('#item-search ~ button')!.addEventListener('click', clearSearch)

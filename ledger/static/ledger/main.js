@@ -10,13 +10,17 @@ class Product extends HTMLIdentifierWrapper {
     get cost() { return parseInt(this.element.dataset.cost ?? '0'); }
     get memberCost() { return parseInt(this.element.dataset.memberCost ?? '0'); }
     totalCost(member) {
-        const cost = member ? this.memberCost : this.cost;
+        const invert_member = new_transaction.form.elements['invert_member'].checked;
+        const cost = (invert_member != member) ? this.memberCost : this.cost;
         const amount = multiplier.value;
         return cost * amount;
     }
 }
 // Working slide indicators
-function changeSlide(name) { document.querySelector(`.slide[data-slide="${name}"]`)?.scrollIntoView({ block: "nearest" }); }
+function changeSlide(name) {
+    document.querySelector(`.slide[data-slide="${name}"]`)?.scrollIntoView({ block: "nearest" });
+    clearSearch();
+}
 const slideshow = document.querySelector('.slideshow');
 const observer = new IntersectionObserver((entries) => {
     let activated = entries.reduce((max, entry) => {
@@ -140,6 +144,7 @@ Transaction.attachRevert();
 new_transaction.form.addEventListener('reset', _ => {
     new_transaction.clear_timeout();
     multiplier.value = 1;
+    clearSearch();
 });
 new_transaction.form.addEventListener('submit', ev => {
     ev.preventDefault();
@@ -149,14 +154,17 @@ new_transaction.form.addEventListener('submit', ev => {
         return;
     }
     const amount = new_transaction.form.elements['amount'].valueAsNumber;
+    const invert_member = new_transaction.form.elements['invert_member'].checked;
+    const invert_str = invert_member ? account.isMember ? 'Für Extern: ' : 'Für Clubbi: ' : '';
     Transaction.submit({
         kind: "product",
         account_id: account.id,
         account_name: account.name,
         balance: -product.totalCost(account.isMember),
         product_id: product.id,
-        reason: `${amount > 1 ? `${amount}x ` : ''}${product.name}`,
+        reason: `${invert_str}${amount > 1 ? `${amount}x ` : ''}${product.name}`,
         amount: amount,
+        invert_member: invert_member,
     });
     new_transaction.form.reset();
 });
@@ -166,3 +174,37 @@ new_transaction.form.querySelector('button[type="submit"').classList.add('css-hi
 new_transaction.form.style.animationDuration = TRANSACTION_TIMEOUT.toString();
 // Horizontal Items
 document.querySelector('.slideshow').classList.add('horizontal');
+// Activate search bar
+document.querySelector('div[hidden]').hidden = false;
+const search_bar = document.querySelector('#item-search');
+const SEARCH_DEBOUNCE_DELAY = 50;
+function debounce(func, wait, immediate = false) {
+    var timeout;
+    return function (...args) {
+        var context = this;
+        var later = function () {
+            timeout = null;
+            if (!immediate)
+                func.apply(context, args);
+        };
+        var callNow = immediate && !timeout;
+        clearTimeout(timeout ?? undefined);
+        timeout = setTimeout(later, wait);
+        if (callNow)
+            func.apply(context, args);
+    };
+}
+// An array of [name, element] pairs, for faster search
+const search_items = [...Account.all(), ...Product.all()].map(e => [e.name, e.element]);
+search_bar.addEventListener('input', debounce(_ => {
+    const searchTerms = search_bar.value.toLowerCase().split(' ');
+    search_items.forEach(([name, element]) => {
+        const matches = searchTerms.every(term => name.toLocaleLowerCase().includes(term));
+        element.style.display = matches ? '' : 'none';
+    });
+}, SEARCH_DEBOUNCE_DELAY));
+function clearSearch() {
+    search_bar.value = '';
+    search_bar.dispatchEvent(new Event('input'));
+}
+document.querySelector('#item-search ~ button').addEventListener('click', clearSearch);
