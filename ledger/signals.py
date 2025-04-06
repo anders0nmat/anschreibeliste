@@ -25,5 +25,5 @@ def notify_clients(instance: Transaction, created: bool, **_):
 	if instance.idempotency_key is not None:
 		data["idempotency_key"] = instance.idempotency_key
 
-	send_event("transaction", "create", data, id="5")
+	send_event("transaction", "create", data)
 
