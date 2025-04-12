@@ -48,6 +48,9 @@ export class HTMLWrapper {
     static from(element) {
         return element !== null ? new this(element) : null;
     }
+    static fromQuery(query, root) {
+        return this.from((root ?? document).querySelector(query));
+    }
     static template;
     static create() {
         const element = _cloneTemplate(this.template).firstElementChild;

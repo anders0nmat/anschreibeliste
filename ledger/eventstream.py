@@ -90,9 +90,9 @@ def get_eventstream_channel(channel: str) -> EventstreamChannel:
 
 def send_event(channel: str, event: str | None = None, data: Any | str = '', id: str | None = None):
     """
-    Send an event to all listeners of specified channel.
+    Send an event to all listeners on `channel`.
     
-    data is json-encoded before sending
+    If `data` is not a `str`, it is json-encoded before sending
     """
     eventstream_channels[channel].post_event(
        StreamEvent(

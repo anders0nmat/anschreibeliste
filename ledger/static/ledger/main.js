@@ -2,6 +2,7 @@ import { config, HTMLIdentifierWrapper } from './base.js';
 import { Transaction } from './transaction.js';
 import { Account } from './accounts.js';
 const TRANSACTION_TIMEOUT = config().transaction_timeout;
+const SEARCH_DEBOUNCE_DELAY = 50;
 class Product extends HTMLIdentifierWrapper {
     static all_selector = '#products .item';
     static id_attribute = 'data-product-id';
@@ -10,8 +11,7 @@ class Product extends HTMLIdentifierWrapper {
     get cost() { return parseInt(this.element.dataset.cost ?? '0'); }
     get memberCost() { return parseInt(this.element.dataset.memberCost ?? '0'); }
     totalCost(member) {
-        const invert_member = new_transaction.form.elements['invert_member'].checked;
-        const cost = (invert_member != member) ? this.memberCost : this.cost;
+        const cost = member ? this.memberCost : this.cost;
         const amount = multiplier.value;
         return cost * amount;
     }
@@ -109,75 +109,30 @@ multiplier.element.closest('div')?.addEventListener('click', _ => { multiplier.s
 multiplier.input.parentElement?.classList.add('visually-hidden');
 multiplier.element.classList.remove('css-hidden');
 // Attach to transaction form
-const new_transaction = {
-    form: document.getElementById('new-transaction'),
-    timeout: undefined,
-    set_timeout() {
-        new_transaction.clear_timeout();
-        new_transaction.timeout = setTimeout(_ => new_transaction.form.reset(), TRANSACTION_TIMEOUT);
-        new_transaction.form.classList.add('timeout');
-    },
-    clear_timeout() {
-        clearTimeout(new_transaction.timeout);
-        new_transaction.timeout = undefined;
-        new_transaction.form.classList.remove('timeout');
-        // force animation stop in case it gets started immediately again
-        new_transaction.form.offsetWidth;
-    },
-    change(e) {
-        const account = new_transaction.form.elements['account'].value;
-        const product = new_transaction.form.elements['product'].value;
-        if (account || product) {
-            new_transaction.set_timeout();
-        }
+Transaction.attachNew({
+    getAccount: id => Account.byId(id),
+    getProduct: id => Product.byId(id),
+    timeout: TRANSACTION_TIMEOUT,
+    onInputChange: e => {
         const next_slide = {
             'account': 'products',
             'product': 'accounts',
         };
-        if (e.checked) {
+        if (next_slide[e.name] && e.checked) {
             changeSlide(next_slide[e.name]);
         }
     },
-};
-Transaction.attachNew(new_transaction.form, id => Account.byId(id), id => Product.byId(id), new_transaction.change);
-Transaction.attachRevert();
-new_transaction.form.addEventListener('reset', _ => {
-    new_transaction.clear_timeout();
-    multiplier.value = 1;
-    clearSearch();
-});
-new_transaction.form.addEventListener('submit', ev => {
-    ev.preventDefault();
-    const account = Account.byId(new_transaction.form.elements['account'].value);
-    const product = Product.byId(new_transaction.form.elements['product'].value);
-    if (!account || !product) {
-        return;
+    onReset: _ => {
+        multiplier.value = 1;
+        clearSearch();
     }
-    const amount = new_transaction.form.elements['amount'].valueAsNumber;
-    const invert_member = new_transaction.form.elements['invert_member'].checked;
-    const invert_str = invert_member ? account.isMember ? 'Für Extern: ' : 'Für Clubbi: ' : '';
-    Transaction.submit({
-        kind: "product",
-        account_id: account.id,
-        account_name: account.name,
-        balance: -product.totalCost(account.isMember),
-        product_id: product.id,
-        reason: `${invert_str}${amount > 1 ? `${amount}x ` : ''}${product.name}`,
-        amount: amount,
-        invert_member: invert_member,
-    });
-    new_transaction.form.reset();
 });
-// Hide submit button (because of auto-submit)
-new_transaction.form.querySelector('button[type="submit"').classList.add('css-hidden');
-// Adjust timeout animation to actual timeout
-new_transaction.form.style.animationDuration = TRANSACTION_TIMEOUT.toString();
+Transaction.attachRevert();
 // Horizontal Items
 document.querySelector('.slideshow').classList.add('horizontal');
 // Activate search bar
 document.querySelector('div[hidden]').hidden = false;
 const search_bar = document.querySelector('#item-search');
-const SEARCH_DEBOUNCE_DELAY = 50;
 function debounce(func, wait, immediate = false) {
     var timeout;
     return function (...args) {

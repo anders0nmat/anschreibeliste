@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.utils.timezone import now
 from .managers import TransactionManager, ProductManager
 from .modelfield import PositiveFixedPrecisionField, FixedPrecisionField
-from datetime import timedelta, datetime
+from datetime import timedelta
 from django.core.exceptions import PermissionDenied
 # Create your models here.
 # TODO : Better terminologiy regarding money:
@@ -129,7 +129,7 @@ class AccountBalance(models.Model):
         ordering = ['-timestamp']
 
     def __str__(self) -> str:
-        return f"{self.account} at {self.timestamp}"
+        return f"{self.account}: {self.closing_balance} at {self.timestamp}"
 
 class Transaction(models.Model):
     class AlreadyReverted(Exception): pass

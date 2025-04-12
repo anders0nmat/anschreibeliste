@@ -3,15 +3,31 @@ from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
 from http import HTTPStatus
 from django.core.cache import caches
 from hashlib import blake2b
-import json
-from typing import Any, Callable, TypeVar, Optional
-from dataclasses import dataclass
-from django.core.exceptions import ImproperlyConfigured
 
 class HttpResponseLocked(HttpResponse):
     status_code = HTTPStatus.LOCKED
 
-def idempotent(function=None, header_name: str = "Idempotency-Key", required: bool = False, post_field=None, cache: str = 'default', timeout=600):
+def idempotent(function=None, header_name: str = "Idempotency-Key", required: bool = True, post_field=None, cache: str = 'default', timeout=600):
+    """
+    Ensure idempotency on this view. Responses will be buffered for subsequent requests with the same key.
+    
+    This ensures that views where calling them multiple times has a different effect than calling them once (non-idempotent)
+    will only execute once, but will behave to the client as if every request was processed (just with the identical response).
+
+    Can be used on POST-requests where it is important that the exact same request will not trigger an action multiple times.
+    E.g. processing a transaction request.
+    
+    Will look for the value of header `header_name` (default 'Idempotency-Key'),
+    if not present, assume the body is a POST body and look for the `post_field`.
+    This allows for plain HTML-forms to still use this decorator by including an `<input type="hidden">` with name `post_field` and an server-provided value/key.
+    
+    Responses are cached in `cache` for `timeout` milliseconds. During that time, a request from the same session with the same key
+    will instead receive the cached response _without_ calling the view. The request is not checked for equality, only the idempotency-key.
+    
+    if `required` is false, requests without the `header_name`-header or `post_field` in the body will be passed without modification
+    to the view function, behaving as if the modifier is not present.
+    Requests with one of the key fields will still get idempotent behavior.
+    """
     def _idempotent(view_func):
         @wraps(view_func)
         def _check_idempotent(request: HttpRequest, *args, **kwargs):
@@ -42,183 +58,3 @@ def idempotent(function=None, header_name: str = "Idempotency-Key", required: bo
         return _idempotent(function)
     return _idempotent
 
-@dataclass
-class Pattern:
-    name: str
-    path: str
-    validator: Callable[[Any], Any]
-    
-    def __init__(self, pattern: str | tuple[str] | tuple[str, str | Callable[[Any], Any]] | tuple[str, str, Callable[[Any], Any]]):
-        self.validator = lambda x: x
-        match pattern:
-            case (a, b, c):
-                self.path = a
-                self.name = b
-                self.validator = c
-            case (a, b):
-                if isinstance(b, str):
-                    self.path = a
-                    self.name = b
-                else:
-                    self.path = a
-                    self.name = a
-                    self.validator = b
-            case (a,):
-                self.path = a
-                self.name = a
-            case a if isinstance(a, str):
-                self.path = a
-                self.name = a
-            case a if isinstance(a, Pattern):
-                self = pattern
-            case _:
-                raise ImproperlyConfigured(f"Invalid pattern: {pattern}")
-        self.name = self.name.replace('.', '_').replace('?', '')
-    
-    def split_path(self) -> list[tuple[str, bool]]:
-        result = ((part, part[-1] == '?') for part in self.path.split('.'))
-        return [(part[:-1] if optional else part, optional) for part, optional in result]
-    
-    def find_value(self, json_structure, default=None):
-        current = json_structure
-        path = []
-        for step, optional in self.split_path():
-            if not isinstance(current, (dict, list)):
-                raise ValueError(f'Cannot walk path along object of type {current.__class__.__name__}. Expected dict or list')
-            try:
-                if isinstance(current, dict):
-                    current = current[step]
-                elif isinstance(current, list):
-                    current = current[int(step)]
-                path.append(step)
-            except (KeyError, IndexError):
-                if optional:
-                    return default
-                raise KeyError('.'.join(path))
-        return current
-    
-    def get_value(self, structure) -> Optional[tuple[str, Any]]:
-        sentinel = object()
-        value = self.find_value(structure, default=sentinel)
-        if value is not sentinel:
-            try:
-                value = self.validator(value)
-            except ValueError:
-                raise ValueError('.'.join(p for p, _ in self.split_path()))
-            return self.name, value
-        return None
-        
-
-    
-
-def one_of(*values: Any) -> Callable[[Any], Any]:
-    def _one_of(value):
-        if value not in values:
-            raise ValueError()
-        return value
-    return _one_of
-
-T = TypeVar("T")
-def satisfies(condition: Callable[[Any], bool]) -> Callable[[T], T]:
-    def _satisfies(value):
-        if not condition(value):
-            raise ValueError()
-        return value
-    return _satisfies
-
-def chain(*validators: Callable[[Any], Any]) -> Callable[[Any], Any]:
-    def _chain(value):
-        for validator in validators:
-            value = validator(value)
-        return value
-    return _chain
-
-def json_body(function=None, patterns: list[Pattern] = None):
-    """
-    Assert a request body of type json which is added to the request object under `request.json`.
-
-    If parameter `patterns` is given, the json body is also evaluated and passed as parameter to the view function.
-    A pattern is a tuple with the following entries:
-    - a json path
-    - a parameter name to populate (optional, inferred from the json path)
-    - a validator/converter function (optional)
-    if only a json path is given, the pattern may also be a string.
-    If any component of the json path ends with a '?', the component may not exist.
-    In this case, the argument is not bound, allowing for a default value to be specified.
-
-    Example:
-    ```python
-    recipe_patterns = [
-        "recipe.id",
-        ("step_count", int),
-
-        ("steps.-1", "last_step"),
-        ("steps.-1.time", "last_step_time", datetime.time.fromisoformat)
-    ]
-
-    request.json = {
-        "recipe": {"id": 51, "name": "Eggs & Bacon"},
-        "step_count": 3,
-        "steps": [
-            {"type": "prepare", "time": "0:30"},
-            {"type": "cook", "time": "6:00"},
-            {"type": "garnish", "time": "15:00"}
-        ]
-    }
-
-    @json_body(patterns=recipe_patterns)
-    def view_func(request: HttpRequest, recipe_id: Any, step_count: int, last_step: Any, last_step_time: datetime.time):
-        print(f"{recipe_id=} {step_count=} {last_step=} {last_step_time=}")
-        # prints: recipe_id=51 step_count=3 last_step={"type": "garnish", "time": "15:00"} last_step_time=datetime.time(15, 0)
-    ```
-    """
-    def _json_body(view_func):
-        @wraps(view_func)
-        def _convert_json_body(request: HttpRequest, *args, **kwargs):
-            try:
-                body_json = json.loads(request.body)
-
-                if not hasattr(request, 'json'):
-                    setattr(request, 'json', body_json)
-
-                arguments = {}
-                if patterns:
-                    for field in patterns:
-                        key_value = Pattern(field).get_value(body_json)
-                        if key_value is not None:
-                            arguments[key_value[0]] = key_value[1]
-            except json.JSONDecodeError:
-                return HttpResponseBadRequest("Expected JSON")
-            except KeyError as e:
-                return HttpResponseBadRequest(f"Missing Field '{e}'")
-            except ValueError as e:
-                return HttpResponseBadRequest(f"Invalid value at '{e}'")
-            return view_func(request, *args, **arguments, **kwargs)
-        return _convert_json_body
-    
-    if function:
-        return _json_body(function)
-    return _json_body
-
-
-
-def require_POST_fields(fields: list[Pattern]):
-    def _require_POST_fields(view_func):
-        @wraps(view_func)
-        def _read_POST_fields(request: HttpRequest, *args, **kwargs):
-            arguments = {}
-            try:
-                for field in fields:
-                    key_value = Pattern(field).get_value(request.POST)
-                    if key_value is not None:
-                        arguments[key_value[0]] = key_value[1]
-            except KeyError:
-                return HttpResponseBadRequest("Missing required POST parameter")
-            except ValueError:
-                return HttpResponseBadRequest("POST parameter has wrong type")
-            return view_func(request, *args, **arguments, **kwargs)
-
-        return _read_POST_fields
-    
-    return _require_POST_fields
-    

@@ -14,11 +14,13 @@ interface ServerEvent {
 }
 
 interface Product {
+	readonly id: string
 	readonly name: string
 	totalCost(member: boolean): number
 }
 
 interface Account {
+	readonly id: string
 	readonly name: string
 	readonly budget: number
 	readonly isMember: boolean
@@ -47,6 +49,16 @@ interface TransactionAmountRequest extends TransactionRequestBase {
 	kind: "deposit" | "withdraw"
 }
 
+interface ProductRequest {
+	account: Account
+	product: Product
+	amount: number
+	/**
+	Whether the member role of `account` should be inverted for product price
+	*/
+	invertMember: boolean
+}
+
 type TransactionRequest = TransactionAmountRequest | TransactionProductRequest
 
 function getRadioGroup(formElements: HTMLFormControlsCollection, name: string): { elements: HTMLElement[], readonly value: string; } {
@@ -69,6 +81,35 @@ function getRadioGroup(formElements: HTMLFormControlsCollection, name: string): 
 		elements: [],
 		get value(): string { return '' }
 	}
+}
+
+function getIdempotencyKey(): string {
+	return Date.now().valueOf().toString()
+}
+
+function productReason(account: Account | null, product: Product | null, amount: number, invert_member = false): string {
+	let reason = ''
+	if (invert_member) {
+		reason += account?.isMember ? 'Für Extern: ' : 'Für Clubbi: '
+	}
+	if (amount > 1) {
+		reason += `${amount}x `
+	}
+	if (product) {
+		reason += product.name
+	}
+
+	return reason
+}
+
+function accountShouldDisable(account: Account | null, product: Product | null): boolean {
+	if (!account) { return false }
+	return product ? !account.canAfford(product) : account.budget <= 0
+}
+
+function productShouldDisable(product: Product | null, account: Account | null): boolean {
+	if (!product) { return false }
+	return account ? !account.canAfford(product) : false
 }
 
 class Status extends HTMLWrapper {
@@ -117,21 +158,13 @@ export class Transaction extends HTMLWrapper {
 			const data = JSON.parse(event.data) as ServerEvent
 			console.log("received server event:", data)
 
-			const confirmed_transaction = data.idempotency_key !== undefined && Transaction.from(document.querySelector<HTMLElement>(`.transaction[data-pending-id="${data.idempotency_key}"]`))
+			const confirmed_transaction = data.idempotency_key && Transaction.fromQuery(`.transaction[data-pending-id="${data.idempotency_key}"]`)
 			if (confirmed_transaction) {
-				confirmed_transaction.pendingId = null
-				confirmed_transaction.account = data.account_name
-				confirmed_transaction.amount = data.amount
-				confirmed_transaction.reason = data.reason
-				confirmed_transaction.can_revert = data.related === undefined
+				confirmed_transaction.applyServerEvent(data)
 			}
 			else {
 				const new_transaction = Transaction.create()
-				new_transaction.id = data.id.toString()
-				new_transaction.account = data.account_name
-				new_transaction.amount = data.amount
-				new_transaction.reason = data.reason
-				new_transaction.can_revert = data.related === undefined
+				new_transaction.applyServerEvent(data)
 				new_transaction.status?.element.remove()
 				document.getElementById('transactions')!.prepend(new_transaction.element)
 			}
@@ -210,12 +243,73 @@ export class Transaction extends HTMLWrapper {
 		pending_transaction.status!.success()
 	}
 
+	static async submitProduct(request: ProductRequest) {
+		const idempotency_key = getIdempotencyKey()
+		const useMemberPrice = request.account.isMember != request.invertMember
 
-	static attachNew(
-	form_element: HTMLFormElement,
-	account_getter: (_: string) => Account | null,
-	product_getter: (_: string) => Product | null,
-	onInputChange?: (_: HTMLInputElement) => void) {
+		const pending_transaction = Transaction.create()
+		pending_transaction.account = request.account.name
+		pending_transaction.amount = -request.product.totalCost(useMemberPrice)
+		pending_transaction.reason = productReason(request.account, request.product, request.amount, request.invertMember)
+		pending_transaction.can_revert = true
+		pending_transaction.pendingId = idempotency_key
+		document.getElementById('transactions')!.prepend(pending_transaction.element)
+
+		const response = await Transaction.post(this.api.order, {
+			account: request.account.id,
+			product: request.product.id,
+			amount: request.amount,
+			invert_member: request.invertMember,
+		})
+
+		if (!response.ok) {
+			pending_transaction.status!.error()
+			pending_transaction.element.toggleAttribute('error', true)
+			console.error(`Failed to submit product: Server returned ${response.status} ${response.statusText}`, await response.json())
+			return
+		}
+
+		const {transaction_id} = await response.json()
+
+		pending_transaction.id = transaction_id
+		pending_transaction.status!.success()
+	}
+
+	static attachNew({
+		form: form_element,
+		getAccount,
+		getProduct,
+		onInputChange,
+		onReset,
+		timeout: timeout_duration,
+	}: {
+		form?: HTMLFormElement,
+		getAccount: (_: string) => Account | null,
+		getProduct: (_: string) => Product | null,
+		onInputChange?: (_: HTMLInputElement) => void,
+		onReset?: (_: HTMLFormElement) => void,
+		timeout?: number,
+	}) {
+		form_element ??= document.getElementById('new-transaction') as HTMLFormElement
+		const timeout = timeout_duration ? {
+			handler: undefined as number | undefined,
+
+			set() {
+				timeout!.clear()
+				timeout!.handler = setTimeout(_ => form_element.reset(), timeout_duration)
+				form_element.classList.add('timeout')
+			},
+			clear() {
+				clearTimeout(timeout!.handler)
+				timeout!.handler = undefined
+				form_element.classList.remove('timeout')
+				form_element.offsetWidth
+			}
+		} : undefined
+
+		if (timeout_duration) {
+			form_element.style.animationDuration = timeout_duration.toString() + 'ms'
+		}
 
 		const account_radios = getRadioGroup(form_element.elements, 'account')
 		const product_radios = getRadioGroup(form_element.elements, 'product')
@@ -225,35 +319,32 @@ export class Transaction extends HTMLWrapper {
 		const selected_account = form_element.elements['selected_account'] as HTMLOutputElement
 		const selected_product = form_element.elements['selected_product'] as HTMLOutputElement
 
-		[...account_radios.elements, ...product_radios.elements, amount_input, invert_input].forEach((e: HTMLInputElement) => {
+		const submit_button = form_element.querySelector('button[type="submit"]') as HTMLButtonElement
+		submit_button.classList.add('css-hidden');
+
+		const all_elements = [...account_radios.elements, ...product_radios.elements, amount_input, invert_input]
+		all_elements.forEach((e: HTMLInputElement) => {
 			e.addEventListener('change', _ => {
-				const account = account_getter(account_radios.value)
-				const product = product_getter(product_radios.value)
+				const account = getAccount(account_radios.value)
+				const product = getProduct(product_radios.value)
 
 				// Update selection display
 				selected_account.value = account?.name ?? ''
-				
-				const amount_string = amount_input.valueAsNumber > 1 ? amount_input.value + 'x ' : ''
-				const invert_string = invert_input.checked ? account?.isMember ? 'Für Extern: ' : 'Für Clubbi: ' : ''
-				selected_product.value = product ? invert_string + amount_string + product.name : ''
+				selected_product.value = productReason(account, product, amount_input.valueAsNumber, invert_input.checked)
 
 				// Disable products & accounts according to price/budget
 				product_radios.elements.forEach((e: HTMLInputElement) => {
-					const product = product_getter(e.value)
-					if (product) {
-						e.disabled = account !== null && !account.canAfford(product)
-					}
+					e.disabled = productShouldDisable(getProduct(e.value), account)
 				})
 
 				account_radios.elements.forEach((e: HTMLInputElement) => {
-					const account = account_getter(e.value)
-					if (account) {
-						e.disabled = product ? !account.canAfford(product) : account.budget <= 0
-					}
+					e.disabled = accountShouldDisable(getAccount(e.value), product)
 				})
 
-				if (onInputChange) {
-					onInputChange(e)
+				onInputChange?.(e)
+
+				if (account || product) {
+					timeout?.set()
 				}
 
 				// Auto-submit if both are present
@@ -263,28 +354,44 @@ export class Transaction extends HTMLWrapper {
 			})
 		})
 
+		form_element.addEventListener('submit', ev => {
+			ev.preventDefault()
+
+			const account = getAccount(account_radios.value)
+			const product = getProduct(product_radios.value)
+			if (!account || !product) {
+				// TODO : Should we reset the form here?
+				return
+			}
+
+			Transaction.submitProduct({
+				account: account,
+				product: product,
+				amount: amount_input.valueAsNumber,
+				invertMember: invert_input.checked,
+			})
+			
+			form_element.reset()
+		})
+
 		form_element.addEventListener('reset', _ => {
+			timeout?.clear()
+
 			// Disable products & accounts according to price/budget
 			product_radios.elements.forEach((e: HTMLInputElement) => {
-				const product = product_getter(e.value)
-				if (product) {
-					e.disabled = false
-				}
+				e.disabled = productShouldDisable(getProduct(e.value), null)
+			})
+			
+			account_radios.elements.forEach((e: HTMLInputElement) => {
+				e.disabled = accountShouldDisable(getAccount(e.value), null)
 			})
 
-			account_radios.elements.forEach((e: HTMLInputElement) => {
-				const account = account_getter(e.value)
-				if (account) {
-					e.disabled = account.budget <= 0
-				}
-			})
+			onReset?.(form_element)
 		})
 	}
 
 	static attachRevert(form_element?: HTMLFormElement) {
-		if (!form_element) {
-			form_element = document.getElementById('transaction-revert') as HTMLFormElement
-		}
+		form_element ??= document.getElementById('transaction-revert') as HTMLFormElement
 
 		form_element.addEventListener('submit', ev => {
 			ev.preventDefault()
@@ -295,6 +402,15 @@ export class Transaction extends HTMLWrapper {
 
 	static attachCustom(form_element: HTMLFormElement) {
 
+	}
+
+	private applyServerEvent(data: ServerEvent) {
+		this.id = data.id.toString()
+		this.pendingId = null
+		this.account = data.account_name
+		this.amount = data.amount
+		this.reason = data.reason
+		this.can_revert = data.related === undefined
 	}
 
 	get id(): string { return this.element.querySelector<HTMLInputElement>('button[name="transaction"]')!.value }

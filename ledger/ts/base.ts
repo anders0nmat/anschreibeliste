@@ -83,6 +83,8 @@ interface GenericHTMLWrapper<T> {
 	from(element: null): null
 	from<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>, element: HTMLElement): T
 	from<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>, element: HTMLElement | null): T | null
+
+	fromQuery<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>, query: string, root?: HTMLElement): T | null
 	create<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>): T
 	all<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>): T[]
 	get<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>, selector: string): T | null
@@ -98,6 +100,10 @@ export class HTMLWrapper {
 	static from<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>, element: HTMLElement | null): T | null;
 	static from<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>, element: HTMLElement | null): T | null {
 		return element !== null ? new this(element) : null
+	}
+	
+	static fromQuery<T extends HTMLWrapper>(this: GenericHTMLWrapper<T>, query: string, root?: HTMLElement): T | null {
+		return this.from((root ?? document).querySelector<HTMLElement>(query))
 	}
 
 	static template: string

@@ -1,8 +1,9 @@
-from typing import Any, Literal
+from typing import Any
 from django import forms
 from django.forms.widgets import Widget, NumberInput, Input
 from django.utils.formats import sanitize_separators, number_format, get_format
 from django.utils.translation import gettext as _
+from re import escape
 
 class DecimalInput(Input):
     input_type = 'text'
@@ -68,27 +69,7 @@ class FixedPrecisionField(forms.IntegerField):
             decimal_separator = get_format('DECIMAL_SEPARATOR')
             pattern = '\\d+'
             if self.decimal_places > 0:
-                pattern += '('
-                pattern += '[' + ('\\\\' if decimal_separator == '\\' else decimal_separator) + '.]'
-                pattern += f'\\d{{1,{self.decimal_places}}}'
-                pattern += ')?'
+                pattern += f'([{escape(decimal_separator)}.]\\d{{1,{self.decimal_places}}})?'
             attrs.setdefault('pattern', pattern)
         return attrs
-
-class DisabledFieldMixin:
-    def __init__(self, *args, disabled_fields: list[str] | Literal['__all__'] = None, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-
-        if disabled_fields is None:
-            disabled_fields = set()
-        elif disabled_fields == '__all__':
-            disabled_fields = set(self.fields.keys())
-        else:
-            disabled_fields = set(field for field in disabled_fields if field in self.fields)
-
-        for disabled_field in disabled_field:
-            self.fields[disabled_field].disabled = True
-
-        self.has_enabled_fields = disabled_fields < self.fields.keys()
-
 

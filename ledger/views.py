@@ -21,12 +21,12 @@ from . import config
 def js_config() -> dict[str, Any]:
     return {
         'transaction': {
-			'deposit': reverse('api_deposit'),
-			'withdraw': reverse('api_withdraw'),
-			'order': reverse('api_order'),
-			'revert': reverse('api_revert'),
-			'events': reverse('api_events'),
-		},
+            'deposit': reverse('api_deposit'),
+            'withdraw': reverse('api_withdraw'),
+            'order': reverse('api_order'),
+            'revert': reverse('api_revert'),
+            'events': reverse('api_events'),
+        },
         'transaction_timeout': config.TRANSACTION_TIMEOUT,
         'submit_overlay': config.SUBMIT_OVERLAY,
     }
