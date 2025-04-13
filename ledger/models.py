@@ -6,6 +6,9 @@ from .managers import TransactionManager, ProductManager
 from .modelfield import PositiveFixedPrecisionField, FixedPrecisionField
 from datetime import timedelta
 from django.core.exceptions import PermissionDenied
+from django.utils.translation import gettext, override as override_language, gettext_lazy as _
+from django.conf import settings
+from django.contrib.admin import display
 # Create your models here.
 # TODO : Better terminologiy regarding money:
 # TODO : User A has amount k and additionally is allowed to go amount n into debt
@@ -14,8 +17,9 @@ from django.core.exceptions import PermissionDenied
 # TODO : How to call k + n
 
 class AccountGroup(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(verbose_name=_('name'), max_length=255)
     order = models.PositiveIntegerField(
+        verbose_name=_('order'),
         default=0,
         blank=False,
         null=False,
@@ -27,6 +31,8 @@ class AccountGroup(models.Model):
 
     class Meta:
         ordering = ['order']
+        verbose_name = _('account group')
+        verbose_name_plural = _('account groups')
 
 class AccountManager(models.Manager):
     def grouped(self):
@@ -54,14 +60,14 @@ class Account(models.Model):
     
     objects = AccountManager()
 
-    name = models.CharField(max_length=255)
-    credit = PositiveFixedPrecisionField(decimal_places=2, default=0)
-    member = models.BooleanField()
-    active = models.BooleanField(default=True)
+    name = models.CharField(verbose_name=_('name'), max_length=255)
+    credit = PositiveFixedPrecisionField(verbose_name=_('credit'), decimal_places=2, default=0)
+    member = models.BooleanField(verbose_name=_('member'))
+    active = models.BooleanField(verbose_name=_('active'), default=True)
     
-    permanent = models.BooleanField(default=False)
+    permanent = models.BooleanField(verbose_name=_('permanent'), default=False)
 
-    group = models.ForeignKey(AccountGroup, on_delete=models.SET_NULL, null=True, default=None, blank=True)
+    group = models.ForeignKey(AccountGroup, verbose_name=_('group'), on_delete=models.SET_NULL, null=True, default=None, blank=True)
     
     # Forward declaration for type-hinting
     transactions: models.QuerySet["Transaction"]
@@ -77,15 +83,19 @@ class Account(models.Model):
             models.Index('active', models.F('group').asc(), 'name', name='idx_grouped_accounts'),
             models.Index('active', name='idx_active_account'),
         ]
+        verbose_name = _('account')
+        verbose_name_plural = _('accounts')
 
     def __str__(self) -> str:
         return self.name
     
     @property
+    @display(description=_('Last closing balance'))
     def last_balance(self) -> Optional["AccountBalance"]:
         return self.balances.order_by('-timestamp').first()
 
     @property
+    @display(description=_('Balance'))
     @transaction.atomic
     def current_balance(self) -> int:
         if hasattr(self, '_last_balance'):
@@ -121,15 +131,17 @@ class Account(models.Model):
         self.transactions.filter(closing_balance=None).update(closing_balance=closing_balance)
 
 class AccountBalance(models.Model):
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='balances')
-    timestamp = models.DateTimeField(auto_now_add=True)
-    closing_balance = FixedPrecisionField(decimal_places=2)
+    account = models.ForeignKey(Account, verbose_name=_('account'), on_delete=models.CASCADE, related_name='balances')
+    timestamp = models.DateTimeField(verbose_name=_('timestamp'), auto_now_add=True)
+    closing_balance = FixedPrecisionField(verbose_name=_('closing balance'), decimal_places=2)
 
     class Meta:
         ordering = ['-timestamp']
+        verbose_name = _('account balance')
+        verbose_name_plural = _('account balances')
 
     def __str__(self) -> str:
-        return f"{self.account}: {self.closing_balance} at {self.timestamp}"
+        return gettext("{account}: {closing_balance} at {timestamp}").format(account=self.account, closing_balance=self.closing_balance, timestamp=self.timestamp)
 
 class Transaction(models.Model):
     class AlreadyReverted(Exception): pass
@@ -138,14 +150,14 @@ class Transaction(models.Model):
         timejump_threshold=timedelta(hours=6),
         revert_threshold=timedelta(hours=12))
 
-    closing_balance = models.ForeignKey(AccountBalance, on_delete=models.CASCADE, related_name='transactions', null=True, default=None, blank=True)
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='transactions')
-    amount = FixedPrecisionField(decimal_places=2)
-    timestamp = models.DateTimeField(auto_now_add=True)
-    reason = models.CharField(max_length=255)
-    issuer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    closing_balance = models.ForeignKey(AccountBalance, verbose_name=_('closing balance'), on_delete=models.CASCADE, related_name='transactions', null=True, default=None, blank=True)
+    account = models.ForeignKey(Account, verbose_name=_('account'), on_delete=models.CASCADE, related_name='transactions')
+    amount = FixedPrecisionField(verbose_name=_('amount'), decimal_places=2)
+    timestamp = models.DateTimeField(verbose_name=_('timestamp'), auto_now_add=True)
+    reason = models.CharField(verbose_name=_('reason'), max_length=255)
+    issuer = models.ForeignKey(User, verbose_name=_('issuer'), on_delete=models.SET_NULL, null=True)
     
-    related_transaction: "Transaction" = models.OneToOneField(to="self", on_delete=models.CASCADE, null=True, default=None, blank=True)
+    related_transaction: "Transaction" = models.OneToOneField(to="self", verbose_name=_('related transaction'), help_text=_('Used to track and associate canceled transactions'), on_delete=models.CASCADE, null=True, default=None, blank=True)
 
     idempotency_key: str | None
 
@@ -158,6 +170,8 @@ class Transaction(models.Model):
             models.Index('closing_balance', models.F('timestamp').desc(), name="idx_recent_transactions"),
             models.Index('closing_balance', name='idx_balance_transaction'),
         ]
+        verbose_name = _('transaction')
+        verbose_name_plural = _('transactions')
 
     def __init__(self, *args: Any, idempotency_key=None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -187,11 +201,14 @@ class Transaction(models.Model):
         
         if not self.can_revert:
             raise Transaction.AlreadyReverted()
+        
+        with override_language(settings.LANGUAGE_CODE):
+            revert_prefix = gettext('Canceled')
 
         revert_transaction = Transaction.objects.create(
             account=self.account,
             amount=-self.amount,
-            reason=f"Storno: {self.reason}",
+            reason=f"{revert_prefix}: {self.reason}",
             issuer=issuer,
             related_transaction=self,
             idempotency_key=idempotency_key
@@ -201,8 +218,9 @@ class Transaction(models.Model):
         return revert_transaction
 
 class ProductGroup(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(verbose_name=_('name'), max_length=255)
     order = models.PositiveIntegerField(
+        verbose_name=_('order'),
         default=0,
         blank=False,
         null=False,
@@ -214,16 +232,19 @@ class ProductGroup(models.Model):
     
     class Meta:
         ordering = ['order']
+        verbose_name = _('product group')
+        verbose_name_plural = _('product groups')
 
 class Product(models.Model):
     objects = ProductManager()
 
-    name = models.CharField(max_length=255)
-    cost = PositiveFixedPrecisionField(decimal_places=2)
-    member_cost = PositiveFixedPrecisionField(decimal_places=2, blank=True)
+    name = models.CharField(verbose_name=_('name'), max_length=255)
+    cost = PositiveFixedPrecisionField(verbose_name=_('cost'), decimal_places=2)
+    member_cost = PositiveFixedPrecisionField(verbose_name=_('member cost'), decimal_places=2, blank=True)
     
-    group = models.ForeignKey(ProductGroup, on_delete=models.SET_NULL, null=True, default=None, blank=True)
+    group = models.ForeignKey(ProductGroup, verbose_name=_('group'), on_delete=models.SET_NULL, null=True, default=None, blank=True)
     order = models.PositiveIntegerField(
+        verbose_name=_('order'),
         default=0,
         blank=False,
         null=False,
@@ -235,6 +256,8 @@ class Product(models.Model):
         indexes = [
             models.Index(models.F('group'), 'order', name="idx_grouped_products")
         ]
+        verbose_name = _('product')
+        verbose_name_plural = _('products')
 
     def __str__(self) -> str:
         return self.name

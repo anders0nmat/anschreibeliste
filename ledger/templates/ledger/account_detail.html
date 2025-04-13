@@ -2,6 +2,7 @@
 
 {% load ledger %}
 {% load static %}
+{% load i18n %}
 
 {% block import %}
 	<link rel="stylesheet" href="{% static 'ledger/transaction_history.css' %}">
@@ -29,21 +30,21 @@
 	</div>
 	<details {% if form.errors %}open{% endif %}>
 		<summary>
-			<h3>Account</h3>
+			<h3>{% translate "Account" %}</h3>
 			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
 		</summary>
 		<form method="post">
 			{% csrf_token %}
 			{{ form }}
 			{% if form.has_enabled_fields %}
-			<input type="submit" class="primary button" value="Save">
+			<input type="submit" class="primary button" value="{% translate "Save" %}">
 			{% endif %}
 		</form>
 	</details>
 	{% if allow_custom_transaction %}
 	<details open>
 		<summary>
-			<h3>Einzahlung</h3>
+			<h3>{% translate "Deposit" %}</h3>
 			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
 		</summary>
 		<form action="{% url 'api_deposit' %}" method="POST" id="deposit-transaction" class="transaction">
@@ -55,12 +56,12 @@
 				<button type="button" class="button" data-amount="1000">+10€</button>
 				<button type="button" class="button" data-amount="5000">+50€</button>
 			</div>
-			<button type="submit" id="confirm-deposit" class="primary button">Bestätigen</button>
+			<button type="submit" id="confirm-deposit" class="primary button">{% translate "Confirm" %}</button>
 		</form>
 	</details>
 	<details open>
 		<summary>
-			<h3>Auszahlung</h3>
+			<h3>{% translate "Withdraw" %}</h3>
 			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
 		</summary>
 
@@ -72,16 +73,17 @@
 			<div class="buttons">
 				<button type="button" class="button" data-amount="1000">+10€</button>
 				<button type="button" class="button" data-amount="5000">+50€</button>
-				<button type="button" class="button" id="withdraw-all">Alles</button>
+				{# Translators: Used to withdraw the entire deposited money #}
+				<button type="button" class="button" id="withdraw-all">{% translate "All" %}</button>
 			</div>
-			<button type="submit" id="confirm-withdraw" class="primary button">Bestätigen</button>
+			<button type="submit" id="confirm-withdraw" class="primary button">{% translate "Confirm" %}</button>
 		</form>
 	</details>
 	{% endif %}
 
 	<details open>
 		<summary>
-			<h3>Transaktionen</h3>
+			<h3>{% translate "Transactions" %}</h3>
 			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>		
 		</summary>
 		<ul id="transactions">

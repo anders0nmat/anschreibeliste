@@ -1,0 +1,278 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-04-13 13:28+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: formfield.py:22
+#, python-brace-format
+msgid "Enter a number with {decimal_places} decimal places."
+msgstr "Gib eine Zahl mit {decimal_places} Nachkommastellen ein."
+
+#: forms.py:21 models.py:98
+msgid "Balance"
+msgstr "Guthaben"
+
+#: forms.py:24 templates/ledger/account_create.html:18
+#: templates/ledger/account_detail.html:33
+msgid "Account"
+msgstr "Account"
+
+#: forms.py:25
+msgid "Amount"
+msgstr "Menge"
+
+#: forms.py:26
+msgid "Reason"
+msgstr "Verwendungszweck"
+
+#: modelfield.py:28
+#, python-format
+msgid "Fixed precision decimal (up to %(decimal_places)i decimal places)"
+msgstr ""
+"Dezimalzahl mit fester Präzision (bis zu %(decimal_places)i Nachkommastellen)"
+
+#: modelfield.py:34
+#, python-format
+msgid ""
+"Positive fixed precision decimal (up to %(decimal_places)i decimal places)"
+msgstr ""
+"Positive Dezimalzahl mit fester Präzision (bis zu %(decimal_places)i "
+"Nachkommastellen)"
+
+#: models.py:20 models.py:63 models.py:221 models.py:241
+msgid "name"
+msgstr "Name"
+
+#: models.py:22 models.py:223 models.py:247
+msgid "order"
+msgstr "Reihenfolge"
+
+#: models.py:34
+msgid "account group"
+msgstr "Account-Gruppe"
+
+#: models.py:35
+msgid "account groups"
+msgstr "Account-Gruppen"
+
+#: models.py:64
+msgid "credit"
+msgstr "Kredit"
+
+#: models.py:65
+msgid "member"
+msgstr "Mitglied"
+
+#: models.py:66
+msgid "active"
+msgstr "Aktiv"
+
+#: models.py:68
+msgid "permanent"
+msgstr "Permanent"
+
+#: models.py:70 models.py:245
+msgid "group"
+msgstr "Gruppe"
+
+#: models.py:86 models.py:134 models.py:154
+msgid "account"
+msgstr "Account"
+
+#: models.py:87
+msgid "accounts"
+msgstr "Accounts"
+
+#: models.py:93
+msgid "Last closing balance"
+msgstr "Letzte Schlussbilanz"
+
+#: models.py:135 models.py:156
+msgid "timestamp"
+msgstr "Zeitstempel"
+
+#: models.py:136 models.py:153
+msgid "closing balance"
+msgstr "Schlussbilanz"
+
+#: models.py:140
+msgid "account balance"
+msgstr "Schlussbilanz"
+
+#: models.py:141
+msgid "account balances"
+msgstr "Schlussbilanzen"
+
+#: models.py:144
+#, python-brace-format
+msgid "{account}: {closing_balance} at {timestamp}"
+msgstr "{account}: {closing_balance} zum {timestamp}"
+
+#: models.py:155
+msgid "amount"
+msgstr "Menge"
+
+#: models.py:157
+msgid "reason"
+msgstr "Verwendungszweck"
+
+#: models.py:158
+msgid "issuer"
+msgstr "Auftraggeber"
+
+#: models.py:160
+msgid "related transaction"
+msgstr "Verwandte Transaktion"
+
+#: models.py:160
+msgid "Used to track and associate canceled transactions"
+msgstr "Dient der Verfolgung und Zuordnung stornierter Transaktionen"
+
+#: models.py:173
+msgid "transaction"
+msgstr "Transaktion"
+
+#: models.py:174
+msgid "transactions"
+msgstr "Transaktionen"
+
+#: models.py:206
+msgid "Canceled"
+msgstr "Storniert"
+
+#: models.py:235
+msgid "product group"
+msgstr "produkt-Gruppe"
+
+#: models.py:236
+msgid "product groups"
+msgstr "produkt-Gruppen"
+
+#: models.py:242
+msgid "cost"
+msgstr "preis"
+
+#: models.py:243
+msgid "member cost"
+msgstr "preis für Mitglieder"
+
+#: models.py:259
+msgid "product"
+msgstr "produkt"
+
+#: models.py:260
+msgid "products"
+msgstr "produkte"
+
+#: templates/ledger/account_create.html:10
+msgid "New Account"
+msgstr "Neuer Account"
+
+#: templates/ledger/account_create.html:32
+#: templates/ledger/account_detail.html:40
+msgid "Save"
+msgstr "Speichern"
+
+#: templates/ledger/account_detail.html:47 views.py:186
+msgid "Deposit"
+msgstr "Einzahlen"
+
+#: templates/ledger/account_detail.html:59
+#: templates/ledger/account_detail.html:79
+msgid "Confirm"
+msgstr "Bestätigen"
+
+#: templates/ledger/account_detail.html:64 views.py:187
+msgid "Withdraw"
+msgstr "Auszahlen"
+
+#. Translators: Used to withdraw the entire deposited money
+#: templates/ledger/account_detail.html:77
+msgid "All"
+msgstr "Alles"
+
+#: templates/ledger/account_detail.html:86 templates/ledger/main.html:106
+msgid "Transactions"
+msgstr "Transaktionen"
+
+#: templates/ledger/account_list.html:4 templates/ledger/main.html:24
+msgid "Account-Liste"
+msgstr "Account-Liste"
+
+#: templates/ledger/account_list.html:17 templates/ledger/main.html:4
+msgid "Anschreibeliste"
+msgstr "Anschreibeliste"
+
+#: templates/ledger/main.html:36
+msgid "Products"
+msgstr "Getränke"
+
+#: templates/ledger/main.html:37
+msgid "Accounts"
+msgstr "Accounts"
+
+#: templates/ledger/main.html:45
+msgid "Search an item..."
+msgstr "Suche einen Eintrag..."
+
+#: templates/ledger/main.html:61
+msgid "Amount:"
+msgstr "Menge:"
+
+#: templates/ledger/main.html:84
+msgid "Select account"
+msgstr "Account auswählen"
+
+#: templates/ledger/main.html:88
+msgid "Select product"
+msgstr "Produkt auswählen"
+
+#: templates/ledger/snippets/accounts.html:28
+#: templates/ledger/snippets/accounts.html:55
+msgid "Credit"
+msgstr "Kredit"
+
+#: templates/ledger/snippets/transaction_history.html:33
+msgid "No transactions found"
+msgstr "Keine Transaktionen gefunden"
+
+#: views.py:147 views.py:193
+msgid "The account has not enough money"
+msgstr "Der ausgewählte Account hat nicht genug Guthaben"
+
+#. Translators: Used as a prefix for transaction reason if a member buys something on behalf of a non-member
+#: views.py:155
+msgid "For extern"
+msgstr "Für Extern"
+
+#. Translators: Used as a prefix for transaction reason if a non-member buys something on behalf of a member
+#: views.py:157
+msgid "For intern"
+msgstr "Für Clubbi"
+
+#: views.py:180
+msgid "Not authorized to withdraw from this account"
+msgstr "Nicht berechtigt, von diesem Account auszuzahlen"
+
+#: views.py:211
+msgid "Transaction already reverted"
+msgstr "Transaktion bereits zurückgezogen"
+
+#: views.py:213
+msgid "Not authorized to revert this transaction"
+msgstr "Nicht berechtigt, diese Transaktion zurückzuziehen"

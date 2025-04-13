@@ -1,6 +1,7 @@
 {% extends 'index.html' %}
+{% load i18n %}
 
-{% block title %}Account-Liste{% endblock title %}
+{% block title %}{% translate "Account-Liste" %}{% endblock title %}
 
 {% block import %}
 	{% load static %}
@@ -13,7 +14,7 @@
 {% endblock import %}
 
 {% block links %}
-<li><a href="{% url 'main' %}">Anschreibeliste</a></li>
+<li><a href="{% url 'main' %}">{% translate "Anschreibeliste" %}</a></li>
 {{ block.super }}
 {% endblock links %}
 

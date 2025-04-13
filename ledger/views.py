@@ -9,6 +9,8 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, UpdateView, CreateView, TemplateView
 from json import loads
+from django.utils.translation import gettext as _, override as override_language
+from django.conf import settings
 
 from .decorators import idempotent
 from .eventstream import EventstreamResponse, StreamEvent
@@ -142,13 +144,18 @@ def _product_transaction(request: HttpRequest, form: ProductTransactionForm) -> 
             price *= amount
 
             if account.current_budget < price:
-                raise ValidationError('The account has not enough money', code='out_of_money')
+                raise ValidationError(_('The account has not enough money'), code='out_of_money')
             
             reason = product.name
             if amount > 1:
                 reason = f'{amount}x {reason}'
             if invert_member:
-                reason = f'Für {"Extern" if account.member else "Clubbi"}: {reason}'
+                with override_language(settings.LANGUAGE_CODE):
+                    # Translators: Used as a prefix for transaction reason if a member buys something on behalf of a non-member
+                    for_extern = _('For extern')
+                    # Translators: Used as a prefix for transaction reason if a non-member buys something on behalf of a member
+                    for_intern = _('For intern')
+                reason = f'{for_extern if account.member else for_intern}: {reason}'
 
             return Transaction.objects.create(
                 account=account,
@@ -170,17 +177,20 @@ def _custom_transaction(request: HttpRequest, form: TransactionForm, action: Lit
 
             required_permission = 'ledger.add_permanent_custom_transaction' if account.permanent else 'ledger.add_custom_transaction'
             if not request.user.has_perm(required_permission):
-                raise ValidationError('Not authorized to withdraw from this account', code='user_permission')
+                raise ValidationError(_('Not authorized to withdraw from this account'), code='user_permission')
             
             if not reason:
                 amount_str = str(amount)
                 wholes, cents = amount_str[:-2], amount_str[-2:]
-                reason = f"{action.capitalize()}: {wholes},{cents}€"
+                with override_language(settings.LANGUAGE_CODE):
+                    deposit_reason = _('Deposit')
+                    withdraw_reason = _('Withdraw')
+                reason = f"{deposit_reason if action == 'deposit' else withdraw_reason}: {wholes},{cents}€"
 
             if action == 'withdraw':
                 amount = -amount
                 if account.current_budget + amount < 0:
-                    raise ValidationError('The account has not enough money', code='out_of_money')
+                    raise ValidationError(_('The account has not enough money'), code='out_of_money')
 
             return Transaction.objects.create(
                 account=account,
@@ -198,9 +208,9 @@ def _revert_transaction(request: HttpRequest, form: RevertTransactionForm) -> Tr
         try:
             return transaction.revert(issuer=request.user, idempotency_key=request.idempotency_key)
         except Transaction.AlreadyReverted:
-            form.add_error(None, ValidationError('Transaction already reverted', code='already_reverted'))
+            form.add_error(None, ValidationError(_('Transaction already reverted'), code='already_reverted'))
         except PermissionDenied:
-            form.add_error(None, ValidationError('Not authorized to revert this transaction', code='user_permission'))        
+            form.add_error(None, ValidationError(_('Not authorized to revert this transaction'), code='user_permission'))        
     return None
 
 

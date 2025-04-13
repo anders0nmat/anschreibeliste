@@ -1,6 +1,7 @@
 {% extends 'index.html' %}
+{% load i18n %}
 
-{% block title %}Anschreibeliste{% endblock title %}
+{% block title %}{% translate "Anschreibeliste" %}{% endblock title %}
 
 {% block import %}
 	{% load static %}
@@ -20,7 +21,7 @@
 
 {% block links %}
 	{{ block.super }}
-	<li><a href="{% url 'account_list' %}">Account-Liste</a></li>
+	<li><a href="{% url 'account_list' %}">{% translate "Account-Liste" %}</a></li>
 {% endblock links %}
 
 {% block content %}
@@ -32,13 +33,16 @@
 		}
 	</style>
 
+	{% translate "Products" as the_product %}
+	{% translate "Accounts" as the_account %}
+
 	<div class="slide-bar">
-		<button class="slide-indicator transparent button" data-slide="products">Getränke</button>
-		<button class="slide-indicator transparent button" data-slide="accounts">Accounts</button>
+		<button class="slide-indicator transparent button" data-slide="products">{{ the_product }}</button>
+		<button class="slide-indicator transparent button" data-slide="accounts">{{ the_account }}</button>
 		<div style="flex-grow:1"></div>
 		<div hidden>
 			<label>
-				<input type="search" id="item-search" placeholder="Search an item..." autocomplete="off">
+				<input type="search" id="item-search" placeholder="{% translate "Search an item..." %}" autocomplete="off">
 				<button type="button" class="transparent slim center button">
 					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-x-icon lucide-circle-x"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
 				</button>
@@ -54,7 +58,7 @@
 		<div id="transaction-multiplier">
 			<span class="css-hidden" aria-hidden="true"  inputmode="numeric" contenteditable>1</span>
 			<label>
-				<span class="visually-hidden">Amount:</span>
+				<span class="visually-hidden">{% translate "Amount:" %}</span>
 				<input type="number" name="amount" value="1" form="new-transaction" min="1">
 			</label>
 		</div>
@@ -62,12 +66,12 @@
 
 	<div class="slideshow">
 		<div class="slide group-list" id="products" data-slide="products">
-			<h2 class="visually-hidden">Getränke</h2>
+			<h2 class="visually-hidden">{{ the_product }}</h2>
 			{% include 'ledger/snippets/products.html' with items=product_list target_form="new-transaction" only %}
 		</div>
 		
 		<div class="slide group-list" id="accounts" data-slide="accounts">
-			<h2 class="visually-hidden">Accounts</h2>
+			<h2 class="visually-hidden">{{ the_account }}</h2>
 			{% include 'ledger/snippets/accounts.html' with items=account_list target_form="new-transaction" only %}
 		</div>
 	</div>
@@ -77,11 +81,11 @@
 	<input type="hidden" name="idempotency-key" value="{{ idempotency_key }}">
 
 	<span class="account">
-		<span class="empty">Select account</span>
+		<span class="empty">{% translate "Select account" %}</span>
 		<output name="selected_account" value=""></output>
 	</span>
 	<span class="product reason">
-		<span class="empty">Select product</span>
+		<span class="empty">{% translate "Select product" %}</span>
 		<output name="selected_product" value=""></output>
 	</span>
 
@@ -99,7 +103,7 @@
 	</button>
 </form>
 <div>
-	<h2 class="visually-hidden">Transactions</h2>
+	<h2 class="visually-hidden">{% translate "Transactions" %}</h2>
 	<ul id="transactions">
 		{% include 'ledger/snippets/transaction_history.html' with transactions=transaction_list %}
 	</ul>

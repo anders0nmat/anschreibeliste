@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block tab_title %}Login{% endblock tab_title %}
+{% block tab_title %}{% translate "Login" %}{% endblock tab_title %}
 
 {% block import %}
 <style>
@@ -48,19 +49,23 @@
 
 {% block content %}
 <main>
-	<h1>User Login</h1>
+	<h1>{%translate "User Login" %}</h1>
 	{% if form.errors %}
 	<p class="note">
+		{% blocktranslate %}
 		Wrong username or password.<br>
 		Please try again.
+		{% endblocktranslate %}
 	</p>
 	{% endif %}
 
 	{% if next %}
 		{% if user.is_authenticated %}
 		<p class="note">
+			{% blocktranslate %}
 			Your don't have access to this page.<br>
 			Login with an account that has access.
+			{% endblocktranslate %}
 		</p>
 		{% endif %}
 	{% endif %}
@@ -73,12 +78,12 @@
 		{{ form.password.label_tag }}
 		{{ form.password }}
 
-		<button type="submit" class="primary button">Login</button>
+		<button type="submit" class="primary button">{% translate "Login" %}</button>
 		<input type="hidden" name="next" value="{{ next }}">
 	</form>
 
 	{# Assumes you set up the password_reset view in your URLconf #}
-	<p><a href="{% url 'password_reset' %}">Lost password?</a></p>
+	<p><a href="{% url 'password_reset' %}">{% translate "Lost password?" %}</a></p>
 		
 </main>
 {% endblock content %}

@@ -2,6 +2,8 @@
 
 {% load static %}
 {% load ledger %}
+{% load i18n %}
+
 
 {% block item %}
 {% with account=item %}
@@ -23,7 +25,7 @@
 			{% endif %}
 			{{ account.name }}</h4>
 		{{ current_balance|money }}
-		{% if show_credit %}<span class="credit">Credit: {{ account.credit|money }}</span>{% endif %}
+		{% if show_credit %}<span class="credit">{% translate "Credit" %}: {{ account.credit|money }}</span>{% endif %}
 
 	</a>
 {% else %}
@@ -50,7 +52,7 @@
 			{{ account.name }}
 		</h4>
 		{{ current_balance|money }}
-		{% if show_credit %}<span class="credit">Credit: {{ account.credit|money }}</span>{% endif %}
+		{% if show_credit %}<span class="credit">{% translate "Credit" %}: {{ account.credit|money }}</span>{% endif %}
 		
 </label>
 {% endif %}
