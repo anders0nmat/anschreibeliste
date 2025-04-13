@@ -41,8 +41,9 @@
 			{% endif %}
 		</form>
 	</details>
-	{% if allow_custom_transaction %}
-	<details open>
+
+	{% if deposit_form %}
+	<details>
 		<summary>
 			<h3>{% translate "Deposit" %}</h3>
 			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
@@ -51,7 +52,7 @@
 			{% csrf_token %}
 			{% idempotency_key %}
 			{{ deposit_form }}
-
+			
 			<div class="buttons">
 				<button type="button" class="button" data-amount="1000">+10€</button>
 				<button type="button" class="button" data-amount="5000">+50€</button>
@@ -59,17 +60,20 @@
 			<button type="submit" id="confirm-deposit" class="primary button">{% translate "Confirm" %}</button>
 		</form>
 	</details>
-	<details open>
+	{% endif %}
+
+	{% if withdraw_form %}
+	<details>
 		<summary>
 			<h3>{% translate "Withdraw" %}</h3>
 			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
 		</summary>
-
+		
 		<form action="{% url 'api_withdraw' %}" method="post" id="withdraw-transaction" class="transaction">
 			{% csrf_token %}
 			{% idempotency_key %}
 			{{ withdraw_form }}
-
+			
 			<div class="buttons">
 				<button type="button" class="button" data-amount="1000">+10€</button>
 				<button type="button" class="button" data-amount="5000">+50€</button>

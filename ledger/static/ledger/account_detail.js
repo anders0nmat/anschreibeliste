@@ -28,7 +28,7 @@ document.querySelectorAll<HTMLElement>('#withdraw-transaction .button[data-amoun
     })
 })*/
 const withdraw_all = document.querySelector('#withdraw-all');
-withdraw_all.addEventListener('click', _ => {
+withdraw_all?.addEventListener('click', _ => {
     const form = withdraw_all.closest('form');
     const input = form.elements.namedItem('amount');
     const newValue = Math.max(parseInt(selected_account.dataset.balance ?? '0'), 0).toString().padStart(3, '0');
@@ -63,5 +63,5 @@ function submit_custom_transaction(action) {
         form.reset();
     };
 }
-document.getElementById('withdraw-transaction').addEventListener('submit', submit_custom_transaction("withdraw"));
-document.getElementById('deposit-transaction').addEventListener('submit', submit_custom_transaction("deposit"));
+document.getElementById('withdraw-transaction')?.addEventListener('submit', submit_custom_transaction("withdraw"));
+document.getElementById('deposit-transaction')?.addEventListener('submit', submit_custom_transaction("deposit"));

@@ -46,16 +46,29 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
         return reverse('account_detail', kwargs={'pk': self.object.pk})
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
-        custom_transaction_permission = 'ledger.add_permanent_custom_transaction' if self.object.permanent else 'ledger.add_custom_transaction'
+        # key=(action, permanent)
+        PERMS = {
+            ('deposit', False): 'ledger.add_deposit_transaction',
+            ('withdraw', False): 'ledger.add_withdraw_transaction',
+            ('deposit', True): 'ledger.add_permanent_deposit_transaction',
+            ('withdraw', True): 'ledger.add_permanent_withdraw_transaction',
+        }
 
         kwargs |= {
             'account_list': Account.objects.grouped(),
             'transactions': Transaction.objects.recent(account=self.object, user=self.request.user),
-            'allow_custom_transaction': self.request.user.has_perm(custom_transaction_permission),
-            'deposit_form': TransactionForm(initial={'account': self.object, 'action': 'deposit'}),
-            'withdraw_form': TransactionForm(initial={'account': self.object, 'action': 'withdraw'}),
             'js_config': js_config(),
         }
+
+        if self.request.user.has_perm(PERMS[('deposit', self.object.permanent)]):
+            kwargs |= {
+                'deposit_form': TransactionForm(initial={'account': self.object, 'action': 'deposit'}),
+            }
+        if self.request.user.has_perm(PERMS[('withdraw', self.object.permanent)]):
+            kwargs |= {
+                'withdraw_form': TransactionForm(initial={'account': self.object, 'action': 'withdraw'}),
+            }
+        
         return super().get_context_data(**kwargs)
     
     def get_disabled_fields(self) -> list[str] | Literal['__all__']:
@@ -174,10 +187,19 @@ def _custom_transaction(request: HttpRequest, form: TransactionForm, action: Lit
             account: Account = form.cleaned_data['account']
             amount: int = form.cleaned_data['amount']
             reason: str = form.cleaned_data['reason']
-
-            required_permission = 'ledger.add_permanent_custom_transaction' if account.permanent else 'ledger.add_custom_transaction'
+            
+            # key=(action, permanent)
+            PERMS = {
+                ('deposit', False): 'ledger.add_deposit_transaction',
+                ('withdraw', False): 'ledger.add_withdraw_transaction',
+                ('deposit', True): 'ledger.add_permanent_deposit_transaction',
+                ('withdraw', True): 'ledger.add_permanent_withdraw_transaction',
+            }
+            required_permission = PERMS[(action, account.permanent)]
             if not request.user.has_perm(required_permission):
-                raise ValidationError(_('Not authorized to withdraw from this account'), code='user_permission')
+                deposit_reason = _('Not authorized to deposit to this account')
+                withdraw_reason = _('Not authorized to withdraw from this account')
+                raise ValidationError(deposit_reason if action == 'deposit' else withdraw_reason, code='user_permission')
             
             if not reason:
                 amount_str = str(amount)

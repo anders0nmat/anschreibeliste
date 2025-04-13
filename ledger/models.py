@@ -163,8 +163,10 @@ class Transaction(models.Model):
 
     class Meta:
         permissions = [
-            ('add_custom_transaction', 'Can make arbitrary deposits and withdrawls'),
-            ('add_permanent_custom_transaction', 'Can make arbitrary deposits and withdrawls for permanent accounts'),
+            ('add_deposit_transaction', 'Can make arbitrary deposits'),
+            ('add_permanent_deposit_transaction', 'Can make arbitrary deposits for permanent accounts'),
+            ('add_withdraw_transaction', 'Can make arbitrary withdrawls'),
+            ('add_permanent_withdraw_transaction', 'Can make arbitrary withdrawls for permanent accounts'),
         ]
         indexes = [
             models.Index('closing_balance', models.F('timestamp').desc(), name="idx_recent_transactions"),

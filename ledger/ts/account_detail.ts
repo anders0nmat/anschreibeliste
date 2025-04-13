@@ -3,8 +3,8 @@ import { Transaction } from "./transaction.js"
 import { Account } from "./accounts.js"
 
 const selected_account = document.querySelector<HTMLElement>('#accounts .item[selected]')!
-const deposit_amount = document.querySelector<HTMLInputElement>('#deposit-amount')!
-const withdraw_amount = document.querySelector<HTMLInputElement>('#withdraw-amount')!
+const deposit_amount = document.querySelector<HTMLInputElement>('#deposit-amount')
+const withdraw_amount = document.querySelector<HTMLInputElement>('#withdraw-amount')
 
 const decimalSeparator = Intl.NumberFormat()
 	.formatToParts(0.5)
@@ -34,8 +34,8 @@ document.querySelectorAll<HTMLElement>('#withdraw-transaction .button[data-amoun
 		withdraw_amount.value = (parseInt(withdraw_amount.value) + parseInt(element.dataset.amount ?? '0')).toString()
 	})
 })*/
-const withdraw_all = document.querySelector<HTMLElement>('#withdraw-all')!
-withdraw_all.addEventListener('click', _ => {
+const withdraw_all = document.querySelector<HTMLElement>('#withdraw-all')
+withdraw_all?.addEventListener('click', _ => {
 	const form: HTMLFormElement = withdraw_all.closest('form')!
 	const input = form.elements.namedItem('amount')! as HTMLInputElement
 
@@ -78,7 +78,7 @@ function submit_custom_transaction(action: "deposit" | "withdraw") {
 	}
 }
 
-document.getElementById('withdraw-transaction')!.addEventListener('submit', submit_custom_transaction("withdraw"))
-document.getElementById('deposit-transaction')!.addEventListener('submit', submit_custom_transaction("deposit"))
+document.getElementById('withdraw-transaction')?.addEventListener('submit', submit_custom_transaction("withdraw"))
+document.getElementById('deposit-transaction')?.addEventListener('submit', submit_custom_transaction("deposit"))
 
 
