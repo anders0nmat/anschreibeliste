@@ -1,7 +1,5 @@
 body {
 	display: grid;
-	/* grid-template-columns: 3fr 1fr; */
-	/* grid-template-rows: max-content auto; */
 	grid-template-rows: max-content auto;
 	grid-template-areas: 
 		"head"
@@ -32,6 +30,10 @@ body {
 				"head head"
 				"content editor";
 		}
+
+		#editor-placeholder {
+			display: grid;
+		}
 	}
 }
 
@@ -41,12 +43,20 @@ header {
 
 main {
 	grid-area: content;
-	/* display: none; */
 }
 
 a.item {
 	text-decoration: none;
 	color: currentColor;
+}
+
+#editor-placeholder {
+	grid-area: editor;
+	display: none;
+	justify-items: center;
+	align-items: center;
+	font-style: italic;
+	color: var(--secondary-text-color);
 }
 
 aside {
@@ -55,8 +65,6 @@ aside {
 	flex-flow: column nowrap;
 	align-items: stretch;
 	gap: 1.5em;
-	/* padding-right: 0.25em;
-	padding-bottom: 0.25em; */
 	padding: 0 0.5em 0.25em;
 	overflow: hidden auto;
 
@@ -105,7 +113,7 @@ aside {
 		}
 	}
 	
-	form {
+	& form {
 		display: grid;
 		grid-template-columns: max-content auto;
 		gap: 0.5em;
@@ -139,7 +147,6 @@ aside {
 			border: none;
 			padding: 0.25em 0.5em;
 			background: none;
-			/* width: 16ch; */
 			
 			&:not([disabled]):hover {
 				background-color: color-mix(in srgb, var(--secondary-bg-color), var(--highlight-color) 10%);
@@ -178,26 +185,6 @@ aside {
 			font-size: 80%;
 			font-variant: small-caps;
 			color: var(--secondary-text-color);
-			/* text-align: right; */
-		}
-	}
-}
-
-@media screen and (max-width: 899px) {
-	body {
-		background: red;
-	}
-	body:has( aside) {
-		grid-template-areas: 
-			"head"
-			"editor";
-	
-		& main {
-			display: none;
-		}
-	
-		& aside {
-			display: flex;
 		}
 	}
 }
@@ -208,7 +195,6 @@ aside {
 
 #deposit-transaction,
 #withdraw-transaction {
-	/* padding: 0.25em; */
 	--bg: color-mix(in srgb, var(--secondary-bg-color), var(--selected-color) 20%);
 	border: thin solid var(--selected-color);
 	margin-right: 0.25em;
@@ -292,7 +278,6 @@ aside {
 		background: var(--secondary-bg-color);
 		font-size: 125%;
 		min-width: 5ch;
-		/* width: 16ch; */
 		
 		&:hover {
 			background-color: var(--secondary-bg-color);
@@ -325,8 +310,6 @@ aside {
 #withdraw-transaction {
 	--selected-color: var(--negative-color);
 }
-
-
 
 .transaction {
 	background: var(--secondary-bg-color);
@@ -384,20 +367,10 @@ aside {
 
 	& > .undo {
 		grid-area: undo;
-		/* border: none;
-		background: none; */
 		padding: 4px;
 		color: var(--primary-text-color);
 		display: flex;
 		flex-flow: column nowrap;
 		justify-content: center;
-		/* 
-		&[disabled] {
-			opacity: 30%;
-		}
-
-		&:not([disabled]):hover {
-			background-color: color-mix(in srgb, var(--secondary-bg-color), var(--highlight-color) 10%);
-		} */
 	}
 } 

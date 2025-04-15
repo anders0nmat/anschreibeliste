@@ -4,8 +4,6 @@
 	gap: 0.25em;
 	padding: 0;
 	margin: 0;
-	/* padding-right: 0.25em;
-	padding-bottom: 0.25em; */
 	padding: 0.25em;
 	list-style: none;
 
@@ -38,7 +36,6 @@
 
 .transaction {
 	background: var(--secondary-bg-color);
-	/* padding: 0.5em 0.75em; */
 	padding: 0.5em 0.5em 0.5em 0.75em;
 
 	display: grid;

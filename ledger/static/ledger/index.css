@@ -1,11 +1,5 @@
 body {
 	display: grid;
-	/* grid-template-columns: 4fr 1fr; */
-	/* grid-template-rows: max-content max-content auto; */
-	/* grid-template-areas: 
-		"head head"
-		"content new-transaction"
-		"content transactions"; */
 	grid-template-rows: max-content auto max-content;
 	grid-template-areas: 
 		"head"
@@ -42,7 +36,6 @@ body {
 				"head head"
 				"content new-transaction"
 				"content transactions";
-			/* gap: 0.25em; */
 		}
 
 		#expand {
@@ -60,8 +53,6 @@ main {
 	grid-area: content;
 	grid-template-rows: subgrid;
 	overflow: hidden;
-	/* padding-left: 0.25em;
-	padding-bottom: 0.25em; */
 	padding-inline: 0.5em;
 
 
@@ -71,24 +62,6 @@ main {
 		}
 	}
 }
-
-/* #transactions {
-	display: grid;
-	grid-template-columns: auto auto max-content;
-	gap: 0.25em;
-	padding: 0;
-	margin: 0;
-	padding-right: 0.25em;
-	list-style: none;
-	overflow-y: auto;
-	grid-area: transactions;
-
-	& .timestamp {
-		font-size: 80%;
-		color: var(--secondary-text-color);
-		margin-top: 1em;
-	}
-} */
 
 div:has(#transactions) {
 	overflow: hidden auto;
@@ -104,18 +77,15 @@ div:has(#transactions) {
 }
 
 #new-transaction {
-	/* padding: 0.25em; */
 	--bg: color-mix(in srgb, var(--secondary-bg-color), var(--selected-color) 20%);
 	
 	background: linear-gradient(to right, var(--bg) 50%, transparent 0) left;
 	background-size: 200% 100%;
 	background-position-x: left;
-	/* margin-right: 0.25em; */
 	margin: 0 0.25em 0.25em;
 	position: relative;
 	grid-area: new-transaction;
 	border: thin solid var(--selected-color);
-	/* background: var(--bg); */
 	grid-template-columns: auto auto max-content;
 	grid-template-areas: 
 		"account price undo"
@@ -230,7 +200,6 @@ div:has(#transactions) {
 #transaction-multiplier {
 	margin: 0;
 	padding: 0.25em 0.5em;
-	/* margin-right:2ch; */
 
 	cursor: default;
 	align-self: center;
@@ -278,20 +247,10 @@ div:has(#transactions) {
 	align-items: center;
 	
 	& .slide-indicator {
-		/* margin: 0;
-		padding: 0.75em 1em;
-		display: block; */
-
 		cursor: default;
 		
 		font-weight: normal;
 		font-size: 1em;
-
-		/* transition: background-color 200ms ease-in-out; */
-
-		/* &:hover {
-			background-color: color-mix(in srgb, var(--secondary-bg-color), var(--highlight-color) 10%) !important;
-		} */
 	}
 }
 

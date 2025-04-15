@@ -70,7 +70,6 @@
 		text-overflow: ellipsis;
 		-webkit-line-clamp: 2;
 		line-clamp: 2;
-		/* display: -webkit-inline-box; */
 		-webkit-box-orient: vertical;
 
 		
