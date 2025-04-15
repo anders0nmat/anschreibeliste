@@ -157,6 +157,30 @@ aside {
 			color: var(--secondary-text-color);
 		}
 	}
+
+	& #banking-details {
+		display: flex;
+		flex-flow: row wrap;
+		justify-content: space-evenly;
+		margin-right: 0.25em;
+		align-items: center;
+
+		& table {
+			border-spacing: 0.5ch 0.75em;
+		}
+
+		& table tr {
+			display: flex;
+			flex-direction: column;
+		}
+
+		& table td:nth-of-type(1) {
+			font-size: 80%;
+			font-variant: small-caps;
+			color: var(--secondary-text-color);
+			/* text-align: right; */
+		}
+	}
 }
 
 @media screen and (max-width: 899px) {

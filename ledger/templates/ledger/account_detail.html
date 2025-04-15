@@ -48,6 +48,25 @@
 			<h3>{% translate "Deposit" %}</h3>
 			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
 		</summary>
+		{% if banking_details and account.permanent %}
+		<div id="banking-details">
+			<table>
+				<tr>
+					<td>{% trans "Name" %}</td>
+					<td>{{ banking_details.name }}</td>
+				</tr>
+				<tr>
+					<td>{% trans "IBAN" %}</td>
+					<td>{{ banking_details.iban }}</td>
+				</tr>
+				<tr>
+					<td>{% trans "Invoice Text" %}</td>
+					<td>{{ banking_details.invoice_text }}</td>
+				</tr>
+			</table>
+			{{ banking_details.qr|safe }}
+		</div>
+		{% endif %}
 		<form action="{% url 'api_deposit' %}" method="POST" id="deposit-transaction" class="transaction">
 			{% csrf_token %}
 			{% idempotency_key %}

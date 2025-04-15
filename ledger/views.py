@@ -18,6 +18,27 @@ from .mixins import EnableFieldsMixin
 from .models import Account, Transaction, Product
 from .forms import AccountForm, TransactionForm, ProductTransactionForm, RevertTransactionForm
 from . import config
+from .utils import EPCCode
+import qrcode
+from qrcode.image.svg import SvgImage
+from qrcode.image.styles.moduledrawers.svg import SvgSquareDrawer
+from qrcode.compat.etree import ET
+
+class SvgSquareDrawerNoNamespace(SvgSquareDrawer):
+    """
+    Square drawer that avoids namespaced svg elements (e.g. '<svg:rect>').
+    
+    Namespaced elements are not handled by browsers, so they are not suitable for svg embedded in html
+    """
+    def el(self, box):
+        coords = self.coords(box)
+        return ET.Element(
+            self.tag,  # type: ignore
+            x=self.img.units(coords.x0),
+            y=self.img.units(coords.y0),
+            width=self.unit_size,
+            height=self.unit_size,
+        )
 
 
 def js_config() -> dict[str, Any]:
@@ -59,6 +80,11 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
             'transactions': Transaction.objects.recent(account=self.object, user=self.request.user),
             'js_config': js_config(),
         }
+        
+        if config.BANKING_INFORMATION:
+            kwargs |= {
+                'banking_details': self.get_banking_details() | {'qr': self.get_transaction_qr()},
+            }
 
         if self.request.user.has_perm(PERMS[('deposit', self.object.permanent)]):
             kwargs |= {
@@ -84,6 +110,26 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
             return ['member', 'permanent']
         else:
             return '__all__'
+        
+    def get_banking_details(self) -> config.BankingInfo:
+        with override_language(settings.LANGUAGE_CODE):
+            return {
+                'name': config.BANKING_INFORMATION['name'],
+                'iban': config.BANKING_INFORMATION['iban'],
+                'invoice_text': config.BANKING_INFORMATION['invoice_text'].format(name=self.object.name if self.object.permanent else ''),
+            }
+
+    def get_transaction_qr(self) -> str:
+        if not self.object.permanent:
+            return ''
+        details = self.get_banking_details()
+        code = EPCCode(name=details['name'], iban=details['iban'], invoiceText=details['invoice_text'])
+        qr = qrcode.QRCode(image_factory=SvgImage)
+        qr.add_data(str(code))
+        svg = qr.make_image(attrib={'fill': 'currentcolor'}, module_drawer=SvgSquareDrawerNoNamespace(), eye_drawer=SvgSquareDrawerNoNamespace())
+
+        return svg.to_string(encoding="unicode")
+        
 
 class AccountCreate(PermissionRequiredMixin, EnableFieldsMixin, CreateView):
     model = Account
@@ -306,7 +352,6 @@ def revert_transaction_ajax(request: HttpRequest):
         return JsonResponse({"transaction_id": new_transaction.pk})
 
     return JsonResponse(form.errors.as_json(), safe=False, status=HTTPStatus.BAD_REQUEST)
-
 
 def transaction_events(request: HttpRequest):
     initial_event = None

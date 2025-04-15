@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-13 14:13+0200\n"
+"POT-Creation-Date: 2025-04-15 13:07+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -188,25 +188,37 @@ msgstr "Neuer Account"
 msgid "Save"
 msgstr "Speichern"
 
-#: templates/ledger/account_detail.html:47 views.py:195
+#: templates/ledger/account_detail.html:48 views.py:250
 msgid "Deposit"
 msgstr "Einzahlung"
 
+#: templates/ledger/account_detail.html:55
+msgid "Name"
+msgstr "Name"
+
 #: templates/ledger/account_detail.html:59
+msgid "IBAN"
+msgstr "IBAN"
+
+#: templates/ledger/account_detail.html:63
+msgid "Invoice Text"
+msgstr "Verwendungszweck"
+
 #: templates/ledger/account_detail.html:79
+#: templates/ledger/account_detail.html:102
 msgid "Confirm"
 msgstr "Bestätigen"
 
-#: templates/ledger/account_detail.html:64 views.py:196
+#: templates/ledger/account_detail.html:87 views.py:251
 msgid "Withdraw"
 msgstr "Auszahlung"
 
 #. Translators: Used to withdraw the entire deposited money
-#: templates/ledger/account_detail.html:77
+#: templates/ledger/account_detail.html:100
 msgid "All"
 msgstr "Alles"
 
-#: templates/ledger/account_detail.html:86 templates/ledger/main.html:106
+#: templates/ledger/account_detail.html:109 templates/ledger/main.html:106
 msgid "Transactions"
 msgstr "Transaktionen"
 
@@ -217,6 +229,10 @@ msgstr "Account-Liste"
 #: templates/ledger/account_list.html:17 templates/ledger/main.html:4
 msgid "Anschreibeliste"
 msgstr "Anschreibeliste"
+
+#: templates/ledger/account_list.html:29
+msgid "Select an account"
+msgstr "Wähle einen Account"
 
 #: templates/ledger/main.html:36
 msgid "Products"
@@ -251,32 +267,32 @@ msgstr "Kredit"
 msgid "No transactions found"
 msgstr "Keine Transaktionen gefunden"
 
-#: views.py:147 views.py:202
+#: views.py:202 views.py:257
 msgid "The account has not enough money"
 msgstr "Der ausgewählte Account hat nicht genug Guthaben"
 
 #. Translators: Used as a prefix for transaction reason if a member buys something on behalf of a non-member
-#: views.py:155
+#: views.py:210
 msgid "For extern"
 msgstr "Für Extern"
 
 #. Translators: Used as a prefix for transaction reason if a non-member buys something on behalf of a member
-#: views.py:157
+#: views.py:212
 msgid "For intern"
 msgstr "Für Clubbi"
 
-#: views.py:187
+#: views.py:242
 msgid "Not authorized to deposit to this account"
 msgstr "Nicht berechtigt, in diesen Account einzuzahlen"
 
-#: views.py:188
+#: views.py:243
 msgid "Not authorized to withdraw from this account"
 msgstr "Nicht berechtigt, von diesem Account auszuzahlen"
 
-#: views.py:220
+#: views.py:275
 msgid "Transaction already reverted"
 msgstr "Transaktion bereits zurückgezogen"
 
-#: views.py:222
+#: views.py:277
 msgid "Not authorized to revert this transaction"
 msgstr "Nicht berechtigt, diese Transaktion zurückzuziehen"
