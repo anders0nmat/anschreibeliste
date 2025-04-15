@@ -9,7 +9,7 @@ class AccountForm(ModelForm):
     
     class Meta:
         model = Account
-        fields = ['name', 'balance', 'credit', 'group', 'member', 'permanent']
+        fields = ['display_name', 'full_name', 'balance', 'credit', 'group', 'member', 'permanent']
 
     def __init__(self, *args, **kwargs) -> None:
         instance: Account = kwargs.get('instance')

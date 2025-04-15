@@ -11,6 +11,7 @@ from django.views.generic import ListView, UpdateView, CreateView, TemplateView
 from json import loads
 from django.utils.translation import gettext as _, override as override_language
 from django.conf import settings
+from decimal import Decimal
 
 from .decorators import idempotent
 from .eventstream import EventstreamResponse, StreamEvent
@@ -21,9 +22,24 @@ from . import config
 from .utils import EPCCode
 import qrcode
 from qrcode.image.svg import SvgImage
-from qrcode.image.styles.moduledrawers.svg import SvgSquareDrawer
+from qrcode.image.styles.moduledrawers.svg import SvgSquareDrawer, SvgCircleDrawer
 from qrcode.compat.etree import ET
 
+class SvgCircleDrawerNoNamespace(SvgCircleDrawer):
+    """
+    Circle drawer that avoids namespaced svg elements (e.g. '<svg:rect>').
+    
+    Namespaced elements are not handled by browsers, so they are not suitable for svg embedded in html
+    """
+    def el(self, box):
+        coords = self.coords(box)
+        return ET.Element(
+            self.tag,  # type: ignore
+            cx=self.img.units(coords.xh),
+            cy=self.img.units(coords.yh),
+            r=self.radius,
+        )
+    
 class SvgSquareDrawerNoNamespace(SvgSquareDrawer):
     """
     Square drawer that avoids namespaced svg elements (e.g. '<svg:rect>').
@@ -116,7 +132,7 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
             return {
                 'name': config.BANKING_INFORMATION['name'],
                 'iban': config.BANKING_INFORMATION['iban'],
-                'invoice_text': config.BANKING_INFORMATION['invoice_text'].format(name=self.object.name if self.object.permanent else ''),
+                'invoice_text': config.BANKING_INFORMATION['invoice_text'].format(name=self.object.full_name if self.object.permanent else '[name]'),
             }
 
     def get_transaction_qr(self) -> str:

@@ -37,7 +37,7 @@ class AccountGroup(models.Model):
 class AccountManager(models.Manager):
     def grouped(self):
         return self.filter(active=True)\
-            .order_by(models.F("group__order").asc(nulls_first=True), 'name')\
+            .order_by(models.F("group__order").asc(nulls_first=True), 'display_name')\
             .annotate(
                 _last_balance=models.functions.Coalesce(models.Subquery(
                     AccountBalance.objects\
@@ -60,7 +60,8 @@ class Account(models.Model):
     
     objects = AccountManager()
 
-    name = models.CharField(verbose_name=_('name'), max_length=255)
+    display_name = models.CharField(verbose_name=_('display name'), max_length=255)
+    full_name = models.CharField(verbose_name=_('full name'), max_length=255, default='', blank=True)
     credit = PositiveFixedPrecisionField(verbose_name=_('credit'), decimal_places=2, default=0)
     member = models.BooleanField(verbose_name=_('member'))
     active = models.BooleanField(verbose_name=_('active'), default=True)
@@ -74,20 +75,20 @@ class Account(models.Model):
     balances: models.QuerySet["AccountBalance"]
 
     class Meta:
-        ordering = ['group', 'name']
+        ordering = ['group', 'display_name']
         permissions = [
             ('add_permanent_account', 'Can add permanent accounts'),
             ('change_permanent_account', 'Can change permanent accounts'),
         ]
         indexes = [
-            models.Index('active', models.F('group').asc(), 'name', name='idx_grouped_accounts'),
+            models.Index('active', models.F('group').asc(), 'display_name', name='idx_grouped_accounts'),
             models.Index('active', name='idx_active_account'),
         ]
         verbose_name = _('account')
         verbose_name_plural = _('accounts')
 
     def __str__(self) -> str:
-        return self.name
+        return self.display_name
     
     @property
     @display(description=_('Last closing balance'))
@@ -182,7 +183,7 @@ class Transaction(models.Model):
     def __str__(self) -> str:
         amount_str = str(self.amount)
         wholes, cents = amount_str[:-2], amount_str[-2:]
-        return f"{self.account.name}: {self.reason} ({wholes:>01},{cents:>02}€)"
+        return f"{self.account.display_name}: {self.reason} ({wholes:>01},{cents:>02}€)"
     
     @property
     def can_revert(self) -> bool:

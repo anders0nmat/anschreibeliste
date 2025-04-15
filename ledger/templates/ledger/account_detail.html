@@ -21,7 +21,7 @@
 				<use href="{% static 'ledger/badge.svg' %}#badge" width="24" height="24" />
 			</svg>
 			{% endif %}
-			{{ account.name }}
+			{{ account.display_name }}
 		</h2>
 		<div style="flex-grow: 1"></div>
 		<a href="{% url 'account_list' %}" class="slim transparent center button">

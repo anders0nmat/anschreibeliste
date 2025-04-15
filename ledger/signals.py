@@ -12,7 +12,7 @@ def notify_clients(instance: Transaction, created: bool, **_):
 	data = {
 		"id": instance.pk,
 		"account": instance.account.pk,
-		"account_name": instance.account.name,
+		"account_name": instance.account.display_name,
 		"balance": instance.account.current_balance,
 		"amount": instance.amount,
 		"reason": instance.reason,
