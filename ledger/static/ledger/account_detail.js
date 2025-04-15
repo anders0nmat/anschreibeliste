@@ -51,13 +51,13 @@ function submit_custom_transaction(action) {
         const form = ev.target;
         const form_data = new FormData(form);
         const account = form_data.get('account');
-        const amount = parseInt(form_data.get('amount'));
+        const amount = form_data.get('amount');
         const reason = form_data.get('reason') ?? '';
         Transaction.submit({
             kind: action,
             account_id: account,
             account_name: Account.byId(account)?.name ?? 'Unknown',
-            balance: amount,
+            balance: amount.replace(decimalSeparator, '.'),
             reason: reason,
         });
         form.reset();

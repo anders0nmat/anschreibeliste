@@ -253,7 +253,7 @@ def _custom_transaction(request: HttpRequest, form: TransactionForm, action: Lit
                 with override_language(settings.LANGUAGE_CODE):
                     deposit_reason = _('Deposit')
                     withdraw_reason = _('Withdraw')
-                reason = f"{deposit_reason if action == 'deposit' else withdraw_reason}: {wholes},{cents}€"
+                reason = f"{deposit_reason if action == 'deposit' else withdraw_reason}: {wholes:>01},{cents:>02}€"
 
             if action == 'withdraw':
                 amount = -amount

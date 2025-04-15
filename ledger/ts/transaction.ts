@@ -35,7 +35,7 @@ interface TransactionRequestBase {
 	account_id: string
 	account_name: string
 	reason: string
-	balance: number
+	balance: string
 }
 
 interface TransactionProductRequest extends TransactionRequestBase {
@@ -203,7 +203,7 @@ export class Transaction extends HTMLWrapper {
 
 		const pending_transaction = Transaction.create()
 		pending_transaction.account = request.account_name
-		pending_transaction.amount = request.kind == "withdraw" ? -request.balance : request.balance
+		pending_transaction.amount = (request.kind == 'withdraw' ? -1 : 1) * parseInt(request.balance.replace('.', '').padEnd(3, '0'))
 		pending_transaction.reason = request.reason
 		pending_transaction.can_revert = true
 		pending_transaction.pendingId = idempotency_key

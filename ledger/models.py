@@ -181,8 +181,8 @@ class Transaction(models.Model):
 
     def __str__(self) -> str:
         amount_str = str(self.amount)
-        wholes, cents = amount_str[:-2], amount_str[-2:].ljust(2, '0')
-        return f"{self.account.name}: {self.reason} ({wholes},{cents}€)"
+        wholes, cents = amount_str[:-2], amount_str[-2:]
+        return f"{self.account.name}: {self.reason} ({wholes:>01},{cents:>02}€)"
     
     @property
     def can_revert(self) -> bool:

@@ -63,14 +63,14 @@ function submit_custom_transaction(action: "deposit" | "withdraw") {
 		const form_data = new FormData(form)
 
 		const account = form_data.get('account') as string
-		const amount = parseInt(form_data.get('amount') as string)
+		const amount = form_data.get('amount') as string
 		const reason = form_data.get('reason') as string ?? ''
 
 		Transaction.submit({
 			kind: action,
 			account_id: account,
 			account_name: Account.byId(account)?.name ?? 'Unknown',
-			balance: amount,
+			balance: amount.replace(decimalSeparator, '.'),
 			reason: reason,
 		})
 
