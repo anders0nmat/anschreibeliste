@@ -1,18 +1,21 @@
 from django.test import TestCase, Client, AsyncClient
 
 from django.core.exceptions import PermissionDenied
-
+from django.forms import Form, NumberInput
 from django.contrib.auth.models import User
 
 from django.utils.timezone import now
 from datetime import datetime, timedelta
 from django.forms.models import modelform_factory
+from django.utils.formats import get_format
 
 from .models import Transaction, Account, Product
 from .eventstream import send_event
+from .formfield import FixedPrecisionField
 
 from django.urls import reverse
 from asgiref.sync import sync_to_async
+import re
 
 
 # Create your tests here.
@@ -366,3 +369,106 @@ class ApiViewTest(TestCase):
     - withdraw out of budget
     - no reason provided
     """
+
+class FormFieldTest(TestCase):
+    class TestForm(Form):
+        decimal = FixedPrecisionField(decimal_places=2)
+    class TestForm2(Form):
+        decimal = FixedPrecisionField(decimal_places=2, widget=NumberInput)
+
+    def test_validPOST(self):
+        values = [
+            ('1', 100),
+            ('0', 0),
+            ('99999', 9999900),
+            ('1.00', 100),
+            ('1.01', 101),
+            ('0.01', 1),
+            ('0.00', 0),
+            ('1,00', 100),
+            ('1,0', 100),
+            (',1', 10),
+            ('.7', 70),
+            ('-1', -100),
+            ('-1.3', -130),
+            ('-0.50', -50),
+            ('-12,79', -1279),
+        ]
+        for (value, expected) in values:
+            data = {'decimal': value}
+            form = self.TestForm(data)
+            self.assertTrue(form.is_valid(), f'Invalid for {value=}')
+            self.assertEqual(form.cleaned_data['decimal'], expected, f'{form.cleaned_data["decimal"]=} not equal to {expected=} for {value=}')
+
+    def test_validJSON(self):
+        values = [
+            (10, 1000),
+            (10.00, 1000),
+            (10.01, 1001),
+            (-9.41, -941),
+            (-12, -1200),
+        ]
+        for (value, expected) in values:
+            data = {'decimal': value}
+            form = self.TestForm(data)
+            self.assertTrue(form.is_valid(), f'Invalid for {value=}')
+            self.assertEqual(form.cleaned_data['decimal'], expected, f'{form.cleaned_data["decimal"]=} not equal to {expected=} for {value=}')
+
+    def test_displayDecimalInput(self):
+        SEP = get_format('DECIMAL_SEPARATOR')
+
+        values: list[tuple[str, int]] = [
+            ('1.00', 100),
+            ('0.00', 0),
+            ('99999.00', 9999900),
+            ('1.00', 100),
+            ('1.01', 101),
+            ('0.01', 1),
+            ('0.00', 0),
+            ('1.00', 100),
+            ('1.00', 100),
+            ('0.10', 10),
+            ('0.70', 70),
+            ('-1.00', -100),
+            ('-1.30', -130),
+            ('-0.50', -50),
+            ('-12.79', -1279),
+        ]
+        for (expected, value) in values:
+            data = {'decimal': value}
+            form = self.TestForm(initial=data)
+
+            html = form.as_p()
+            html_value = re.search(r'value="(.+?)"', str(html))
+            self.assertIsNotNone(html_value, f"for {value=}")
+
+            expected = expected.replace('.', SEP)
+            html_value = html_value[1]
+            self.assertEqual(expected, html_value, f"for {value=}")
+
+    def test_displayNumericInput(self):
+        values: list[tuple[str, int]] = [
+            ('1', 100),
+            ('0', 0),
+            ('99999', 9999900),
+            ('1.01', 101),
+            ('0.01', 1),
+            ('0', 0),
+            ('0.10', 10),
+            ('0.70', 70),
+            ('-1', -100),
+            ('-1.30', -130),
+            ('-0.50', -50),
+            ('-12.79', -1279),
+        ]
+        for (expected, value) in values:
+            data = {'decimal': value}
+            form = self.TestForm2(initial=data, )
+
+            html = form.as_p()
+            html_value = re.search(r'value="(.+?)"', str(html))
+            self.assertIsNotNone(html_value, f"for {value=}")
+
+            html_value = html_value[1]
+            self.assertEqual(expected, html_value, f"for {value=}")
+        

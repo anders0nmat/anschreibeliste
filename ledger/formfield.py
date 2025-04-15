@@ -30,12 +30,15 @@ class FixedPrecisionField(forms.IntegerField):
         if isinstance(value, int):
             sign, value = '-' if value < 0 else '', abs(value)
             wholes, cents = divmod(value, 10 ** self.decimal_places)
-            cents = str(cents).rjust(self.decimal_places, '0')
-            
-            formatting = f"{sign}{wholes}.{cents}"
+
             if isinstance(self.widget, DecimalInput):
+                formatting = f"{sign}{wholes}.{cents:>0{self.decimal_places}}"
                 return number_format(formatting, self.decimal_places)
             else:
+                if cents == 0:
+                    formatting = f"{sign}{wholes}"
+                else:
+                    formatting = f"{sign}{wholes}.{cents:>0{self.decimal_places}}"
                 return formatting
         return value
 
@@ -43,22 +46,39 @@ class FixedPrecisionField(forms.IntegerField):
         if value in self.empty_values:
             return None
         
-        value = sanitize_separators(value)
+        WHOLES_FACTOR = 10 ** self.decimal_places
+        
         if isinstance(value, str):
-            wholes, cents, *_ = value.split('.', maxsplit=1) + ['0']
+            value = value.strip()
+            negative = value.startswith('-')
+            value = value[1:] if negative else value
+            value = sanitize_separators(value)
+            wholes, _, cents = value.partition('.')
             cents = cents.ljust(self.decimal_places, '0')
+            wholes = wholes.rjust(1, '0')
+        elif isinstance(value, int):
+            negative = value < 0
+            value = abs(value)
+            wholes = value
+            cents = 0
+        elif isinstance(value, float):
+            negative = value < 0
+            value = abs(value)
+            value = int(value * WHOLES_FACTOR)
+            wholes, cents = divmod(value, WHOLES_FACTOR)            
         else:
             wholes, cents = value, 0
-
+        
         try:
-            wholes = int(wholes) * (10 ** self.decimal_places)
+            wholes = int(wholes) * WHOLES_FACTOR
             cents = int(cents)
             if cents >= 10 ** self.decimal_places:
                 raise ValueError()
         except ValueError:
             raise forms.ValidationError(self.error_messages['invalid'].format(decimal_places=self.decimal_places), code='invalid')
         
-        return wholes + cents
+        amount = wholes + cents
+        return -amount if negative else amount
     
     def widget_attrs(self, widget: Widget) -> Any:
         attrs = super().widget_attrs(widget)
