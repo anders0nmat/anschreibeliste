@@ -50,24 +50,18 @@ class FixedPrecisionField(forms.IntegerField):
         
         if isinstance(value, str):
             value = value.strip()
-            negative = value.startswith('-')
-            value = value[1:] if negative else value
+            negative, value = value.startswith('-'), value.removeprefix('-')
             value = sanitize_separators(value)
             wholes, _, cents = value.partition('.')
             cents = cents.ljust(self.decimal_places, '0')
             wholes = wholes.rjust(1, '0')
         elif isinstance(value, int):
-            negative = value < 0
-            value = abs(value)
-            wholes = value
-            cents = 0
+            negative, wholes, cents = value < 0, abs(value), 0
         elif isinstance(value, float):
-            negative = value < 0
-            value = abs(value)
-            value = int(value * WHOLES_FACTOR)
-            wholes, cents = divmod(value, WHOLES_FACTOR)            
+            negative, value = value < 0, int(abs(value) * WHOLES_FACTOR)
+            wholes, cents = divmod(value, WHOLES_FACTOR)
         else:
-            wholes, cents = value, 0
+            negative, wholes, cents = value < 0, abs(value), 0
         
         try:
             wholes = int(wholes) * WHOLES_FACTOR
