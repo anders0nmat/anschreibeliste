@@ -180,7 +180,7 @@ div:has(#transactions) {
 		}
 	}
 
-	& .empty:has(~ output:not(:empty)) {
+	& output:not(:empty) + .empty {
 		display: none;
 	}
 }
