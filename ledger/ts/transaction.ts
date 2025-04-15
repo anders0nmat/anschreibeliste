@@ -260,7 +260,7 @@ export class Transaction extends HTMLWrapper {
 			product: request.product.id,
 			amount: request.amount,
 			invert_member: request.invertMember,
-		})
+		}, idempotency_key)
 
 		if (!response.ok) {
 			pending_transaction.status!.error()
