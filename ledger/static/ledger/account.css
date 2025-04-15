@@ -172,19 +172,23 @@ aside {
 		margin-right: 0.25em;
 		align-items: center;
 
-		& table {
-			border-spacing: 0.5ch 0.75em;
-		}
-
-		& table tr {
+		& tr {
 			display: flex;
 			flex-direction: column;
+			
+			& + tr {
+				margin-top: 0.5em;
+			}
 		}
-
-		& table td:nth-of-type(1) {
-			font-size: 80%;
-			font-variant: small-caps;
-			color: var(--secondary-text-color);
+		
+		& td {
+			line-height: 1.2;
+			
+			&:nth-of-type(1) {
+				font-size: 80%;
+				font-variant: small-caps;
+				color: var(--secondary-text-color);
+			}
 		}
 	}
 }
