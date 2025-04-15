@@ -243,6 +243,7 @@ class Product(models.Model):
     name = models.CharField(verbose_name=_('name'), max_length=255)
     cost = PositiveFixedPrecisionField(verbose_name=_('cost'), decimal_places=2)
     member_cost = PositiveFixedPrecisionField(verbose_name=_('member cost'), decimal_places=2, blank=True)
+    visible = models.BooleanField(verbose_name=_('visible'), default=True)
     
     group = models.ForeignKey(ProductGroup, verbose_name=_('group'), on_delete=models.SET_NULL, null=True, default=None, blank=True)
     order = models.PositiveIntegerField(

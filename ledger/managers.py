@@ -106,5 +106,5 @@ class TransactionManager(models.Manager):
 
 class ProductManager(models.Manager):
     def grouped(self):
-        return self.order_by(F("group__order").asc(nulls_first=True), 'order').prefetch_related('group')
+        return self.filter(visible=True).order_by(F("group__order").asc(nulls_first=True), 'order').prefetch_related('group')
     
