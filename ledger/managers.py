@@ -24,11 +24,11 @@ class TransactionQuerySet(models.QuerySet):
         if user.is_staff:
             return self.annotate(allow_revert=Q(related_transaction=None))
         elif revert_threshold is None:
-            return self.annotate(allow_revert=Q(related_transaction=None) and Q(issuer=user))
+            return self.annotate(allow_revert=Q(related_transaction=None) & Q(issuer=user))
         else:
             return self.annotate(
                 _timedelta_now=Now() - F('timestamp'),
-                allow_revert=Q(related_transaction=None) and Q(issuer=user) and Q(_timedelta_now__lt=revert_threshold))
+                allow_revert=Q(related_transaction=None) & Q(issuer=user) & Q(_timedelta_now__lt=revert_threshold))
         
     def annotate_timejump(self, timejump: timedelta = None):
         """
@@ -94,11 +94,11 @@ class TransactionManager(models.Manager):
                     allow_revert=Q(related_transaction=None))
             elif self.revert_threshold is None:
                 manager = manager.annotate(
-                    allow_revert=Q(related_transaction=None) and Q(issuer=user))
+                    allow_revert=Q(related_transaction=None) & Q(issuer=user))
             else:
                 manager = manager.annotate(
                     _timedelta_now=Now() - F('timestamp'),
-                    allow_revert=Q(related_transaction=None) and Q(issuer=user) and Q(_timedelta_now__lt=self.revert_threshold))
+                    allow_revert=Q(related_transaction=None) & Q(issuer=user) & Q(_timedelta_now__lt=self.revert_threshold))
             
         return manager.select_related('account')
 
