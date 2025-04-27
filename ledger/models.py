@@ -6,7 +6,7 @@ from .managers import TransactionManager, ProductManager
 from .modelfield import PositiveFixedPrecisionField, FixedPrecisionField
 from datetime import timedelta
 from django.core.exceptions import PermissionDenied
-from django.utils.translation import gettext, override as override_language, gettext_lazy as _
+from django.utils.translation import gettext, override as override_language, gettext_lazy as _, pgettext_lazy
 from django.conf import settings
 from django.contrib.admin import display
 # Create your models here.
@@ -49,7 +49,9 @@ class AccountManager(models.Manager):
                     Transaction.objects\
                         .filter(closing_balance=None, account=models.OuterRef('pk'))\
                         .values('account__pk')\
-                        .annotate(sum=models.Sum('amount', default=0))\
+                        .annotate(sum=
+							models.Sum('amount', filter= ~models.Q(type__in=Transaction.TransactionType.withdraws()), default=0) \
+							- models.Sum('amount', filter=models.Q(type__in=Transaction.TransactionType.withdraws()), default=0))\
                         .values('sum')),
                     models.Value(0))
             )\
@@ -111,7 +113,9 @@ class Account(models.Model):
         else:
             transactions_since = self.transactions  \
                 .filter(closing_balance=None)       \
-                .aggregate(sum=models.Sum('amount', default=0)) \
+                .aggregate(sum=
+					models.Sum('amount', filter= ~models.Q(type__in=Transaction.TransactionType.withdraws()), default=0) \
+					- models.Sum('amount', filter=models.Q(type__in=Transaction.TransactionType.withdraws()), default=0)) \
                 ['sum']
 
         return last_balance + transactions_since
@@ -135,6 +139,7 @@ class AccountBalance(models.Model):
     account = models.ForeignKey(Account, verbose_name=_('account'), on_delete=models.CASCADE, related_name='balances')
     timestamp = models.DateTimeField(verbose_name=_('timestamp'), auto_now_add=True)
     closing_balance = FixedPrecisionField(verbose_name=_('closing balance'), decimal_places=2)
+    previous_balance = models.OneToOneField("self", verbose_name=_('previous balance'), on_delete=models.CASCADE, null=True)
 
     class Meta:
         ordering = ['-timestamp']
@@ -146,6 +151,16 @@ class AccountBalance(models.Model):
 
 class Transaction(models.Model):
     class AlreadyReverted(Exception): pass
+    class TransactionType(models.TextChoices):
+        DEPOSIT = 'DEPT', _('Deposit')
+        WITHDRAW = 'WDRW', _('Withdraw')
+        ORDER = 'ORDR', pgettext_lazy('verb, getting a product', 'Order')
+        REVERT_DEPOSIT = 'RVDP', _('Revert-Deposit')
+        REVERT_WITHDRAW = 'RVWD', _('Revert-Withdraw')
+
+        @classmethod
+        def withdraws(cls) -> set["Transaction.TransactionType"]:
+            return {cls.ORDER, cls.WITHDRAW, cls.REVERT_WITHDRAW}
 
     objects = TransactionManager(
         timejump_threshold=timedelta(hours=6),
@@ -153,10 +168,14 @@ class Transaction(models.Model):
 
     closing_balance = models.ForeignKey(AccountBalance, verbose_name=_('closing balance'), on_delete=models.CASCADE, related_name='transactions', null=True, default=None, blank=True)
     account = models.ForeignKey(Account, verbose_name=_('account'), on_delete=models.CASCADE, related_name='transactions')
-    amount = FixedPrecisionField(verbose_name=_('amount'), decimal_places=2)
+    amount = PositiveFixedPrecisionField(verbose_name=pgettext_lazy('money-related', 'amount'), decimal_places=2)
     timestamp = models.DateTimeField(verbose_name=_('timestamp'), auto_now_add=True)
     reason = models.CharField(verbose_name=_('reason'), max_length=255)
     issuer = models.ForeignKey(User, verbose_name=_('issuer'), on_delete=models.SET_NULL, null=True)
+    
+    type = models.CharField(verbose_name=_('type'), max_length=4, choices=TransactionType.choices)
+
+    extra = models.JSONField(verbose_name=_('extra'), default=dict)
     
     related_transaction: "Transaction" = models.OneToOneField(to="self", verbose_name=_('related transaction'), help_text=_('Used to track and associate canceled transactions'), on_delete=models.CASCADE, null=True, default=None, blank=True)
 
@@ -186,6 +205,10 @@ class Transaction(models.Model):
         return f"{self.account.display_name}: {self.reason} ({wholes:>01},{cents:>02}€)"
     
     @property
+    def normalized_amount(self) -> int:
+        return -self.amount if self.type in self.TransactionType.withdraws() else self.amount
+
+    @property
     def can_revert(self) -> bool:
        return self.related_transaction is None
     
@@ -208,12 +231,15 @@ class Transaction(models.Model):
         with override_language(settings.LANGUAGE_CODE):
             revert_prefix = gettext('Canceled')
 
+        revert_type = self.TransactionType.REVERT_DEPOSIT if self.type in self.TransactionType.withdraws() else self.TransactionType.REVERT_WITHDRAW
+
         revert_transaction = Transaction.objects.create(
             account=self.account,
-            amount=-self.amount,
+            amount=self.amount,
             reason=f"{revert_prefix}: {self.reason}",
             issuer=issuer,
             related_transaction=self,
+            type=revert_type,
             idempotency_key=idempotency_key
         )
         self.related_transaction = revert_transaction

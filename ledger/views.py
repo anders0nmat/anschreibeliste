@@ -234,9 +234,14 @@ def _product_transaction(request: HttpRequest, form: ProductTransactionForm) -> 
 
             return Transaction.objects.create(
                 account=account,
-                amount=-price,
+                amount=price,
                 reason=reason,
                 issuer=request.user,
+                type=Transaction.TransactionType.ORDER,
+                extra={
+                    'product': product.pk,
+                    'amount': amount,
+				},
                 idempotency_key=request.idempotency_key)
         except ValidationError as error:
             form.add_error(None, error)
@@ -272,8 +277,7 @@ def _custom_transaction(request: HttpRequest, form: TransactionForm, action: Lit
                 reason = f"{deposit_reason if action == 'deposit' else withdraw_reason}: {wholes:>01},{cents:>02}€"
 
             if action == 'withdraw':
-                amount = -amount
-                if account.current_budget + amount < 0:
+                if account.current_budget - amount < 0:
                     raise ValidationError(_('The account has not enough money'), code='out_of_money')
 
             return Transaction.objects.create(
@@ -281,6 +285,7 @@ def _custom_transaction(request: HttpRequest, form: TransactionForm, action: Lit
                 amount=amount,
                 reason=reason,
                 issuer=request.user,
+                type=Transaction.TransactionType.DEPOSIT if action == 'deposit' else Transaction.TransactionType.WITHDRAW,
                 idempotency_key=request.idempotency_key)
         except ValidationError as error:
             form.add_error(None, error)
