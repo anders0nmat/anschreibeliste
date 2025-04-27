@@ -1,24 +1,29 @@
+from typing import Any
 from django.forms import ModelForm, Form, CharField, IntegerField, HiddenInput, ModelChoiceField, BooleanField
 from django.utils.translation import gettext_lazy as _
 
 from .models import Account, Product, Transaction
 from .formfield import FixedPrecisionField
 
-class AccountForm(ModelForm):
-    label_suffix = ''
-    
+class CreateAccountForm(ModelForm):
     class Meta:
         model = Account
-        fields = ['display_name', 'full_name', 'balance', 'credit', 'group', 'member', 'permanent']
+        fields = ['display_name', 'full_name', 'balance', 'credit', 'group', 'member', 'permanent', 'active']
+    
+    balance = FixedPrecisionField(label=_('Balance'), decimal_places=2, min_value=0, required=False)
 
-    def __init__(self, *args, **kwargs) -> None:
-        instance: Account = kwargs.get('instance')
-        initial: dict = kwargs.get('initial')
-        if instance and initial is not None:
-            initial.setdefault('balance', instance.current_balance)
-        super().__init__(*args, **kwargs)
+class RestrictedCreateAccountForm(CreateAccountForm):
+    class Meta(CreateAccountForm.Meta):
+        exclude = ['group', 'member', 'permanent']
 
-    balance = FixedPrecisionField(label=_('Balance'), decimal_places=2, disabled=True, initial=0)
+    def save(self, commit: bool = True) -> Any:
+        self.instance.member = False
+        return super().save(commit)
+
+class EditAccountForm(ModelForm):
+    class Meta:
+        model = Account
+        fields = ['display_name', 'full_name', 'credit', 'group', 'member', 'permanent', 'active']
 
 class TransactionForm(Form):
     account = ModelChoiceField(Account.objects.filter(active=True), label=_('Account'), widget=HiddenInput)

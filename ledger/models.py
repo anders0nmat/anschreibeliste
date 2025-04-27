@@ -50,8 +50,8 @@ class AccountManager(models.Manager):
                         .filter(closing_balance=None, account=models.OuterRef('pk'))\
                         .values('account__pk')\
                         .annotate(sum=
-							models.Sum('amount', filter= ~models.Q(type__in=Transaction.TransactionType.withdraws()), default=0) \
-							- models.Sum('amount', filter=models.Q(type__in=Transaction.TransactionType.withdraws()), default=0))\
+                            models.Sum('amount', filter= ~models.Q(type__in=Transaction.TransactionType.withdraws()), default=0) \
+                            - models.Sum('amount', filter=models.Q(type__in=Transaction.TransactionType.withdraws()), default=0))\
                         .values('sum')),
                     models.Value(0))
             )\
@@ -65,12 +65,12 @@ class Account(models.Model):
     display_name = models.CharField(verbose_name=_('display name'), max_length=255)
     full_name = models.CharField(verbose_name=_('full name'), max_length=255, default='', blank=True)
     credit = PositiveFixedPrecisionField(verbose_name=_('credit'), decimal_places=2, default=0)
-    member = models.BooleanField(verbose_name=_('member'))
-    active = models.BooleanField(verbose_name=_('active'), default=True)
+    group = models.ForeignKey(AccountGroup, verbose_name=_('group'), on_delete=models.SET_NULL, null=True, default=None, blank=True)
     
+    member = models.BooleanField(verbose_name=_('member'))
     permanent = models.BooleanField(verbose_name=_('permanent'), default=False)
 
-    group = models.ForeignKey(AccountGroup, verbose_name=_('group'), on_delete=models.SET_NULL, null=True, default=None, blank=True)
+    active = models.BooleanField(verbose_name=_('active'), default=True)
     
     # Forward declaration for type-hinting
     transactions: models.QuerySet["Transaction"]
@@ -114,8 +114,8 @@ class Account(models.Model):
             transactions_since = self.transactions  \
                 .filter(closing_balance=None)       \
                 .aggregate(sum=
-					models.Sum('amount', filter= ~models.Q(type__in=Transaction.TransactionType.withdraws()), default=0) \
-					- models.Sum('amount', filter=models.Q(type__in=Transaction.TransactionType.withdraws()), default=0)) \
+                    models.Sum('amount', filter= ~models.Q(type__in=Transaction.TransactionType.withdraws()), default=0) \
+                    - models.Sum('amount', filter=models.Q(type__in=Transaction.TransactionType.withdraws()), default=0)) \
                 ['sum']
 
         return last_balance + transactions_since
@@ -205,6 +205,7 @@ class Transaction(models.Model):
         return f"{self.account.display_name}: {self.reason} ({wholes:>01},{cents:>02}€)"
     
     @property
+    @display(description=_('Signed amount'))
     def normalized_amount(self) -> int:
         return -self.amount if self.type in self.TransactionType.withdraws() else self.amount
 

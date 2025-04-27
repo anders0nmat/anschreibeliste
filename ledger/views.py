@@ -3,7 +3,7 @@ from http import HTTPStatus
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.http import HttpRequest, JsonResponse, HttpResponseRedirect, HttpResponseBadRequest
+from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
@@ -11,13 +11,12 @@ from django.views.generic import ListView, UpdateView, CreateView, TemplateView
 from json import loads
 from django.utils.translation import gettext as _, override as override_language
 from django.conf import settings
-from decimal import Decimal
 
 from .decorators import idempotent
 from .eventstream import EventstreamResponse, StreamEvent
 from .mixins import EnableFieldsMixin
 from .models import Account, Transaction, Product
-from .forms import AccountForm, TransactionForm, ProductTransactionForm, RevertTransactionForm
+from .forms import TransactionForm, ProductTransactionForm, RevertTransactionForm, CreateAccountForm, RestrictedCreateAccountForm, EditAccountForm
 from . import config
 from .utils import EPCCode
 import qrcode
@@ -74,12 +73,14 @@ class AccountList(ListView):
     queryset = Account.objects.grouped()
 
 class AccountDetail(EnableFieldsMixin, UpdateView):
-    model = Account
-    form_class = AccountForm
+    queryset = Account.objects.filter(active=True)
     object: Account # Type Annotation for IDE
+    form_class = EditAccountForm
     template_name_suffix = '_detail'
     
     def get_success_url(self) -> str:
+        if not self.object.active:
+            return reverse('account_list')
         return reverse('account_detail', kwargs={'pk': self.object.pk})
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
@@ -145,12 +146,10 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
         svg = qr.make_image(attrib={'fill': 'currentcolor'}, module_drawer=SvgSquareDrawerNoNamespace(), eye_drawer=SvgSquareDrawerNoNamespace())
 
         return svg.to_string(encoding="unicode")
-        
 
 class AccountCreate(PermissionRequiredMixin, EnableFieldsMixin, CreateView):
     model = Account
     object: Account # Type Annotation for IDE
-    form_class = AccountForm
     template_name_suffix = '_create'
     initial = {
         'member': False,
@@ -184,6 +183,30 @@ class AccountCreate(PermissionRequiredMixin, EnableFieldsMixin, CreateView):
             return ['permanent']
         else:
             return ['member', 'permanent']
+
+    def get_form_class(self) -> type:
+        HAS_PERM_FORMS = {
+            True: CreateAccountForm,
+            False: RestrictedCreateAccountForm,
+		}
+        return HAS_PERM_FORMS[self.request.user.has_perm('ledger.add_permanent_account')]
+
+    def form_valid(self, form: Any) -> HttpResponse:
+        response = super().form_valid(form)
+        starting_balance = form.cleaned_data['balance']
+        if starting_balance:
+            with override_language(settings.LANGUAGE_CODE):
+                # Translators: Used for account creation with initial balance
+                deposit_reason = _('Initial Deposit')
+            Transaction.objects.create(
+                account=self.object,
+                amount=starting_balance,
+                reason=deposit_reason,
+                type=Transaction.TransactionType.DEPOSIT,
+                issuer=self.request.user,
+            )
+        return response
+        
 
 class IndexView(TemplateView):
     template_name = "ledger/main.html"
@@ -241,7 +264,7 @@ def _product_transaction(request: HttpRequest, form: ProductTransactionForm) -> 
                 extra={
                     'product': product.pk,
                     'amount': amount,
-				},
+                },
                 idempotency_key=request.idempotency_key)
         except ValidationError as error:
             form.add_error(None, error)
