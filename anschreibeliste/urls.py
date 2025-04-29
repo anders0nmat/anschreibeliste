@@ -23,6 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("", include("ledger.urls")),
     path("users/", include("django.contrib.auth.urls")),
+    path("blackbook/", include("blackbook.urls"))
 ]
 
 # Static file serving during development
