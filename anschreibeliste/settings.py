@@ -14,7 +14,7 @@ from pathlib import Path
 import tomllib
 
 with Path("config.toml").open("rb") as f:
-	config = tomllib.load(f)
+	CONFIG = tomllib.load(f)
 
 # Suppose this file lives under
 # 	/path/to/project/files/settings.py
@@ -28,13 +28,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Before deploy, check https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config['secret-key']
+SECRET_KEY = CONFIG['secret-key']
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config['debug']
+DEBUG = CONFIG['debug']
 
-ALLOWED_HOSTS = config['allowed-hosts']
+ALLOWED_HOSTS = CONFIG['allowed-hosts']
 
 
 # Application definition
@@ -92,7 +92,7 @@ ASGI_APPLICATION = 'anschreibeliste.asgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {key.upper(): value for key, value in config['database'].items()},
+    'default': {key.upper(): value for key, value in CONFIG['database'].items()},
 }
 
 
@@ -156,3 +156,13 @@ LOGOUT_REDIRECT_URL = "/users/login/?next=/"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ========== Ledger ==========
+
+LEDGER_CONFIG = {
+	'transaction-timeout': 10_000,
+	'submit-overlay': 1_500,
+	'banking': None,
+}
+LEDGER_CONFIG.update(CONFIG.get('ledger', {}))
+

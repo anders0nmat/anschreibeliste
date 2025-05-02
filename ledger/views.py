@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, UpdateView, CreateView, TemplateView
 from json import loads
-from django.utils.translation import gettext as _, override as override_language
+from django.utils.translation import gettext as _
 from django.conf import settings
 
 from .decorators import idempotent
@@ -17,44 +17,8 @@ from .eventstream import EventstreamResponse, StreamEvent
 from .mixins import EnableFieldsMixin
 from .models import Account, Transaction, Product
 from .forms import TransactionForm, ProductTransactionForm, RevertTransactionForm, CreateAccountForm, RestrictedCreateAccountForm, EditAccountForm
-from . import config
-from .utils import EPCCode
-import qrcode
-from qrcode.image.svg import SvgImage
-from qrcode.image.styles.moduledrawers.svg import SvgSquareDrawer, SvgCircleDrawer
-from qrcode.compat.etree import ET
-
-class SvgCircleDrawerNoNamespace(SvgCircleDrawer):
-    """
-    Circle drawer that avoids namespaced svg elements (e.g. '<svg:rect>').
-    
-    Namespaced elements are not handled by browsers, so they are not suitable for svg embedded in html
-    """
-    def el(self, box):
-        coords = self.coords(box)
-        return ET.Element(
-            self.tag,  # type: ignore
-            cx=self.img.units(coords.xh),
-            cy=self.img.units(coords.yh),
-            r=self.radius,
-        )
-    
-class SvgSquareDrawerNoNamespace(SvgSquareDrawer):
-    """
-    Square drawer that avoids namespaced svg elements (e.g. '<svg:rect>').
-    
-    Namespaced elements are not handled by browsers, so they are not suitable for svg embedded in html
-    """
-    def el(self, box):
-        coords = self.coords(box)
-        return ET.Element(
-            self.tag,  # type: ignore
-            x=self.img.units(coords.x0),
-            y=self.img.units(coords.y0),
-            width=self.unit_size,
-            height=self.unit_size,
-        )
-
+from .utils.banking import EPCCode
+from .utils import server_language
 
 def js_config() -> dict[str, Any]:
     return {
@@ -65,8 +29,8 @@ def js_config() -> dict[str, Any]:
             'revert': reverse('api_revert'),
             'events': reverse('api_events'),
         },
-        'transaction_timeout': config.TRANSACTION_TIMEOUT,
-        'submit_overlay': config.SUBMIT_OVERLAY,
+        'transaction_timeout': settings.LEDGER_CONFIG['transaction-timeout'],
+        'submit_overlay': settings.LEDGER_CONFIG['submit-overlay'],
     }
 
 class AccountList(ListView):
@@ -96,12 +60,8 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
             'account_list': Account.objects.grouped(),
             'transactions': Transaction.objects.recent(account=self.object, user=self.request.user),
             'js_config': js_config(),
+            'banking_details': EPCCode.from_config(self.object.full_name or '[Name]'),
         }
-        
-        if config.BANKING_INFORMATION:
-            kwargs |= {
-                'banking_details': self.get_banking_details() | {'qr': self.get_transaction_qr()},
-            }
 
         if self.request.user.has_perm(PERMS[('deposit', self.object.permanent)]):
             kwargs |= {
@@ -127,42 +87,14 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
             return ['member', 'permanent']
         else:
             return '__all__'
-        
-    def get_banking_details(self) -> config.BankingInfo:
-        with override_language(settings.LANGUAGE_CODE):
-            return {
-                'name': config.BANKING_INFORMATION['name'],
-                'iban': config.BANKING_INFORMATION['iban'],
-                'invoice_text': config.BANKING_INFORMATION['invoice_text'].format(name=self.object.full_name if self.object.permanent else '[name]'),
-            }
 
-    def get_transaction_qr(self) -> str:
-        if not self.object.permanent:
-            return ''
-        details = self.get_banking_details()
-        code = EPCCode(name=details['name'], iban=details['iban'], invoiceText=details['invoice_text'])
-        qr = qrcode.QRCode(image_factory=SvgImage)
-        qr.add_data(str(code))
-        svg = qr.make_image(attrib={'fill': 'currentcolor'}, module_drawer=SvgSquareDrawerNoNamespace(), eye_drawer=SvgSquareDrawerNoNamespace())
-
-        return svg.to_string(encoding="unicode")
-
-class AccountCreate(PermissionRequiredMixin, EnableFieldsMixin, CreateView):
+class AccountCreate(PermissionRequiredMixin, CreateView):
     model = Account
     object: Account # Type Annotation for IDE
     template_name_suffix = '_create'
-    initial = {
-        'member': False,
-        'credit': 0,
-    }
 
     def has_permission(self) -> bool:
         return self.request.user.has_perm('ledger.add_account') or self.request.user.has_perm('ledger.add_permanent_account')
-
-    def get_initial(self) -> Dict[str, Any]:
-        return super().get_initial() | {
-            'permanent': self.request.user.has_perm('ledger.add_permanent_account') and not self.request.user.has_perm('ledger.add_account')
-        }
     
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         return super().get_context_data(**kwargs) | {
@@ -172,17 +104,6 @@ class AccountCreate(PermissionRequiredMixin, EnableFieldsMixin, CreateView):
 
     def get_success_url(self) -> str:
         return reverse('account_detail', args=[self.object.pk])
-
-    def get_disabled_fields(self) -> list[str]:
-        user_can_add = self.request.user.has_perm('ledger.add_account')
-        user_can_add_permanent = self.request.user.has_perm('ledger.add_permanent_account')
-
-        if user_can_add and user_can_add_permanent:
-            return []
-        elif user_can_add_permanent:
-            return ['permanent']
-        else:
-            return ['member', 'permanent']
 
     def get_form_class(self) -> type:
         HAS_PERM_FORMS = {
@@ -195,7 +116,7 @@ class AccountCreate(PermissionRequiredMixin, EnableFieldsMixin, CreateView):
         response = super().form_valid(form)
         starting_balance = form.cleaned_data['balance']
         if starting_balance:
-            with override_language(settings.LANGUAGE_CODE):
+            with server_language():
                 # Translators: Used for account creation with initial balance
                 deposit_reason = _('Initial Deposit')
             Transaction.objects.create(
@@ -203,8 +124,7 @@ class AccountCreate(PermissionRequiredMixin, EnableFieldsMixin, CreateView):
                 amount=starting_balance,
                 reason=deposit_reason,
                 type=Transaction.TransactionType.DEPOSIT,
-                issuer=self.request.user,
-            )
+                issuer=self.request.user)
         return response
         
 
@@ -248,7 +168,7 @@ def _product_transaction(request: HttpRequest, form: ProductTransactionForm) -> 
             if amount > 1:
                 reason = f'{amount}x {reason}'
             if invert_member:
-                with override_language(settings.LANGUAGE_CODE):
+                with server_language():
                     # Translators: Used as a prefix for transaction reason if a member buys something on behalf of a non-member
                     for_extern = _('For extern')
                     # Translators: Used as a prefix for transaction reason if a non-member buys something on behalf of a member
@@ -294,7 +214,7 @@ def _custom_transaction(request: HttpRequest, form: TransactionForm, action: Lit
             if not reason:
                 amount_str = str(amount)
                 wholes, cents = amount_str[:-2], amount_str[-2:]
-                with override_language(settings.LANGUAGE_CODE):
+                with server_language():
                     deposit_reason = _('Deposit')
                     withdraw_reason = _('Withdraw')
                 reason = f"{deposit_reason if action == 'deposit' else withdraw_reason}: {wholes:>01},{cents:>02}€"
