@@ -8,7 +8,7 @@ class AccountGroupAdmin(SortableAdminMixin, admin.ModelAdmin):
 
 @admin.register(models.Account)
 class AccountAdmin(admin.ModelAdmin):
-    list_display = ["display_name", "full_name", "group", "active", "member", "current_balance", "credit", "last_balance", ]
+    list_display = ["display_name", "full_name", "group", "active", "member", "permanent", "current_balance", "credit", "last_balance", ]
     list_filter = ["active", "member", ]
 
 admin.site.register(models.AccountBalance)
@@ -16,8 +16,8 @@ admin.site.register(models.AccountBalance)
 
 @admin.register(models.Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ["account__display_name", "reason", "amount", "timestamp", ]
-    list_filter = ["account", ]
+    list_display = ["account__display_name", "reason", "type", "normalized_amount", "timestamp", ]
+    list_filter = ["account", "type", ]
     ordering = ["-timestamp", ]
     
 

@@ -61,10 +61,10 @@
 				</tr>
 				<tr>
 					<td>{% trans "Invoice Text" %}</td>
-					<td>{{ banking_details.invoice_text }}</td>
+					<td>{{ banking_details.invoiceText }}</td>
 				</tr>
 			</table>
-			{{ banking_details.qr|safe }}
+			{{ banking_details.qr_code|safe }}
 		</div>
 		{% endif %}
 		<form action="{% url 'api_deposit' %}" method="POST" id="deposit-transaction" class="transaction">

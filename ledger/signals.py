@@ -14,7 +14,7 @@ def notify_clients(instance: Transaction, created: bool, **_):
 		"account": instance.account.pk,
 		"account_name": instance.account.display_name,
 		"balance": instance.account.current_balance,
-		"amount": instance.amount,
+		"amount": instance.normalized_amount,
 		"reason": instance.reason,
 	}
 	# Reversal transaction

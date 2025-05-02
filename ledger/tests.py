@@ -26,11 +26,12 @@ class TransactionModelTest(TestCase):
         self.user2: User = User.objects.create_user(username='test2', password='1234')
 
         self.staffUser: User = User.objects.create_user(username='test_staff', password='1234', is_staff=True)
-        self.acc1: Account = Account.objects.create(name='acc1', credit=20_00, member=False)
+        self.acc1: Account = Account.objects.create(display_name='acc1', credit=20_00, member=False)
 
         self.default_transaction = {
             'account': self.acc1,
-            'amount': -50,
+            'amount': 50,
+            'type': Transaction.TransactionType.ORDER,
             'reason': 'buy .50€',
         }
 
@@ -197,14 +198,15 @@ class ProductFormTest(TestCase):
 class TransactionEventTest(TestCase):
     def setUp(self) -> None:
         self.user = User.objects.create_user(username='test')
-        self.acc1: Account = Account.objects.create(name='acc1', credit=20_00, member=False)
+        self.acc1: Account = Account.objects.create(display_name='acc1', credit=20_00, member=False)
 
         self.transactions = self.get_transactions()
 
     def get_transactions(self, count=5) -> list[Transaction]:
         kwargs = {
             'account': self.acc1,
-            'amount': -50,
+            'amount': 50,
+            'type': Transaction.TransactionType.ORDER,
             'reason': 'buy .50€',
             'issuer': None,
         }

@@ -245,6 +245,7 @@ div:has(#transactions) {
 	display: flex;
 	flex-flow: row nowrap;
 	align-items: center;
+	font-size: 110%;
 	
 	& .slide-indicator {
 		cursor: default;

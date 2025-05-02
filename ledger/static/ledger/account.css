@@ -114,31 +114,45 @@ aside {
 	}
 	
 	& form {
-		display: grid;
-		grid-template-columns: max-content auto;
+		/* display: grid;
+		grid-template-columns: auto;
+		grid-auto-rows: auto;
+		gap: 0.5em; */
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
 		gap: 0.5em;
-		padding: 0.5em 1em;
+		padding: 0.5em 0.75em;
 		background: var(--secondary-bg-color);
-		
+		border: thin solid var(--secondary-bg-color);
 		
 		& > div {
-			display: grid;
-			grid-template-columns: subgrid;
-			grid-column: 1 / -1;
+			display: flex;
+			flex-direction: column;
+			align-items: stretch;
+			/* display: grid;
+			grid-template-columns: subgrid; */
+		}
+
+		& > div:has(input[type="checkbox"]) {
+			/* display: grid;
+			grid-template-columns: max-content auto; */
+			flex-direction: row;
 		}
 		
 		& label {
-			align-self: center;
-			justify-self: end;
+			/* align-self: center;
+			justify-self: end; */
+			display: block;
 			
 			font-variant: small-caps;
 			font-weight: 400;
 			font-size: 85%;
-			padding-left: 1em;
+			/* padding-left: 1em; */
 		}
 		
 		& input[type="submit"] {
-			grid-column: 1 / -1;
+			/* grid-column: 1 / -1; */
 		}
 		
 		& input[type="text"],
@@ -146,7 +160,7 @@ aside {
 		& select {
 			border: none;
 			padding: 0.25em 0.5em;
-			background: none;
+			background: color-mix(in srgb, var(--primary-bg-color), transparent 50%);
 			
 			&:not([disabled]):hover {
 				background-color: color-mix(in srgb, var(--secondary-bg-color), var(--highlight-color) 10%);
@@ -201,7 +215,7 @@ aside {
 #withdraw-transaction {
 	--bg: color-mix(in srgb, var(--secondary-bg-color), var(--selected-color) 20%);
 	border: thin solid var(--selected-color);
-	margin-right: 0.25em;
+	/* margin-right: 0.25em; */
 	position: relative;
 	grid-area: new-transaction;
 	grid-template-rows: auto auto auto;
