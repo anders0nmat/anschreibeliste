@@ -1,0 +1,167 @@
+
+
+
+:root {
+	--input-border: gray;
+	--input-label-text: color-mix(in srgb, currentColor, transparent 40%);
+	--input-background: rgb(31, 31, 31);
+	--input-border-selected: rgb(16, 97, 5);
+	--input-fieldset-separator: rgb(77, 77, 77);
+}
+
+form {
+	display: flex;
+	flex-flow: column;
+	gap: 1em;
+}
+
+.pretty-form {
+	display: flex;
+	flex-flow: column;
+	gap: 1em;
+}
+
+.pretty-form div:has(> :is(input, select)) {
+	isolation: isolate;
+	position: relative;
+	display: flex;
+	justify-content: stretch;
+	align-items: center;
+}
+
+.pretty-form fieldset {
+	display: flex;
+	flex-direction: column;
+	padding: 0.5em 0.25em 0;
+	margin: 0;
+	margin-top: 0.25em;
+	isolation: isolate;
+	position: relative;
+
+	border: thin solid var(--input-border);
+
+	&:focus-within {
+		border-color: var(--input-border-selected);
+		outline: none;
+	}
+
+	& > legend {
+		font-variant: small-caps;
+		position: absolute;
+		margin: 0.5em 0.75em;
+		padding-inline: 0.25ch;
+		top: 0;
+		left: 0;
+		background-color: var(--input-background);
+		border: thin solid transparent;
+		pointer-events: none;
+
+		color: var(--input-label-text);
+		font-size: 0.75em;
+		translate: 0 -85%;
+		z-index: 1;
+	}
+	
+	& > div:has(> input):not(:last-of-type) {
+		border-bottom: thin solid var(--input-fieldset-separator);
+	}
+}
+
+.pretty-form div > :is(
+	input[type="text"],
+	input[type="number"],
+	input[type="email"],
+	select
+) {
+	padding: 0.5em 0.75em;
+	background: none;
+	border: thin solid var(--input-border);
+	font-size: 1em;
+	display: block;
+	flex-grow: 1;
+	color: currentColor;
+	border-radius: 0;
+
+	&:focus {
+		border-color: var(--input-border-selected);
+		outline: none;
+	}
+
+	&::placeholder {
+		opacity: 0;
+
+		transition:
+			opacity 100ms;
+	}
+
+	&:focus::placeholder {
+		opacity: 1;
+	}
+
+	label:has(+ &) {
+		position: absolute;
+		top: 0;
+		left: 0;
+		margin: 0.5em 0.75em;
+		padding-inline: 0.25ch;
+		translate: 0 -85%;
+		scale: 0.80;
+		transform-origin: calc(-0.25ch) 50%;
+		
+		pointer-events: none;
+		
+		background-color: var(--input-background);
+		border: thin solid transparent;
+		
+		color: var(--input-label-text);
+		font-variant: small-caps;
+		transition:
+			translate 200ms,
+			scale 200ms;
+
+		&:has(+ input:placeholder-shown:not(:focus)) {
+			translate: 0;
+			scale: 1;
+			color: currentColor;
+		}
+	}
+
+	&[type="number"] {
+		padding-right: 0.5em;
+	}
+
+	&:is(select) {
+		appearance: none;
+	}
+}
+
+.pretty-form div > :is(
+	input[type="checkbox"],
+	input[type="radio"]
+) {
+	margin: 0;
+	background: none;
+
+	:not(fieldset) > div:has(&) {
+		border: thin solid var(--input-border);
+
+		&:has(> :focus) {
+			border-color: var(--input-border-selected);
+		}
+	}
+
+	label:has(+ &) {
+		font-variant: small-caps;
+		padding: 0.5em 0.75em;
+		flex-grow: 1;
+	}
+
+	&[type="checkbox"] {
+		margin-right: 0.75em;
+	}
+	
+	&[type="radio"] {
+		margin-left: 0.75em;
+		order: -1;
+	}
+}
