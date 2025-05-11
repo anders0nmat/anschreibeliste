@@ -1,10 +1,27 @@
 from typing import Any
 from django.forms import ModelForm, Form, CharField, IntegerField, HiddenInput, ModelChoiceField, BooleanField
 from django.utils.translation import gettext_lazy as _
+from django.forms.widgets import TextInput, NumberInput
 
 from .models import Account, Product, Transaction
-from .formfield import FixedPrecisionField
+from .formfield import FixedPrecisionField, DecimalInput
 
+def default_placeholder(cls=None, placeholder=" "):
+    """
+    Decorator for form classes.
+    
+    Sets the HTML-Attribute `placeholder` on widgets of type `TextInput`, `NumberInput` and `DecimalInput`
+    """
+    def _default_placeholder(cls):
+        for field in cls.base_fields.values():
+            if isinstance(field.widget, (TextInput, NumberInput, DecimalInput)): 
+                field.widget.attrs.setdefault('placeholder', placeholder) 
+        return cls
+    if cls:
+        return _default_placeholder(cls)
+    return _default_placeholder
+    
+@default_placeholder
 class CreateAccountForm(ModelForm):
     class Meta:
         model = Account
@@ -20,11 +37,13 @@ class RestrictedCreateAccountForm(CreateAccountForm):
         self.instance.member = False
         return super().save(commit)
 
+@default_placeholder
 class EditAccountForm(ModelForm):
     class Meta:
         model = Account
         fields = ['display_name', 'full_name', 'credit', 'group', 'member', 'permanent', 'active']
 
+@default_placeholder
 class TransactionForm(Form):
     account = ModelChoiceField(Account.objects.filter(active=True), label=_('Account'), widget=HiddenInput)
     amount = FixedPrecisionField(label=_('Amount'), decimal_places=2, min_value=1)

@@ -33,7 +33,7 @@
 			<h3>{% translate "Account" %}</h3>
 			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
 		</summary>
-		<form method="post">
+		<form class="pretty-form" method="post">
 			{% csrf_token %}
 			{{ form }}
 			{% if form.has_enabled_fields %}
@@ -48,6 +48,26 @@
 			<h3>{% translate "Deposit" %}</h3>
 			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
 		</summary>
+		<form action="{% url 'api_deposit' %}" method="POST" id="deposit-transaction" class="pretty-form">
+			{% csrf_token %}
+			{% idempotency_key %}
+			<div>
+				{{ deposit_form.amount.as_field_group }}
+			</div>
+			
+			<div class="buttons">
+				<button type="button" class="button" data-amount="500">+5€</button>
+				<button type="button" class="button" data-amount="1000">+10€</button>
+				<button type="button" class="button" data-amount="5000">+50€</button>
+			</div>
+
+			<div>
+				{{ deposit_form.reason.as_field_group }}
+				{% for field in deposit_form.hidden_fields %}{{ field }}{% endfor %}
+			</div>
+			
+			<button type="submit" id="confirm-deposit" class="primary button">{% translate "Confirm" %}</button>
+		</form>
 		{% if banking_details and account.permanent %}
 		<div id="banking-details">
 			<table>
@@ -67,17 +87,6 @@
 			{{ banking_details.qr_code|safe }}
 		</div>
 		{% endif %}
-		<form action="{% url 'api_deposit' %}" method="POST" id="deposit-transaction" class="transaction">
-			{% csrf_token %}
-			{% idempotency_key %}
-			{{ deposit_form }}
-			
-			<div class="buttons">
-				<button type="button" class="button" data-amount="1000">+10€</button>
-				<button type="button" class="button" data-amount="5000">+50€</button>
-			</div>
-			<button type="submit" id="confirm-deposit" class="primary button">{% translate "Confirm" %}</button>
-		</form>
 	</details>
 	{% endif %}
 
@@ -88,10 +97,12 @@
 			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
 		</summary>
 		
-		<form action="{% url 'api_withdraw' %}" method="post" id="withdraw-transaction" class="transaction">
+		<form action="{% url 'api_withdraw' %}" method="post" id="withdraw-transaction" class="pretty-form">
 			{% csrf_token %}
 			{% idempotency_key %}
-			{{ withdraw_form }}
+			<div>
+				{{ withdraw_form.amount.as_field_group }}
+			</div>
 			
 			<div class="buttons">
 				<button type="button" class="button" data-amount="1000">+10€</button>
@@ -99,6 +110,12 @@
 				{# Translators: Used to withdraw the entire deposited money #}
 				<button type="button" class="button" id="withdraw-all">{% translate "All" %}</button>
 			</div>
+
+			<div>
+				{{ withdraw_form.reason.as_field_group }}
+				{% for field in withdraw_form.hidden_fields %}{{ field }}{% endfor %}
+			</div>
+			
 			<button type="submit" id="confirm-withdraw" class="primary button">{% translate "Confirm" %}</button>
 		</form>
 	</details>
@@ -110,7 +127,7 @@
 			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>		
 		</summary>
 		<ul id="transactions">
-			{% include "ledger/snippets/transaction_history.html" with transactions=transactions only %}
+			{% include "ledger/snippets/transaction_history.html" with transactions=transactions %}
 		</ul>
 	</details>
 </aside>

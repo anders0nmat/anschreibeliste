@@ -42,6 +42,9 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
     form_class = EditAccountForm
     template_name_suffix = '_detail'
     
+    def get_form_kwargs(self) -> Dict[str, Any]:
+        return super().get_form_kwargs() | { 'label_suffix': '' }
+
     def get_success_url(self) -> str:
         if not self.object.active:
             return reverse('account_list')
@@ -65,11 +68,11 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
 
         if self.request.user.has_perm(PERMS[('deposit', self.object.permanent)]):
             kwargs |= {
-                'deposit_form': TransactionForm(initial={'account': self.object, 'action': 'deposit'}),
+                'deposit_form': TransactionForm(initial={'account': self.object, 'action': 'deposit'}, label_suffix=""),
             }
         if self.request.user.has_perm(PERMS[('withdraw', self.object.permanent)]):
             kwargs |= {
-                'withdraw_form': TransactionForm(initial={'account': self.object, 'action': 'withdraw'}),
+                'withdraw_form': TransactionForm(initial={'account': self.object, 'action': 'withdraw'}, label_suffix=""),
             }
         
         return super().get_context_data(**kwargs)
@@ -105,11 +108,14 @@ class AccountCreate(PermissionRequiredMixin, CreateView):
     def get_success_url(self) -> str:
         return reverse('account_detail', args=[self.object.pk])
 
+    def get_form_kwargs(self) -> Dict[str, Any]:
+        return super().get_form_kwargs() | { 'label_suffix': '' }
+
     def get_form_class(self) -> type:
         HAS_PERM_FORMS = {
             True: CreateAccountForm,
             False: RestrictedCreateAccountForm,
-		}
+        }
         return HAS_PERM_FORMS[self.request.user.has_perm('ledger.add_permanent_account')]
 
     def form_valid(self, form: Any) -> HttpResponse:

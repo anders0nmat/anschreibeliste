@@ -114,69 +114,9 @@ aside {
 	}
 	
 	& form {
-		/* display: grid;
-		grid-template-columns: auto;
-		grid-auto-rows: auto;
-		gap: 0.5em; */
-		display: flex;
-		flex-direction: column;
-		align-items: stretch;
-		gap: 0.5em;
 		padding: 0.5em 0.75em;
 		background: var(--secondary-bg-color);
 		border: thin solid var(--secondary-bg-color);
-		
-		& > div {
-			display: flex;
-			flex-direction: column;
-			align-items: stretch;
-			/* display: grid;
-			grid-template-columns: subgrid; */
-		}
-
-		& > div:has(input[type="checkbox"]) {
-			/* display: grid;
-			grid-template-columns: max-content auto; */
-			flex-direction: row;
-		}
-		
-		& label {
-			/* align-self: center;
-			justify-self: end; */
-			display: block;
-			
-			font-variant: small-caps;
-			font-weight: 400;
-			font-size: 85%;
-			/* padding-left: 1em; */
-		}
-		
-		& input[type="submit"] {
-			/* grid-column: 1 / -1; */
-		}
-		
-		& input[type="text"],
-		& input[type="number"],
-		& select {
-			border: none;
-			padding: 0.25em 0.5em;
-			background: color-mix(in srgb, var(--primary-bg-color), transparent 50%);
-			
-			&:not([disabled]):hover {
-				background-color: color-mix(in srgb, var(--secondary-bg-color), var(--highlight-color) 10%);
-			}
-		}
-		
-		& input[type="checkbox"] {
-			padding: 0;
-			margin: 0.25em 0.5em;
-			justify-self: start;
-		}
-		
-		& .balance {
-			padding: 0.25em 0.5em;
-			color: var(--secondary-text-color);
-		}
 	}
 
 	& #banking-details {
@@ -184,6 +124,7 @@ aside {
 		flex-flow: row wrap;
 		justify-content: space-evenly;
 		margin-right: 0.25em;
+		margin-top: 0.25em;
 		align-items: center;
 
 		& tr {
@@ -213,182 +154,30 @@ aside {
 
 #deposit-transaction,
 #withdraw-transaction {
-	--bg: color-mix(in srgb, var(--secondary-bg-color), var(--selected-color) 20%);
+	--bg: color-mix(in srgb, var(--secondary-bg-color), var(--selected-color) 15%);
+	--input-background: var(--bg);
+	--input-label: color-mix(in srgb, var(--input-border), var(--highlight-color) 20%);
+	--input-border-selected: color-mix(in srgb, var(--selected-color), var(--highlight-color) 40%);
+	--input-label-selected: color-mix(in srgb, var(--selected-color), var(--highlight-color) 40%);
+
 	border: thin solid var(--selected-color);
-	/* margin-right: 0.25em; */
-	position: relative;
-	grid-area: new-transaction;
-	grid-template-rows: auto auto auto;
-	grid-template-columns: auto;
-	grid-template-areas: 
-		"amount"
-		"buttons"
-		"reason"
-		"confirm";
 	background: var(--bg);
-	gap: 0.5em;
-	
-	& .overlay {
-		position: absolute;
-		display: flex;
-		justify-content: center;
-		inset: 0;
-		background-color: rgba(71, 71, 71, 0.726);
-		text-align: center;
-		
-		&:not([visible]) {
-			display: none;
-		}
 
-		& svg {
-			display: none;
-		}
-
-		&[data-status="pending"] svg[data-status="pending"],
-		&[data-status="success"] svg[data-status="success"],
-		&[data-status="failure"] svg[data-status="failure"] {
-			display: unset;
-		}
-
-		& svg[data-status="pending"] {
-			stroke-width: 1;
-			stroke: rgb(107, 107, 107);
-			fill: none;
-			stroke-linecap: round;
-			stroke-linejoin: round;
-			stroke-dasharray: 8px 24px;
-			stroke-dashoffset: 0px;
-			animation: 
-				1.5s infinite spinner linear,
-				2s infinite alternate chase-lag cubic-bezier(.58,.14,.65,.99);
-		}
-
-		& svg[data-status="success"] {
-			stroke-width: 1;
-			stroke: green;
-			fill: none;
-			stroke-linecap: round;
-			stroke-linejoin: round;
-			stroke-dasharray: 16px;
-			stroke-dashoffset: 0px;
-			animation:
-				300ms draw ease-in-out;
-		}
-
-
-	}
-
-	& > button {
-		grid-area: confirm;
-	}
-	
-	& div:has(input[name="amount"]) {
-		grid-area: amount;
-	}
-
-	& div:has(input[name="reason"]) {
-		grid-area: reason;
-	}
-
-	& input {
-		border: none;
-		padding: 0.25em 0.5em;
-		background: var(--secondary-bg-color);
-		font-size: 125%;
-		min-width: 5ch;
-		
-		&:hover {
-			background-color: var(--secondary-bg-color);
-		}
-	}
-
-	& label {
-		justify-self: start;
-		padding: 0;
-	}
+	grid-area: new-transaction;
 
 	& .buttons {
-		grid-area: buttons;
 		display: flex;
 		flex-flow: row nowrap;
 		align-items: stretch;
 		overflow-x: auto;
 		gap: 0.5em;
-	}
 
-	& .undo:not([disabled]):hover {
-		background-color: color-mix(in srgb, var(--bg), var(--highlight-color) 10%);
-	}
-
-	& [empty] {
-		font-style: italic;
+		& .button {
+			--bg: color-mix(in srgb, var(--secondary-bg-color), var(--selected-color) 40%);
+		}
 	}
 }
 
 #withdraw-transaction {
 	--selected-color: var(--negative-color);
 }
-
-.transaction {
-	background: var(--secondary-bg-color);
-	padding: 0.5em 0.75em;
-
-	display: grid;
-	grid-column: span 3;
-	grid-template-columns: subgrid;
-	grid-template-rows: auto auto;
-	grid-template-areas: 
-		"account price undo"
-		"reason  price undo";
-	column-gap: 0.5em;
-	align-items: center;
-	border: thin solid var(--secondary-bg-color);
-
-	&:not([data-transaction-id]) {
-		background-color: transparent;
-		border-color: transparent;
-	}
-
-	&[error] {
-		background-color: color-mix(in srgb, var(--secondary-bg-color), red 10%);
-		border-color: rgb(184, 0, 0);
-	}
-	
-	& > .account {
-		grid-area: account;
-		font-size: 80%;
-		font-weight: 600;
-	}
-
-	& > .reason {
-		grid-area: reason;
-		font-size: 80%;
-	}
-
-	& > .money {
-		grid-area: price;
-		text-align: right;
-		font-size: 100%;
-	}
-
-	& > .time {
-		display: none;
-	}
-
-	& > .status {
-		grid-area: undo;
-	}
-
-	&:has(> .status) > .undo {
-		display: none;
-	}
-
-	& > .undo {
-		grid-area: undo;
-		padding: 4px;
-		color: var(--primary-text-color);
-		display: flex;
-		flex-flow: column nowrap;
-		justify-content: center;
-	}
-} 
