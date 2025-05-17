@@ -215,7 +215,7 @@ class Transaction(models.Model):
         if user is None:
             return False
     
-        is_stale = now() - self.timestamp >= Transaction.objects.revert_threshold
+        is_stale = now() - self.timestamp >= Transaction.objects.revert_threshold()
         has_permissions = user.is_staff or (user == self.issuer and not is_stale)
         return has_permissions
 

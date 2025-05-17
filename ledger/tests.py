@@ -62,7 +62,7 @@ class TransactionModelTest(TestCase):
             **self.default_transaction,    
             issuer=self.user1
         )
-        stale_transaction.timestamp = now() - Transaction.objects.revert_threshold - timedelta(seconds=2)
+        stale_transaction.timestamp = now() - Transaction.objects.revert_threshold() - timedelta(seconds=2)
         
         return (fresh_transaction, stale_transaction, foreign_transaction, reverted_transaction)
 

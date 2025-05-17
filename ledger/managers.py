@@ -11,8 +11,14 @@ config = settings.LEDGER_CONFIG
 transaction_config = config['transaction']
 
 class TransactionQuerySet(models.QuerySet):
-    revert_threshold = timedelta(hours=transaction_config['revert-threshold'])
-    timejump = timedelta(hours=transaction_config['timejump-threshold'])
+    _revert_threshold = timedelta(hours=transaction_config['revert-threshold'])
+    _timejump = timedelta(hours=transaction_config['timejump-threshold'])
+
+    def revert_threshold(self):
+        return TransactionQuerySet._revert_threshold
+    
+    def timejump(self):
+        return TransactionQuerySet._timejump
 
     def annotate_revertible(self, user: User, revert_threshold: timedelta = None):
         """
@@ -24,7 +30,7 @@ class TransactionQuerySet(models.QuerySet):
         - Whether the transaction was issued by `user`
         - Whether the transaction was issued no more than `revert_threshold` ago
         """
-        revert_threshold = revert_threshold or self.revert_threshold
+        revert_threshold = revert_threshold or self._revert_threshold
         if user.is_staff:
             return self.annotate(allow_revert=Q(related_transaction=None))
         elif revert_threshold is None:
@@ -42,7 +48,7 @@ class TransactionQuerySet(models.QuerySet):
         - the next one (`timejump_after`)
         - the one before (`timejump_before`)
         """
-        timejump = timejump or self.timejump
+        timejump = timejump or self._timejump
         return self.annotate(
             _previous_timestamp=Window(expression=Lag("timestamp", offset=1, default=None), order_by='timestamp'),
             _timedelta_before=F("timestamp") - F("_previous_timestamp"),
@@ -59,6 +65,8 @@ class TransactionManager(models.Manager):
     """
     This class is only for type-hinting purposes
     """
+    def revert_threshold(self) -> timedelta: ...
+    def timejump(self) -> timedelta: ...
     def annotate_revertible(self: T, user: User, revert_threshold: timedelta = None) -> T: ...
     def annotate_timejump(self: T, timejump: timedelta = None) -> T: ...
 
