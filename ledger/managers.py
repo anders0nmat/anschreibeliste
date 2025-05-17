@@ -5,10 +5,14 @@ from django.db.models.functions.datetime import Now
 from typing import TypeVar
 from datetime import timedelta
 from django.contrib.auth.models import User
+from django.conf import settings
+
+config = settings.LEDGER_CONFIG
+transaction_config = config['transaction']
 
 class TransactionQuerySet(models.QuerySet):
-    revert_threshold = timedelta(hours=12)
-    timejump = timedelta(hours=6)
+    revert_threshold = timedelta(hours=transaction_config['revert-threshold'])
+    timejump = timedelta(hours=transaction_config['timejump-threshold'])
 
     def annotate_revertible(self, user: User, revert_threshold: timedelta = None):
         """

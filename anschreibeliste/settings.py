@@ -10,11 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+from collections.abc import MutableMapping, Mapping
 from pathlib import Path
 import tomllib
 
 with Path("config.toml").open("rb") as f:
-	CONFIG = tomllib.load(f)
+    CONFIG = tomllib.load(f)
 
 # Suppose this file lives under
 # 	/path/to/project/files/settings.py
@@ -71,7 +72,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             BASE_DIR / "templates",
-		],
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -123,7 +124,7 @@ LANGUAGE_CODE = 'de'
 TIME_ZONE = 'UTC'
 
 LOCALE_PATHS = [
-	BASE_DIR / 'locale',
+    BASE_DIR / 'locale',
 ]
 
 USE_I18N = True
@@ -157,12 +158,62 @@ LOGOUT_REDIRECT_URL = "/users/login/?next=/"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Used for custom configs, see below
+def update_recursive(d: MutableMapping, u: Mapping):
+    """
+    Updates a dict recursively.
+
+    ```
+    update_recursive({'a': 1}, {'b': 2})
+    # {'a': 1, 'b': 2}
+    
+    update_recursive({'a': 1}, {'a': 2})
+    # {'a': 2}
+    
+    update_recursive({'a': 1}, {'a': {'c': 5}})
+    # {'a': {'c': 5}}
+    
+    update_recursive({'a': {'b': 1, 'c': 3}}, {'a': {'c': 5}})
+    # {'a': {'b': 1, 'c': 5}}
+    ```
+    """
+    if not isinstance(d, MutableMapping):
+        return u
+    for k, v in u.items():
+        if isinstance(v, Mapping):
+            d[k] = update_recursive(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d
+
+
 # ========== Ledger ==========
+#
+# ? How to add new settings
+# Add a new key-value-pair to the `LEDGER_CONFIG`. This is used as the default value.
+# ```
+# LEDGER_CONFIG = {
+#   ...
+#   'ip-address': '0.0.0.0',
+# }
+# ```
+#
+# ? How to use these settings
+# ```
+# from django.conf import settings
+# config = settings.LEDGER_CONFIG
+# ip_address = config['ip-address']  
+# ```
 
 LEDGER_CONFIG = {
-	'transaction-timeout': 10_000,
-	'submit-overlay': 1_500,
-	'banking': None,
+    'transaction-timeout': 10_000,
+    'submit-overlay': 1_500,
+    'banking': None,
+    'transaction': {
+        'revert-threshold': 6,
+        'timejump-threshold': 12,
+    }
 }
-LEDGER_CONFIG.update(CONFIG.get('ledger', {}))
+
+update_recursive(LEDGER_CONFIG, CONFIG.get('ledger', {}))
 
