@@ -105,8 +105,12 @@
 <div>
 	<h2 class="visually-hidden">{% translate "Transactions" %}</h2>
 	<ul id="transactions">
-		{% include 'ledger/snippets/transaction_history.html' with transactions=transaction_list %}
+		{% include 'ledger/snippets/transaction_history.html' with transactions=transaction_list revert_form="transaction-revert" only %}
 	</ul>
+	<form id="transaction-revert" action="{% url 'transaction_revert' %}" method="POST" >
+		{% csrf_token %}
+		{% idempotency_key %}
+	</form>
 </div>
 
 {% endblock content %}

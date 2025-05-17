@@ -2,7 +2,7 @@ from typing import Any, Optional
 from django.db import models, transaction
 from django.contrib.auth.models import User
 from django.utils.timezone import now
-from .managers import TransactionManager, ProductManager
+from .managers import TransactionManager, ProductManager, TransactionQuerySet
 from .modelfield import PositiveFixedPrecisionField, FixedPrecisionField
 from datetime import timedelta
 from django.core.exceptions import PermissionDenied
@@ -162,9 +162,7 @@ class Transaction(models.Model):
         def withdraws(cls) -> set["Transaction.TransactionType"]:
             return {cls.ORDER, cls.WITHDRAW, cls.REVERT_WITHDRAW}
 
-    objects = TransactionManager(
-        timejump_threshold=timedelta(hours=6),
-        revert_threshold=timedelta(hours=12))
+    objects: TransactionManager = TransactionQuerySet.as_manager()
 
     closing_balance = models.ForeignKey(AccountBalance, verbose_name=_('closing balance'), on_delete=models.CASCADE, related_name='transactions', null=True, default=None, blank=True)
     account = models.ForeignKey(Account, verbose_name=_('account'), on_delete=models.CASCADE, related_name='transactions')

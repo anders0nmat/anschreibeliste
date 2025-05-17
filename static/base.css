@@ -89,6 +89,14 @@ select {
 	--secondary-text-color: light-dark(rgb(100, 100, 100), rgb(117, 117, 117));
 	--disabled-text-color: light-dark(rgb(141, 141, 141), rgb(78, 78, 78));
 	--headline-text-color: light-dark(rgb(24, 24, 24), rgb(160, 160, 160));
+	
+	/* pretty-forms */
+	--input-background: var(--secondary-bg-color);
+	--input-border: var(--disabled-text-color);
+	--input-border-selected: var(--selected-color);
+	--input-label: var(--secondary-text-color);
+	--input-label-selected: color-mix(in srgb, var(--input-border-selected), var(--highlight-color) 40%);
+	--input-fieldset-separator: rgb(77, 77, 77);
 
 	color-scheme: light dark;
 

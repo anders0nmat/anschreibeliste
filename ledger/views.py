@@ -61,7 +61,12 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
 
         kwargs |= {
             'account_list': Account.objects.grouped(),
-            'transactions': Transaction.objects.recent(account=self.object, user=self.request.user),
+            'transactions': Transaction.objects\
+                .filter(closing_balance=None, account=self.object)\
+                .order_by('-timestamp')\
+                .annotate_timejump()\
+                .annotate_revertible(user=self.request.user)\
+                .select_related('account'),
             'js_config': js_config(),
             'banking_details': EPCCode.from_config(self.object.full_name or '[Name]'),
         }
@@ -141,16 +146,27 @@ class IndexView(TemplateView):
         return super().get_context_data(**kwargs) | {
             "account_list": Account.objects.grouped(),
             "product_list": Product.objects.grouped(),
-            "transaction_list": Transaction.objects.recent(user=self.request.user),
+            "transaction_list": Transaction.objects\
+                .filter(closing_balance=None)\
+                .order_by('-timestamp')\
+                .annotate_timejump()\
+                .annotate_revertible(user=self.request.user)\
+                .select_related('account'),
             'js_config': js_config(),
         }
+        
 
 
 def test(request: HttpRequest):
     return render(request, "ledger/test.html", {
         "accounts": Account.objects.grouped(),
         "products": Product.objects.grouped(),
-        "transactions": Transaction.objects.recent(),
+        "transactions": Transaction.objects\
+                .filter(closing_balance=None)\
+                .order_by('-timestamp')\
+                .annotate_timejump()\
+                .annotate_revertible(user=request.user)\
+                .select_related('account'),
         'js_config': js_config(),
     })
 
@@ -303,10 +319,12 @@ def custom_transaction_ajax(request: HttpRequest, action: Literal['deposit', 'wi
     return JsonResponse(form.errors.as_json(), safe=False, status=HTTPStatus.BAD_REQUEST)
 
 @require_POST
-def revert_transaction(request: HttpRequest):
+def revert_transaction(request: HttpRequest, pk: int = None):
+    next_url = reverse('account_detail', args=[pk]) if pk else reverse('main')
+
     form = RevertTransactionForm(request.POST)
     if _revert_transaction(request, form):
-        return HttpResponseRedirect(reverse('main'))
+        return HttpResponseRedirect(next_url)
     return HttpResponseBadRequest(form.errors.as_ul())
 
 @require_POST

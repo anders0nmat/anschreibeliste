@@ -1,14 +1,14 @@
 
 
 
-:root {
+/* :root {
 	--input-background: rgb(31, 31, 31);
 	--input-border: gray;
 	--input-border-selected: rgb(16, 97, 5);
 	--input-label: var(--input-border);
 	--input-label-selected: var(--input-border-selected);
 	--input-fieldset-separator: rgb(77, 77, 77);
-}
+} */
 
 .pretty-form {
 	display: flex;

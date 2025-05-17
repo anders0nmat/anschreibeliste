@@ -8,6 +8,7 @@ urlpatterns = [
     path("accounts/", views.AccountList.as_view(), name="account_list"),
     path("accounts/new/", views.AccountCreate.as_view(), name="account_create"),
     path("accounts/<pk>/", views.AccountDetail.as_view(), name="account_detail"),
+    path("accounts/<pk>/revert/", views.revert_transaction, name="account_revert"),
     
 	path("transaction/", include([
 		path("deposit/", views.custom_transaction, {'action': 'deposit'}),

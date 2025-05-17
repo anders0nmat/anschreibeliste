@@ -19,16 +19,11 @@
 
 
 <template id="transaction-template">
-	{% include 'ledger/snippets/transaction.html' with transaction=None only %}
+	{% include 'ledger/snippets/transaction.html' with transaction=None %}
 </template>
 
-<form id="transaction-revert" action="{% url 'transaction_revert' %}" method="POST" >
-	{% csrf_token %}
-	{% idempotency_key %}
-</form>
-
 {% for transaction in transactions %}
-	{% include 'ledger/snippets/transaction.html' with transaction=transaction only %}
+	{% include 'ledger/snippets/transaction.html' with transaction=transaction %}
 {% empty %}
 	<span class="separator" id="no-transactions">{% translate "No transactions found" %}</span>
 {% endfor %}
