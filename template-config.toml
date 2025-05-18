@@ -38,12 +38,12 @@ port=''
 
 # How long until an unfinished transaction will be discarded.
 # 
-# Unit: ms (milliseconds)
+# Unit: milliseconds
 transaction-timeout=10_000
 
 # How long the confirmation/error overlay is shown after submitting a transaction.
 # 
-# Unit: ms (milliseconds)
+# Unit: milliseconds
 submit-overlay=1_500
 
 # This information is displayed for permanent members to transfer money to.
@@ -53,8 +53,21 @@ submit-overlay=1_500
 # Field `invoice_text` wil be formatted before use with `.format(name=account.name)`,
 # so it may contain format pattern `'{name}'`.
 
-# [ledger.banking]
+[ledger.banking]
 # name="John Doe"
 # iban="DE12 3456 7890 1234 5678 90"
 # invoice-text="Deposit for {name}"
 
+# Configuration specific to transaction objects
+[ledger.transaction]
+# Transactions older than `revert-threshold` cannot be reverted by users
+# Staff users can still revert these transactions.
+#
+# Unit: hours
+# revert-threshold=6
+
+# If `timejump-threshold` time lies between succesive transactions,
+# they are visually separated
+#
+# Unit: hours
+# timejump-threshold=96

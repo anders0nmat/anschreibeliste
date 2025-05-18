@@ -149,6 +149,7 @@ class AccountBalance(models.Model):
     def __str__(self) -> str:
         return gettext("{account}: {closing_balance} at {timestamp}").format(account=self.account, closing_balance=self.closing_balance, timestamp=self.timestamp)
 
+config = settings.LEDGER_CONFIG['transaction']
 class Transaction(models.Model):
     class AlreadyReverted(Exception): pass
     class TransactionType(models.TextChoices):
@@ -162,6 +163,8 @@ class Transaction(models.Model):
         def withdraws(cls) -> set["Transaction.TransactionType"]:
             return {cls.ORDER, cls.WITHDRAW, cls.REVERT_WITHDRAW}
 
+    revert_threshold = timedelta(hours=config['revert-threshold'])
+    timejump_threshold = timedelta(hours=config['timejump-threshold'])
     objects: TransactionManager = TransactionQuerySet.as_manager()
 
     closing_balance = models.ForeignKey(AccountBalance, verbose_name=_('closing balance'), on_delete=models.CASCADE, related_name='transactions', null=True, default=None, blank=True)
@@ -201,7 +204,7 @@ class Transaction(models.Model):
         amount_str = str(self.amount)
         wholes, cents = amount_str[:-2], amount_str[-2:]
         return f"{self.account.display_name}: {self.reason} ({wholes:>01},{cents:>02}€)"
-    
+
     @property
     @display(description=_('Signed amount'))
     def normalized_amount(self) -> int:
@@ -215,7 +218,7 @@ class Transaction(models.Model):
         if user is None:
             return False
     
-        is_stale = now() - self.timestamp >= Transaction.objects.revert_threshold()
+        is_stale = now() - self.timestamp >= self.revert_threshold
         has_permissions = user.is_staff or (user == self.issuer and not is_stale)
         return has_permissions
 
