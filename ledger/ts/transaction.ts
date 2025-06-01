@@ -16,7 +16,8 @@ interface ServerEvent {
 interface Product {
 	readonly id: string
 	readonly name: string
-	totalCost(member: boolean): number
+	readonly cost: number
+	readonly memberCost: number
 }
 
 interface Account {
@@ -24,8 +25,6 @@ interface Account {
 	readonly name: string
 	readonly budget: number
 	readonly isMember: boolean
-
-	canAfford(_: Product): boolean
 }
 
 type TransactionKind = "product" | "deposit" | "withdraw"
@@ -61,7 +60,7 @@ interface ProductRequest {
 
 type TransactionRequest = TransactionAmountRequest | TransactionProductRequest
 
-function getRadioGroup(formElements: HTMLFormControlsCollection, name: string): { elements: HTMLElement[], readonly value: string; } {
+function getRadioGroup(formElements: HTMLFormControlsCollection, name: string): { elements: HTMLInputElement[], readonly value: string; } {
 	const elements: RadioNodeList | HTMLInputElement | null = formElements[name]
 
 	if (elements instanceof RadioNodeList) {
@@ -102,15 +101,12 @@ function productReason(account: Account | null, product: Product | null, amount:
 	return reason
 }
 
-function accountShouldDisable(account: Account | null, product: Product | null): boolean {
-	if (!account) { return false }
-	return product ? !account.canAfford(product) : account.budget <= 0
+function totalProductCost(request: ProductRequest): number {
+	const useMemberCost = request.account.isMember != request.invertMember
+	const singleProductCost = useMemberCost ? request.product.memberCost : request.product.cost
+	return request.amount * singleProductCost
 }
 
-function productShouldDisable(product: Product | null, account: Account | null): boolean {
-	if (!product) { return false }
-	return account ? !account.canAfford(product) : false
-}
 
 class Status extends HTMLWrapper {
 	error() { this.element.dataset.status = "failure" }
@@ -246,10 +242,10 @@ export class Transaction extends HTMLWrapper {
 	static async submitProduct(request: ProductRequest) {
 		const idempotency_key = getIdempotencyKey()
 		const useMemberPrice = request.account.isMember != request.invertMember
-
+		
 		const pending_transaction = Transaction.create()
 		pending_transaction.account = request.account.name
-		pending_transaction.amount = -request.product.totalCost(useMemberPrice)
+		pending_transaction.amount = -totalProductCost(request)
 		pending_transaction.reason = productReason(request.account, request.product, request.amount, request.invertMember)
 		pending_transaction.can_revert = true
 		pending_transaction.pendingId = idempotency_key
@@ -281,6 +277,7 @@ export class Transaction extends HTMLWrapper {
 		getProduct,
 		onInputChange,
 		onReset,
+		accountLocked,
 		timeout: timeout_duration,
 	}: {
 		form?: HTMLFormElement,
@@ -288,7 +285,11 @@ export class Transaction extends HTMLWrapper {
 		getProduct: (_: string) => Product | null,
 		onInputChange?: (_: HTMLInputElement) => void,
 		onReset?: (_: HTMLFormElement) => void,
+		accountLocked?: () => boolean,
 		timeout?: number,
+	}): ({
+		form: HTMLFormElement,
+		updateSelection: () => void,
 	}) {
 		form_element ??= document.getElementById('new-transaction') as HTMLFormElement
 		const timeout = timeout_duration ? {
@@ -322,6 +323,39 @@ export class Transaction extends HTMLWrapper {
 		const submit_button = form_element.querySelector('button[type="submit"]') as HTMLButtonElement
 		submit_button.classList.add('css-hidden');
 
+		const updateSelection = (selected_account: Account | null, selected_product: Product | null) => {
+			// Disable products & accounts according to price/budget
+			product_radios.elements.forEach((e: HTMLInputElement) => {
+				const this_product = getProduct(e.value)
+				if (this_product && selected_account) {
+					e.disabled = selected_account.budget < totalProductCost({
+						product: this_product,
+						account: selected_account,
+						amount: amount_input.valueAsNumber,
+						invertMember: invert_input.checked,
+					})
+				}
+				else {
+					e.disabled = false
+				}
+			})
+
+			account_radios.elements.forEach((e: HTMLInputElement) => {
+				const this_account = getAccount(e.value)
+				if (this_account && selected_product) {
+					e.disabled = this_account.budget < totalProductCost({
+						product: selected_product,
+						account: this_account,
+						amount: amount_input.valueAsNumber,
+						invertMember: invert_input.checked,
+					})
+				}
+				else {
+					e.disabled = this_account ? this_account.budget <= 0 : false
+				}
+			})
+		}
+
 		const all_elements = [...account_radios.elements, ...product_radios.elements, amount_input, invert_input]
 		all_elements.forEach((e: HTMLInputElement) => {
 			e.addEventListener('change', _ => {
@@ -332,14 +366,7 @@ export class Transaction extends HTMLWrapper {
 				selected_account.value = account?.name ?? ''
 				selected_product.value = productReason(account, product, amount_input.valueAsNumber, invert_input.checked)
 
-				// Disable products & accounts according to price/budget
-				product_radios.elements.forEach((e: HTMLInputElement) => {
-					e.disabled = productShouldDisable(getProduct(e.value), account)
-				})
-
-				account_radios.elements.forEach((e: HTMLInputElement) => {
-					e.disabled = accountShouldDisable(getAccount(e.value), product)
-				})
+				updateSelection(account, product)
 
 				onInputChange?.(e)
 
@@ -371,23 +398,31 @@ export class Transaction extends HTMLWrapper {
 				invertMember: invert_input.checked,
 			})
 			
+
 			form_element.reset()
+
+			if (accountLocked?.()) {
+				account_radios.elements.find(e => e.value == account.id)?.click()
+			}
 		})
 
-		form_element.addEventListener('reset', _ => {
+		form_element.addEventListener('reset', r => {
 			timeout?.clear()
 
-			// Disable products & accounts according to price/budget
-			product_radios.elements.forEach((e: HTMLInputElement) => {
-				e.disabled = productShouldDisable(getProduct(e.value), null)
-			})
-			
-			account_radios.elements.forEach((e: HTMLInputElement) => {
-				e.disabled = accountShouldDisable(getAccount(e.value), null)
-			})
+			updateSelection(null, null)
 
 			onReset?.(form_element)
 		})
+
+		return {
+			form: form_element,
+			updateSelection() {
+				const account = getAccount(account_radios.value)
+				const product = getProduct(product_radios.value)
+
+				updateSelection(account, product)
+			},
+		}
 	}
 
 	static attachRevert(form_element?: HTMLFormElement) {

@@ -185,6 +185,10 @@ div:has(#transactions) {
 	}
 }
 
+#transaction-revert {
+	display: none;
+}
+
 @keyframes progress-background {
 	from { background-position-x: left; }
 	  to { background-position-x: right; }
@@ -199,7 +203,10 @@ div:has(#transactions) {
 
 #transaction-multiplier {
 	margin: 0;
-	padding: 0.25em 0.5em;
+	padding: 0.25em 0.25em;
+
+	display: flex;
+	gap: 0.25em;
 
 	cursor: default;
 	align-self: center;
@@ -222,6 +229,11 @@ div:has(#transactions) {
 		color: var(--secondary-text-color);
 		font-size: 80%;
 		margin-left: 2px;
+	}
+
+	& button {
+		font-size: 80%;
+		align-items: center;
 	}
 }
 
@@ -246,6 +258,7 @@ div:has(#transactions) {
 	flex-flow: row nowrap;
 	align-items: center;
 	font-size: 110%;
+	overflow: hidden;
 	
 	& .slide-indicator {
 		cursor: default;
@@ -351,6 +364,7 @@ label:has(#item-search) {
 
 	background-color: var(--secondary-bg-color);
 	padding: 0.25em 0.5em;
+	margin-inline: 0.5em;
 	gap: 0.5em;
 
 	input {
@@ -358,10 +372,22 @@ label:has(#item-search) {
 		border: none;
 		color: inherit;
 		padding: 0.25em;
+		width: 12ch;
 	}
 }
 
 label:has(input[name="invert_member"]) {
+	margin-right: 0.5em;
+	padding: 0.375em;
+	font-size: 125%;
+	color: var(--secondary-text-color);
+	
+	&:has(input:checked) {
+		color: color-mix(in srgb, var(--selected-color), var(--highlight-color) 25%);
+	}
+}
+
+label:has(#lock-account) {
 	margin-right: 0.5em;
 	padding: 0.375em;
 	font-size: 125%;

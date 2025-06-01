@@ -35,17 +35,10 @@ function productReason(account, product, amount, invert_member = false) {
     }
     return reason;
 }
-function accountShouldDisable(account, product) {
-    if (!account) {
-        return false;
-    }
-    return product ? !account.canAfford(product) : account.budget <= 0;
-}
-function productShouldDisable(product, account) {
-    if (!product) {
-        return false;
-    }
-    return account ? !account.canAfford(product) : false;
+function totalProductCost(request) {
+    const useMemberCost = request.account.isMember != request.invertMember;
+    const singleProductCost = useMemberCost ? request.product.memberCost : request.product.cost;
+    return request.amount * singleProductCost;
 }
 class Status extends HTMLWrapper {
     error() { this.element.dataset.status = "failure"; }
@@ -163,7 +156,7 @@ export class Transaction extends HTMLWrapper {
         const useMemberPrice = request.account.isMember != request.invertMember;
         const pending_transaction = Transaction.create();
         pending_transaction.account = request.account.name;
-        pending_transaction.amount = -request.product.totalCost(useMemberPrice);
+        pending_transaction.amount = -totalProductCost(request);
         pending_transaction.reason = productReason(request.account, request.product, request.amount, request.invertMember);
         pending_transaction.can_revert = true;
         pending_transaction.pendingId = idempotency_key;
@@ -184,7 +177,7 @@ export class Transaction extends HTMLWrapper {
         pending_transaction.id = transaction_id;
         pending_transaction.status.success();
     }
-    static attachNew({ form: form_element, getAccount, getProduct, onInputChange, onReset, timeout: timeout_duration, }) {
+    static attachNew({ form: form_element, getAccount, getProduct, onInputChange, onReset, accountLocked, timeout: timeout_duration, }) {
         form_element ??= document.getElementById('new-transaction');
         const timeout = timeout_duration ? {
             handler: undefined,
@@ -211,6 +204,37 @@ export class Transaction extends HTMLWrapper {
         const selected_product = form_element.elements['selected_product'];
         const submit_button = form_element.querySelector('button[type="submit"]');
         submit_button.classList.add('css-hidden');
+        const updateSelection = (selected_account, selected_product) => {
+            // Disable products & accounts according to price/budget
+            product_radios.elements.forEach((e) => {
+                const this_product = getProduct(e.value);
+                if (this_product && selected_account) {
+                    e.disabled = selected_account.budget < totalProductCost({
+                        product: this_product,
+                        account: selected_account,
+                        amount: amount_input.valueAsNumber,
+                        invertMember: invert_input.checked,
+                    });
+                }
+                else {
+                    e.disabled = false;
+                }
+            });
+            account_radios.elements.forEach((e) => {
+                const this_account = getAccount(e.value);
+                if (this_account && selected_product) {
+                    e.disabled = this_account.budget < totalProductCost({
+                        product: selected_product,
+                        account: this_account,
+                        amount: amount_input.valueAsNumber,
+                        invertMember: invert_input.checked,
+                    });
+                }
+                else {
+                    e.disabled = this_account ? this_account.budget <= 0 : false;
+                }
+            });
+        };
         const all_elements = [...account_radios.elements, ...product_radios.elements, amount_input, invert_input];
         all_elements.forEach((e) => {
             e.addEventListener('change', _ => {
@@ -219,13 +243,7 @@ export class Transaction extends HTMLWrapper {
                 // Update selection display
                 selected_account.value = account?.name ?? '';
                 selected_product.value = productReason(account, product, amount_input.valueAsNumber, invert_input.checked);
-                // Disable products & accounts according to price/budget
-                product_radios.elements.forEach((e) => {
-                    e.disabled = productShouldDisable(getProduct(e.value), account);
-                });
-                account_radios.elements.forEach((e) => {
-                    e.disabled = accountShouldDisable(getAccount(e.value), product);
-                });
+                updateSelection(account, product);
                 onInputChange?.(e);
                 if (account || product) {
                     timeout?.set();
@@ -251,18 +269,23 @@ export class Transaction extends HTMLWrapper {
                 invertMember: invert_input.checked,
             });
             form_element.reset();
+            if (accountLocked?.()) {
+                account_radios.elements.find(e => e.value == account.id)?.click();
+            }
         });
-        form_element.addEventListener('reset', _ => {
+        form_element.addEventListener('reset', r => {
             timeout?.clear();
-            // Disable products & accounts according to price/budget
-            product_radios.elements.forEach((e) => {
-                e.disabled = productShouldDisable(getProduct(e.value), null);
-            });
-            account_radios.elements.forEach((e) => {
-                e.disabled = accountShouldDisable(getAccount(e.value), null);
-            });
+            updateSelection(null, null);
             onReset?.(form_element);
         });
+        return {
+            form: form_element,
+            updateSelection() {
+                const account = getAccount(account_radios.value);
+                const product = getProduct(product_radios.value);
+                updateSelection(account, product);
+            },
+        };
     }
     static attachRevert(form_element) {
         form_element ??= document.getElementById('transaction-revert');

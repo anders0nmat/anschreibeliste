@@ -53,6 +53,7 @@ Transaction.listen(event => {
 	if (!account) { return }
 	account.balance = event.balance
 	account.disabled = account.budget <= 0
+	updateSelection()
 }, true)
 
 // Better transaction multiplier
@@ -116,13 +117,23 @@ multiplier.element.addEventListener('input', _ => {
 	multiplier.input.value = multiplier.value.toString()
 	multiplier.input.dispatchEvent(new Event('change'))
 })
-multiplier.element.closest('div')?.addEventListener('click', _ => {multiplier.selectAll()})
+multiplier.element.addEventListener('click', _ => {multiplier.selectAll()})
 multiplier.input.parentElement?.classList.add('visually-hidden')
 multiplier.element.classList.remove('css-hidden')
+document.querySelectorAll<HTMLButtonElement>('#transaction-multiplier button[data-increment]').forEach(el => {
+	el.addEventListener('click', _ => {
+		const increment = parseInt(el.dataset.increment ?? '0')
+		if (!increment) { return }
+		multiplier.value = Math.max(multiplier.value + increment, 1)
+		multiplier.element.dispatchEvent(new Event('input'))
+	})
+})
 
 // Attach to transaction form
 
-Transaction.attachNew({
+const lock_account = document.querySelector<HTMLInputElement>('#lock-account')
+
+const { updateSelection } = Transaction.attachNew({
 	getAccount: id => Account.byId(id),
 	getProduct: id => Product.byId(id),
 	timeout: TRANSACTION_TIMEOUT,
@@ -131,15 +142,19 @@ Transaction.attachNew({
 			'account': 'products',
 			'product': 'accounts',
 		}
-
-		if (next_slide[e.name] && e.checked) {
+		if (!next_slide[e.name]) { return }
+		
+		const locked_account = lock_account?.checked ?? false
+		const element_is_product = e.name == 'product'
+		if (e.checked && !(locked_account && element_is_product)) {
 			changeSlide(next_slide[e.name])
 		}
 	},
 	onReset: _ => {
 		multiplier.value = 1
 		clearSearch()
-	}
+	},
+	accountLocked: () => { return lock_account?.checked ?? false }
 })
 Transaction.attachRevert()
 
@@ -184,4 +199,4 @@ function clearSearch() {
 	search_bar.dispatchEvent(new Event('input'))
 }
 
-document.querySelector<HTMLButtonElement>('#item-search ~ button')!.addEventListener('click', clearSearch)
+document.querySelector<HTMLButtonElement>('#item-search ~ button')?.addEventListener('click', clearSearch)
