@@ -42,6 +42,7 @@ ALLOWED_HOSTS = config['allowed-hosts']
 INSTALLED_APPS = [
     'daphne',
     'ledger.apps.LedgerConfig',
+    'blackbook.apps.BlackbookConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
