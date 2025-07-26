@@ -23,7 +23,10 @@
 	{% block import %}{% endblock import %}
 </head>
 <body>
-	{% block header %}{% endblock header %}
-	{% block content %}{% endblock content %}
+	{% block body %}{% endblock body %}
+     <script>
+        document.querySelectorAll('.js-show').forEach(e => e.hidden = false)
+        document.querySelectorAll('.js-hide').forEach(e => e.style.display = 'none')
+    </script>
 </body>
 </html>

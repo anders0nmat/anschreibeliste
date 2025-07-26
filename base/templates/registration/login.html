@@ -47,7 +47,7 @@
 </style>
 {% endblock import %}
 
-{% block content %}
+{% block body %}
 <main>
 	<h1>{%translate "User Login" %}</h1>
 	{% if form.errors %}
@@ -86,5 +86,5 @@
 	<p><a href="{% url 'password_reset' %}">{% translate "Lost password?" %}</a></p>
 		
 </main>
-{% endblock content %}
+{% endblock body %}
 

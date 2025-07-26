@@ -42,6 +42,7 @@ ALLOWED_HOSTS = CONFIG['allowed-hosts']
 
 INSTALLED_APPS = [
     'daphne',
+    'base.apps.BaseConfig',
     'ledger.apps.LedgerConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -60,6 +61,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'base.middleware.AutoLoginMiddleware',
     'django.contrib.auth.middleware.LoginRequiredMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -80,6 +82,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+            ],
+            'builtins': [
+                "base.icons",
             ],
         },
     },
@@ -139,10 +144,6 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
 
 
 # Authentication Configuration

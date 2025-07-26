@@ -1,8 +1,6 @@
 {% extends 'index.html' %}
 {% load i18n %}
 
-{% block title %}{% translate "Account-Liste" %}{% endblock title %}
-
 {% block import %}
 	{% load static %}
 	{% load ledger %}
@@ -14,17 +12,10 @@
 	{{ block.super }}
 {% endblock import %}
 
-{% block links %}
-<li><a href="{% url 'main' %}">{% translate "Anschreibeliste" %}</a></li>
-{{ block.super }}
-{% endblock links %}
-
 {% block content %}
-<main>
 	<div class="group-list" id="accounts">
 		{% include 'ledger/snippets/accounts.html' with items=account_list selected=account url='account_detail' show_credit=True create_account=True require_empty_group=True only %}
 	</div>
-</main>
 {% block editor %}
 <div id="editor-placeholder">
 	{% trans "Select an account" %}

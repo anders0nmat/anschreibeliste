@@ -1,8 +1,6 @@
 {% extends 'index.html' %}
 {% load i18n %}
 
-{% block title %}{% translate "Anschreibeliste" %}{% endblock title %}
-
 {% block import %}
 	{% load static %}
 	{% load ledger %}
@@ -19,13 +17,8 @@
 	{{ api|json_script:"api" }}
 {% endblock import %}
 
-{% block links %}
-	{{ block.super }}
-	<li><a href="{% url 'account_list' %}">{% translate "Account-Liste" %}</a></li>
-{% endblock links %}
-
 {% block content %}
-<main data-active-slide="products">
+<div id="tabs" data-active-slide="products">
 	<style>
 		[data-active-slide="products"] .slide-indicator[data-slide="products"],
 		[data-active-slide="accounts"] .slide-indicator[data-slide="accounts"] {
@@ -48,22 +41,24 @@
 		<div style="flex-grow:1"></div>
 		<label class="center button">
 			<input type="checkbox" class="css-hidden" id="lock-account" autocomplete="off">
-			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-lock-icon lucide-user-lock"><circle cx="10" cy="7" r="4"/><path d="M10.3 15H7a4 4 0 0 0-4 4v2"/><path d="M15 15.5V14a2 2 0 0 1 4 0v1.5"/><rect width="8" height="5" x="13" y="16" rx=".899"/></svg>
+            {% icon "user-lock" %}
 		</label>
 		<label class="center button">
 			<input type="checkbox" class="css-hidden" name="invert_member" form="new-transaction">
-			<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings">
-				<use href="{% static 'ledger/badge-update.svg' %}#badge-update" width="24" height="24" />
-			</svg>
+            {% icon "badge-update" %}
 		</label>
 		<div id="transaction-multiplier">
-			<button type="button" class="transparent slim center button" data-increment="-1"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus-icon lucide-minus"><path d="M5 12h14"/></svg></button>
+			<button type="button" class="transparent slim center button" data-increment="-1">
+                {% icon "minus" %}
+            </button>
 			<span class="css-hidden" aria-hidden="true"  inputmode="numeric" contenteditable>1</span>
 			<label>
 				<span class="visually-hidden">{% translate "Amount:" %}</span>
 				<input type="number" name="amount" value="1" form="new-transaction" min="1">
 			</label>
-			<button type="button" class="transparent slim center button" data-increment="1"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button>
+			<button type="button" class="transparent slim center button" data-increment="1">
+                {% icon "plus" %}
+            </button>
 		</div>
 	</div>
 
@@ -78,7 +73,7 @@
 			{% include 'ledger/snippets/accounts.html' with items=account_list target_form="new-transaction" only %}
 		</div>
 	</div>
-</main>
+</div>
 <form action="/transaction/order/" id="new-transaction" class="transaction" method="POST">
 	{% csrf_token %}
 	<input type="hidden" name="idempotency-key" value="{{ idempotency_key }}">
@@ -93,16 +88,16 @@
 	</span>
 
 	<button type="reset" class="undo transparent slim center button">
-		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+        {% icon "trash-2" %}
 	</button>
 
 	<label class="transparent slim center button" id="expand">
 		<input type="checkbox">
-		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up"><path d="m18 15-6-6-6 6"/></svg>
+        {% icon "chevron-up" %}
 	</label>
 
 	<button type="submit" class="slim transparent center button">
-		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-forward-icon lucide-forward"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>
+        {% icon "forward" %}
 	</button>
 </form>
 <div>

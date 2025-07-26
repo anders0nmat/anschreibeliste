@@ -2,9 +2,8 @@
 	display: grid;
 	grid-template-columns: auto auto min-content;
 	gap: 0.25em;
-	padding: 0;
 	margin: 0;
-	padding: 0.25em;
+	padding: 0;
 	list-style: none;
 
 	& .separator {
@@ -23,15 +22,6 @@
 
 	#transaction-revert {
 		display: none;
-	}
-
-
-	@media screen and (min-width: 900px) {
-		& {
-			padding: 0;
-			margin-right: 0.5em;
-			margin-bottom: 0.5em;
-		}
 	}
 }
 

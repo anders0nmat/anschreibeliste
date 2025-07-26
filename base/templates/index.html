@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% load i18n %}
+{% load base %}
+
+{% block title %}{% link_title %}{% endblock title %}
+
+{% block body %}
+
+{% block header %}
+<header>
+	<nav id="links">
+		<ul>
+			{% link_tree %}
+		</ul>
+	</nav>
+	<div id="user-info">
+		<label class="slim transparent vcenter button" id="user-menu-toggle">
+			<input type="checkbox" hidden class="css-hide" autocomplete="off">
+			{% icon "circle-user" %}
+			<span id="user-name">{{ user.username }}</span>
+		</label>
+
+		<ul id="user-menu">
+			{% if user.is_staff %}
+			<li>
+				<a href="{% url 'admin:index' %}" class="thin transparent vcenter button">
+					{% icon "settings" %}
+					<span>{% trans "Admin-Panel" %}</span>
+				</a>
+			</li>
+			{% endif %}
+			<li>
+				<button type="button" id="fullscreen-toggle" class="thin transparent vcenter button">
+                    {% icon "maximize" %}
+                    {% icon "minimize" %}
+					<span>{% trans "Fullscreen" %}</span>
+				</button>
+			</li>
+			<span class="separator"></span>
+			<li>
+				<form action="{% url 'logout' %}" method="POST">
+					{% csrf_token %}
+					<button type="submit" class="thin transparent vcenter button">
+                        {% icon "log-out" %}
+						<span>{% trans "Logout" %}</span>
+					</button>
+				</form>
+			</li>
+		</ul>
+
+		
+
+		<style>
+			#fullscreen-toggle {
+				&[active] svg:nth-of-type(1),
+				&:not([active]) svg:nth-of-type(2) {
+					display: none !important;
+				}
+			}
+		</style>
+		<script>
+			const fullscreen_toggle = document.getElementById('fullscreen-toggle')
+			fullscreen_toggle.addEventListener('click', ev => {
+				if (fullscreen_toggle.toggleAttribute('active')) {
+					document.body.requestFullscreen({
+						navigationUI: 'hide',
+					})
+				}
+				else {
+					document.exitFullscreen()
+				}
+			})
+			document.body.addEventListener('fullscreenchange', ev => {
+				fullscreen_toggle.toggleAttribute('active', document.fullscreenElement !== null)
+			})
+
+
+			const usermenu_toggle = document.querySelector('#user-menu-toggle input')
+			const userinfo = document.getElementById('user-info')
+			function usermenu_click(event) {
+				if (!userinfo.contains(event.target)) {
+					// close usermenu
+					usermenu_toggle.checked = false
+					usermenu_toggle.dispatchEvent(new Event('change'))
+				}
+			}
+			usermenu_toggle.addEventListener('change', _ => {
+				if (usermenu_toggle.checked) {
+					document.body.addEventListener('click', usermenu_click)
+				}
+				else {
+					document.body.removeEventListener('click', usermenu_click)
+				}
+			})
+
+		</script>
+	</div>
+
+	<script>
+		// Make title of page visible
+		document.querySelector('#links h1').scrollIntoView()
+	</script>
+</header>
+{% endblock header %}
+
+<main>
+	{% block content %}{% endblock content %}
+</main>
+
+{% endblock body %}
+
+

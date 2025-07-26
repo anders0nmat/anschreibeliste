@@ -1,12 +1,10 @@
-{% extends 'base.html' %}
-
-{% block title %}Anschreibeliste{% endblock title %}
+{% extends 'index.html' %}
 
 {% block import %}
 	{% load static %}
 	{% load ledger %}
 
-	<link rel="stylesheet" href="{% static 'ledger/index.css' %}">
+	{% comment %} <link rel="stylesheet" href="{% static 'ledger/index.css' %}"> {% endcomment %}
 	<script src="{% static 'ledger/test.js' %}" defer></script>
 	<style>
 		body {
@@ -34,90 +32,51 @@
 
 {% comment %} <svg width="20" height="20"><use href="{% static 'ledger/icons/badge.svg' %}#badge"/></svg> {% endcomment %}
 
-{% comment %} <button id="send-event">
+<button id="send-event">
 	Send Event
 </button>
 
+<button id="event-status">
+	EventSource status
+</button>
+
+<button id="event-close">
+	Disconnect
+</button>
+
+<button id="event-open">
+	Connect
+</button>
+
+<a href="{% url 'ledger:main' %}">Back to main</a>
+
+{% icon "badge" 256 style="width: 256px; height: 250px" %}
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  width="256"
+  height="256"
+  style="filter: invert(1); background: black; stroke: white">
+  <path
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="3"
+    d="m9 12 2 2 4-4"/><rect width="24" height="24" stroke-width="1" stroke="gray" fill="none" />
+</svg>
+
+<div>
+    {{ request.META }}
+</div>
+
 <ul id="event-list">
 
-</ul> {% endcomment %}
+</ul>
 
 <div>
 	
-	<style>
-		#account-form output {
-			font-style: italic;
-
-			&[value]:not([value=""]) {
-				font-style: unset;
-			}
-		}
-	</style>
-
-	<form id="account-form">
-		<output name="selected_account" placeholder="Select account"></output>
-		
-		<button type="button" onclick="onSet()">Set to Arian</button>
-		<button type="button" onclick="onClear()">Clear</button>
-	</form>
-
-	<script>
-		function onSet() {
-			const output = document.getElementById('account-form').elements.namedItem('selected_account')
-			output.value = 'Arian'
-		}
-		function onClear() {
-			const output = document.getElementById('account-form').elements.namedItem('selected_account')
-			output.value = ''
-		}
-	</script>
-
-	{% comment %} {% include 'ledger/snippets/accounts.html' with items=accounts only %} {% endcomment %}
-	{% comment %} {% include 'ledger/snippets/products.html' with items=products only %} {% endcomment %}
-	{% comment %} {% include 'ledger/snippets/transaction_history.html' with transactions=transactions only %} {% endcomment %}
-
-	{% comment %} {% for tr in transactions %}
-	{{ tr.pk }}
-	{% endfor %} {% endcomment %}
+	
 
 </div>
-{% comment %} 
-<ul>
-	{% for product in products %}
-	<li>{{ product.name }}</li>
-	{% endfor %}
-	{% for account in accounts %}
-	<li>{{ account.name }}</li>
-	{% endfor %}
-	{% for transaction in transactions %}
-	<li>{{ transaction.reason }}</li>
-	{% endfor %}
-</ul> {% endcomment %}
-
-
-{% comment %} <main style="grid-area: content">
-	<drunk-money class="money" amount="1450">
-		<span class="wholes">14</span>
-		<span class="cents">50</span>
-	</drunk-money>
-
-	<drunk-transaction transaction="">
-		<span slot="name">Tim</span>
-		<span slot="reason">Bierchen</span>
-	</drunk-transaction>
-</main>
-
-<template id="drunk-transaction-template">
-	<span class="name"><slot name="name"></slot></span>
-	<span class="reason"><slot name="reason"></slot></span>
-	<drunk-money></drunk-money>
-	<button type="button" class="button slim">
-			
-	</button>
-</template>
-
-<template id="drunk-money-template">
-	<span class="wholes"></span><span class="cents"></span>
-</template> {% endcomment %}
 
 {% endblock content %}

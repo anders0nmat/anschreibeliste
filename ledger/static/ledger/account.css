@@ -1,19 +1,14 @@
-body {
-	display: grid;
-	grid-template-rows: max-content auto;
-	grid-template-areas: 
-		"head"
-		"content";
-	gap: 0.5em;
-	height: 100vh;
 
+
+main {
+	grid-template-rows: auto;
+	grid-template-areas: "content";
 	@media screen and (max-width: 899px) {
 		&:has(aside) {
 			grid-template-areas: 
-				"head"
 				"editor";
 			
-			main {
+			#accounts {
 				display: none;
 			}
 
@@ -27,7 +22,6 @@ body {
 	@media screen and (min-width: 900px) {
 		& {
 			grid-template-areas: 
-				"head head"
 				"content editor";
 		}
 
@@ -39,10 +33,6 @@ body {
 
 header {
 	grid-area: head;
-}
-
-main {
-	grid-area: content;
 }
 
 a.item {

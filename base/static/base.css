@@ -120,6 +120,19 @@ body {
 	padding: 0;
 	background: var(--primary-bg-color);
 	color: var(--primary-text-color);
+	max-width: 100vw;
+
+    touch-action: manipulation;
+
+	display: flex;
+	flex-flow: column;
+	justify-content: stretch;
+	height: 100vh;
+}
+
+main {
+	flex: 1;
+	min-height: 0;
 }
 
 header {
@@ -130,17 +143,9 @@ header {
 	grid-auto-rows: auto;
 	align-items: center;
 	gap: 0.5em 1em;
+	width: 100%;
 
 	padding: 0.5em 1em;
-
-	@media screen and (min-width: 700px) {
-		& {
-			display: flex;
-			flex-flow: row nowrap;
-			align-items: baseline;
-			justify-content: space-between;
-		}
-	}
 
 	& #links {
 		padding: 0;
@@ -164,18 +169,18 @@ header {
 
 		@media screen and (min-width: 700px) {
 			& {
-
 				display: flex;
-				flex-flow: row wrap;
+				flex-flow: row;
 				align-items: baseline;
+				justify-content: flex-start;
+				overflow-x: auto;
+
+				text-wrap: nowrap;
+				scrollbar-width: thin;
 			}
 		
 			& #link-hamburger {
 				display: none;
-			}
-
-			& h1 {
-				order: unset;
 			}
 		}
 
@@ -184,38 +189,41 @@ header {
 				display: none;
 			}
 
-			& a {
+			& li {
 				grid-column: 1;
 			}
 
 			& .spacer {
 				display: none;
 			}
+
+			& h1 {
+				order: -1;
+			}
 		}
-	}
 
-	& h1 {
-		grid-row: 1;
-		display: flex;
-		flex-flow: row;
-		align-items: center;
-		gap: 0.5em;
-		font-size: 125%;
+		& h1 {
+			grid-row: 1;
+			display: flex;
+			flex-flow: row;
+			align-items: center;
+			gap: 0.5em;
+			font-size: 125%;
 
-		order: -1;
-	}
+		}
 
-	& h1,
-	& a {
-		padding: 0;
-		margin: 0;
-		font-variant: small-caps;
-		letter-spacing: 10%;
-	}
+		& h1,
+		& a {
+			padding: 0;
+			margin: 0;
+			font-variant: small-caps;
+			letter-spacing: 10%;
+		}
 
-	& a {
-		text-decoration: none;
-		color: var(--secondary-text-color);
+		& a {
+			text-decoration: none;
+			color: var(--secondary-text-color);
+		}
 	}
 }
 
@@ -226,6 +234,8 @@ header {
 	gap: 0 0.25em;
 	font-size: 100%;
 	grid-area: user;
+
+	position: relative;
 
 
 	& #extra-buttons {
@@ -244,6 +254,50 @@ header {
 
 	& a {
 		color: var(--primary-text-color);
+	}
+
+	#user-menu {
+		position: absolute;
+		right: 0;
+		top: calc(100% + 1em);
+		z-index: 5;
+		width: max-content;
+		padding: 0.5em;
+		margin: 0;
+		list-style: none;
+		background-color: var(--secondary-bg-color);
+		box-shadow: 0 1px 5px 1px var(--separator-color);
+
+		display: flex;
+		flex-flow: column;
+		gap: 0.25em;
+
+		& a,
+		& button {
+			width: 100%;
+		}
+
+		& a {
+			color: currentColor;
+			text-decoration: none;
+		}
+
+		& svg {
+			display: inline;
+			margin-right: 0.75em;
+		}
+
+		& > span.separator {
+			border-top: thin solid var(--separator-color);
+		}
+	}
+
+	&:has(#user-menu-toggle input:not(:checked)) #user-menu {
+		display: none;
+	}
+
+	& #user-menu-toggle svg {
+		margin-right: 0.25em;
 	}
 }
 
@@ -298,10 +352,29 @@ header {
 		padding: 4px;
 	}
 
+	&.thin {
+		padding: 0.25em 0.5em;
+	}
+
 	&.center {
 		display: flex;
 		flex-flow: row nowrap;
 		justify-content: center;
+        gap: 0.25em;
+	}
+    
+    &.inline-center {
+        display: inline-flex;
+        flex-flow: row nowrap;
+        justify-content: center;
+        gap: 0.25em;
+    }
+	
+	&.vcenter {
+		display: flex;
+		flex-flow: row nowrap;
+		align-items: center;
+        gap: 0.25em;
 	}
 
 	&[disabled] {
@@ -322,8 +395,17 @@ header {
 	flex-grow: 1;
 }
 
-.css-hidden {
+.css-hidden,
+.css-hide {
 	display: none !important;
+}
+
+.js-show[hidden] {
+    display: none !important;
+}
+
+.css-show[hidden] {
+    display: initial;
 }
 
 .visually-hidden {

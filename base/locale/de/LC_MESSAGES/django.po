@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-13 11:56+0200\n"
+"POT-Creation-Date: 2025-07-26 23:20+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,35 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: models.py:11
+msgid "User"
+msgstr "Benutzer"
+
+#: nav.py:9
+msgid "Order"
+msgstr "Anschreiben"
+
+#: nav.py:10
+msgid "Accounts"
+msgstr "Accounts"
+
+#: nav.py:14
+msgid "Transactions"
+msgstr "Transaktionen"
+
+#: templates/index.html:29
+msgid "Admin-Panel"
+msgstr "Admin-Panem"
+
+#: templates/index.html:37
+msgid "Fullscreen"
+msgstr "Vollbild"
+
+#: templates/index.html:46
+msgid "Logout"
+msgstr "Abmelden"
+
 #: templates/registration/login.html:4 templates/registration/login.html:81
 msgid "Login"
 msgstr "Anmelden"
