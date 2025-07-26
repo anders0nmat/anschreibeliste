@@ -1,10 +1,10 @@
 from typing import Any
-from django.forms import ModelForm, Form, CharField, IntegerField, HiddenInput, ModelChoiceField, BooleanField
+from django.forms import ModelForm, Form, CharField, IntegerField, HiddenInput, ModelChoiceField, BooleanField, ModelMultipleChoiceField, MultipleChoiceField, DateField
 from django.utils.translation import gettext_lazy as _
-from django.forms.widgets import TextInput, NumberInput
+from django.forms.widgets import TextInput, NumberInput, CheckboxSelectMultiple
 
 from .models import Account, Product, Transaction
-from .formfield import FixedPrecisionField, DecimalInput
+from .formfield import FixedPrecisionField, DecimalInput, NativeDateInput
 
 def default_placeholder(cls=None, placeholder=" "):
     """
@@ -58,3 +58,8 @@ class ProductTransactionForm(Form):
 class RevertTransactionForm(Form):
     transaction = ModelChoiceField(Transaction.objects) 
 
+class TransactionListFilter(Form):
+    account = ModelMultipleChoiceField(Account.objects, required=False, widget=CheckboxSelectMultiple)
+    type = MultipleChoiceField(choices=Transaction.TransactionType.choices, required=False, widget=CheckboxSelectMultiple)
+    start = DateField(required=False, widget=NativeDateInput)
+    end = DateField(required=False, widget=NativeDateInput)

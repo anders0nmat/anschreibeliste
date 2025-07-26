@@ -1,9 +1,12 @@
 from typing import Any
 from django import forms
-from django.forms.widgets import Widget, NumberInput, Input
+from django.forms.widgets import Widget, NumberInput, Input, DateInput
 from django.utils.formats import sanitize_separators, number_format, get_format
 from django.utils.translation import gettext as _
 from re import escape
+
+class NativeDateInput(DateInput):
+    input_type = "date"
 
 class DecimalInput(Input):
     input_type = 'text'

@@ -8,9 +8,11 @@ cryptography==44.0.0
 daphne==4.1.2
 Django==5.1.4
 django-admin-sortable2==2.2.4
+et_xmlfile==2.0.0
 hyperlink==21.0.0
 idna==3.10
 incremental==24.7.2
+openpyxl==3.1.5
 pillow==11.1.0
 psycopg==3.2.5
 psycopg-binary==3.2.5

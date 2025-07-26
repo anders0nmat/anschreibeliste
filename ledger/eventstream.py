@@ -45,8 +45,10 @@ class StreamEvent:
 
 class StreamListener:
     events: Queue[StreamEvent]
-    def __init__(self) -> None:
+    identifier: str
+    def __init__(self, identifier) -> None:
         self.events = Queue()
+        self.identifier = identifier
 
     async def get_event(self) -> StreamEvent:
         return await self.events.get()
@@ -68,20 +70,21 @@ class EventstreamChannel:
 
     def add_listener(self, listener: StreamListener):
         self.listeners.append(listener)
-        logger.info(f"{self.logging_prefix}: Added listener")
+        logger.info(f"{self.logging_prefix}: Added listener {listener.identifier}")
     
     def remove_listener(self, listener: StreamListener):
         self.listeners.remove(listener)
-        logger.info(f"{self.logging_prefix}: Removed listener")
+        logger.info(f"{self.logging_prefix}: Removed listener {listener.identifier}")
 
     def post_event(self, event: StreamEvent):
+        if not self.listeners:
+            logger.info(f"{self.logging_prefix}: Posting event {event!r} to channel with no listeners")
+
         for listener in self.listeners:
             try:
                 listener.events.put_nowait(event)
             except QueueFull:
-                logger.warning(f"{self.logging_prefix}: Dropped event {event!r} for listener because queue is full")
-        else:
-            logger.info(f"{self.logging_prefix}: Posting event {event!r} to channel with no listeners")
+                logger.warning(f"{self.logging_prefix}: Dropped event {event!r} for listener {listener.identifier} because queue is full")
 
 eventstream_channels: defaultdict[str, EventstreamChannel] = defaultdict(EventstreamChannel)
 
@@ -102,7 +105,7 @@ def send_event(channel: str, event: str | None = None, data: Any | str = '', id:
         ) 
     )
 
-async def listen(channel: str | Iterable[str], initial_event: Callable[[], StreamEvent] | StreamEvent = None):
+async def listen(channel: str | Iterable[str], identifier: str, initial_event: Callable[[], StreamEvent] | StreamEvent = None):
     if isinstance(initial_event, StreamEvent):
         _initial_event = initial_event
         initial_event = lambda: _initial_event
@@ -111,7 +114,7 @@ async def listen(channel: str | Iterable[str], initial_event: Callable[[], Strea
 
     ev_channels = [get_eventstream_channel(ch) for ch in channel]
     try:
-        listener = StreamListener()
+        listener = StreamListener(identifier=identifier)
         await listener.events.put(StreamEvent(event='open'))
         if initial_event:
             await listener.events.put(initial_event())
@@ -129,11 +132,11 @@ class EventstreamResponse(StreamingHttpResponse):
     """
     Http response for connecting client to channels of a eventstream
     """
-    def __init__(self, channel: str | Iterable[str], *args, initial_event: Callable[[], StreamEvent] | StreamEvent = None, **kwargs) -> None:
+    def __init__(self, channel: str | Iterable[str], *args, identifier: str, initial_event: Callable[[], StreamEvent] | StreamEvent = None, **kwargs) -> None:
         """
         Requires a list of channels the client will receive events from
         """
-        super().__init__(listen(channel, initial_event=initial_event), *args, content_type="text/event-stream", **kwargs)
+        super().__init__(listen(channel, identifier=identifier, initial_event=initial_event), *args, content_type="text/event-stream", **kwargs)
         self['Cache-Control'] = 'no-cache'
         self['X-Accel-Buffering'] = 'no'
 

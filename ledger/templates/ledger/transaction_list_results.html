@@ -1,0 +1,12 @@
+
+{% load ledger %}
+{% for transaction in transaction_list %}
+<tr>
+    <td>{{ transaction.account.display_name }}</td>
+    <td>{{ transaction.reason }}</td>
+    <td>{{ transaction.timestamp|date:"Y-m-d" }}</td>
+    <td>{{ transaction.timestamp|date:"H:i" }}</td>
+    <td>{{ transaction.get_type_display }}</td>
+    <td>{{ transaction.normalized_amount|money }}</td>
+</tr>
+{% endfor %}

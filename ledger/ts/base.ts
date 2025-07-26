@@ -65,6 +65,7 @@ interface ServerConfig {
 		order: string
 		revert: string
 		events: string
+		ping: string
 	}
 
 	submit_overlay: number

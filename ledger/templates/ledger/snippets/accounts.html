@@ -46,7 +46,7 @@
 				{% if selected.pk == account.pk %}checked{% endif %}
 				{% if target_form %}form="{{ target_form }}"{% endif %}
 				{% if current_balance|add:account.credit <= 0 %}disabled{% endif %}>
-				{% if account.member %}
+			{% if account.member %}
 			{% icon "badge" class="badge" %}
 			{% endif %}
 			{{ account.display_name }}
@@ -63,7 +63,7 @@
 
 {% block unnamed_items %}
 {% if create_account %}
-<a href="{% url 'account_create' %}" class="item new">
+<a href="{% url 'ledger:account_create' %}" class="item new">
 	{% icon "plus" %}
 </a>
 {% endif %}

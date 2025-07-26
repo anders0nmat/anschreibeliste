@@ -48,6 +48,7 @@ document.querySelectorAll<HTMLElement>('.slide-indicator').forEach(e => {
 
 // Hook up to server events for new transactions
 
+Transaction.attachPing()
 Transaction.listen(event => {
 	const account = Account.byId(event.account.toString())
 	if (!account) { return }

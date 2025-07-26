@@ -1,20 +1,24 @@
-from typing import Any, Optional
+from typing import Any, Optional, Type
 from django.db import models, transaction
-from django.contrib.auth.models import User
 from django.utils.timezone import now
 from .managers import TransactionManager, ProductManager, TransactionQuerySet
 from .modelfield import PositiveFixedPrecisionField, FixedPrecisionField
 from datetime import timedelta
 from django.core.exceptions import PermissionDenied
+from django.utils.formats import get_format
 from django.utils.translation import gettext, override as override_language, gettext_lazy as _, pgettext_lazy
 from django.conf import settings
 from django.contrib.admin import display
+from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth import get_user_model
 # Create your models here.
 # TODO : Better terminologiy regarding money:
 # TODO : User A has amount k and additionally is allowed to go amount n into debt
 # TODO : How to call k
 # TODO : How to call n
 # TODO : How to call k + n
+
+UserModel: Type[AbstractBaseUser] = get_user_model()
 
 class AccountGroup(models.Model):
     name = models.CharField(verbose_name=_('name'), max_length=255)
@@ -103,13 +107,11 @@ class Account(models.Model):
     def current_balance(self) -> int:
         if hasattr(self, '_last_balance'):
             last_balance = self._last_balance
-            print(f'Hit cached last_balance: {self._last_balance}')
         else:
             last_balance = self.last_balance
             last_balance = last_balance.closing_balance if last_balance is not None else 0
         if hasattr(self, '_summed_transactions'):
             transactions_since = self._summed_transactions
-            print(f'Hit cached summed_transactions: {self._summed_transactions}')
         else:
             transactions_since = self.transactions  \
                 .filter(closing_balance=None)       \
@@ -172,11 +174,11 @@ class Transaction(models.Model):
     amount = PositiveFixedPrecisionField(verbose_name=pgettext_lazy('money-related', 'amount'), decimal_places=2)
     timestamp = models.DateTimeField(verbose_name=_('timestamp'), auto_now_add=True)
     reason = models.CharField(verbose_name=_('reason'), max_length=255)
-    issuer = models.ForeignKey(User, verbose_name=_('issuer'), on_delete=models.SET_NULL, null=True)
+    issuer = models.ForeignKey(UserModel, verbose_name=_('issuer'), on_delete=models.SET_NULL, null=True)
     
-    type = models.CharField(verbose_name=_('type'), max_length=4, choices=TransactionType.choices)
+    type = models.CharField(verbose_name=pgettext_lazy('transaction', 'type'), max_length=4, choices=TransactionType.choices)
 
-    extra = models.JSONField(verbose_name=_('extra'), default=dict)
+    extra = models.JSONField(verbose_name=_('extra'), default=dict, blank=True)
     
     related_transaction: "Transaction" = models.OneToOneField(to="self", verbose_name=_('related transaction'), help_text=_('Used to track and associate canceled transactions'), on_delete=models.CASCADE, null=True, default=None, blank=True)
 
@@ -206,6 +208,15 @@ class Transaction(models.Model):
         return f"{self.account.display_name}: {self.reason} ({wholes:>01},{cents:>02}€)"
 
     @property
+    @display(description=_('Amount'))
+    def formatted_amount(self) -> str:
+        amount_str = str(self.amount).rjust(self.__class__._meta.get_field('amount').decimal_places + 1, '0')
+        wholes, cents = amount_str[:-2], amount_str[-2:]
+        decimal_separator = get_format('DECIMAL_SEPARATOR')
+        sign = '-' if self.type in self.TransactionType.withdraws() else ''
+        return f"{sign}{wholes}{decimal_separator}{cents}"
+
+    @property
     @display(description=_('Signed amount'))
     def normalized_amount(self) -> int:
         return -self.amount if self.type in self.TransactionType.withdraws() else self.amount
@@ -214,7 +225,7 @@ class Transaction(models.Model):
     def can_revert(self) -> bool:
        return self.related_transaction is None
     
-    def user_can_revert(self, user: User | None) -> bool:
+    def user_can_revert(self, user: UserModel | None) -> bool:
         if user is None:
             return False
     
@@ -223,7 +234,7 @@ class Transaction(models.Model):
         return has_permissions
 
     @transaction.atomic
-    def revert(self, issuer: User | None, idempotency_key=None) -> "Transaction":
+    def revert(self, issuer: UserModel | None, idempotency_key=None) -> "Transaction":
         if not self.user_can_revert(issuer):
             raise PermissionDenied()
         
@@ -300,3 +311,4 @@ class Product(models.Model):
 
 
 # https://stackoverflow.com/questions/29688982/derived-account-balance-vs-stored-account-balance-for-a-simple-bank-account/29713230#29713230
+        

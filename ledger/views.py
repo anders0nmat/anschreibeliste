@@ -1,33 +1,41 @@
-from typing import Any, Dict, Literal
+from typing import Any, Dict, Literal, Callable
 from http import HTTPStatus
-from django.core.exceptions import PermissionDenied, ValidationError
+from io import BytesIO, TextIOWrapper
+import csv
+from datetime import timedelta
+from importlib.util import find_spec
+from django import http
+from django.core.exceptions import PermissionDenied, ValidationError, BadRequest, ImproperlyConfigured
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseRedirect, HttpResponseBadRequest
+from django.db.models.query import QuerySet
+from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseRedirect, HttpResponseBadRequest, FileResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, UpdateView, CreateView, TemplateView
 from json import loads
-from django.utils.translation import gettext as _
+from django.utils.timezone import now
+from django.utils.translation import gettext as _, pgettext
 from django.conf import settings
 
 from .decorators import idempotent
 from .eventstream import EventstreamResponse, StreamEvent
 from .mixins import EnableFieldsMixin
 from .models import Account, Transaction, Product
-from .forms import TransactionForm, ProductTransactionForm, RevertTransactionForm, CreateAccountForm, RestrictedCreateAccountForm, EditAccountForm
+from .forms import TransactionForm, ProductTransactionForm, RevertTransactionForm, CreateAccountForm, RestrictedCreateAccountForm, EditAccountForm, TransactionListFilter
 from .utils.banking import EPCCode
 from .utils import server_language
 
 def js_config() -> dict[str, Any]:
     return {
         'transaction': {
-            'deposit': reverse('api_deposit'),
-            'withdraw': reverse('api_withdraw'),
-            'order': reverse('api_order'),
-            'revert': reverse('api_revert'),
-            'events': reverse('api_events'),
+            'deposit': reverse('ledger:api:deposit'),
+            'withdraw': reverse('ledger:api:withdraw'),
+            'order': reverse('ledger:api:order'),
+            'revert': reverse('ledger:api:revert'),
+            'events': reverse('ledger:api:events'),
+            'ping': reverse('ledger:api:ping'),
         },
         'transaction_timeout': settings.LEDGER_CONFIG['transaction-timeout'],
         'submit_overlay': settings.LEDGER_CONFIG['submit-overlay'],
@@ -137,25 +145,149 @@ class AccountCreate(PermissionRequiredMixin, CreateView):
                 type=Transaction.TransactionType.DEPOSIT,
                 issuer=self.request.user)
         return response
+
+class TransactionList(ListView):
+    model = Transaction
+
+    output_format = 'html'
+
+    def get_queryset(self) -> QuerySet[Any]:
+        queryset = super().get_queryset().order_by('-timestamp')
+        return self.filter_queryset(queryset)
+    
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        filter_form = TransactionListFilter(self.request.GET, label_suffix='')
+
+        return super().get_context_data(**kwargs) | {
+            'filters': filter_form,
+        }
+    
+    def filter_queryset(self, queryset: QuerySet):
+        account_filter = self.get_filter('account', convert=int)
+        if account_filter:
+            queryset = queryset.filter(account__in=account_filter)
+
+        type_filter = self.get_filter('type', convert=str.upper)
+        if type_filter:
+            queryset = queryset.filter(type__in=type_filter)
+
+        start_date_filter = self.request.GET.get('start', '')
+        if start_date_filter:
+            queryset = queryset.filter(timestamp__date__gte=start_date_filter)
+
+        end_date_filter = self.request.GET.get('end', '')
+        if end_date_filter:
+            queryset = queryset.filter(timestamp__date__lte=end_date_filter)
+
+        return queryset
+    
+    def get_filter[T](self, query_name: str, convert: Callable[[str], T] = lambda x: x) -> list[T]:
+        def convert_skip_exception(value):
+            try:
+                return convert(value)
+            except:
+                return None
+            
+        values = self.request.GET.getlist(query_name)
+        values = (convert_skip_exception(value) for param in values for value in param.split(',') if value)
+        return [value for value in values if value]
+    
+    def transactions_to_list(self, transactions: QuerySet[Transaction]) -> tuple[list[str], list[list[str]]]:
+        headers = [
+            _('Account'),
+            _('Reason'),
+            _('Date'),
+            _('Time'),
+            pgettext('transaction', 'Type'),
+            pgettext('money-related', 'Amount'),
+        ]
+        values = []
+        for transaction in transactions:
+            values.append([
+                transaction.account.display_name,
+                transaction.reason,
+                f"{transaction.timestamp:%Y-%m-%d}",
+                f"{transaction.timestamp:%H:%M}",
+                transaction.get_type_display(),
+                transaction.formatted_amount,
+            ])
+        return (headers, values)
+
+    def render_to_csv(self, file: BytesIO, transactions: QuerySet[Transaction]):
+        f = TextIOWrapper(file)
+        try:
+            writer = csv.writer(f)
+            header, values = self.transactions_to_list(transactions)
+            writer.writerow(header)
+            writer.writerows(values)
+        finally:
+            f.detach()
+
+    def render_to_xlsx(self, file: BytesIO, transactions: QuerySet[Transaction]):
+        from openpyxl import Workbook
+        from openpyxl.worksheet.worksheet import Worksheet
+        wb = Workbook()
+        ws: Worksheet = wb.active
         
+        header, values = self.transactions_to_list(transactions)
+        ws.append(header)
+        for value in values:
+            ws.append(value)
+        wb.save(file)
+
+    def render_to_response(self, context: Dict[str, Any], **response_kwargs: Any) -> HttpResponse:
+        if self.output_format == 'html':
+            return super().render_to_response(context, **response_kwargs)
+        
+        if self.output_format == 'csv':
+            b = BytesIO()
+            self.render_to_csv(b, context['object_list'])
+            b.seek(0)
+            return FileResponse(b, filename=f"Transaction List.csv", as_attachment=True)
+
+        if self.output_format == 'xlsx' and find_spec('openpyxl'):
+            b = BytesIO()
+            self.render_to_xlsx(b, context['object_list'])
+            b.seek(0)
+            return FileResponse(b, filename=f"Transaction List.xlsx", as_attachment=True)
+            
+
+        return ImproperlyConfigured("No output format given")
 
 class IndexView(TemplateView):
     template_name = "ledger/main.html"
+
+    def get_transactions(self) -> list[Transaction]:
+        """
+        Return all transactions newer than `old_threshold`.
+        If there are fewer than `min_results`, fill with transactions older than that
+        """
+        min_results = 30
+        old_threshold = now() - timedelta(weeks=4)
+        queryset = Transaction.objects\
+            .filter(closing_balance=None)\
+            .order_by('-timestamp')\
+            .annotate_timejump()\
+            .annotate_revertible(user=self.request.user)\
+            .select_related('account')
+
+        transactions = []
+        for t in queryset:
+            t: Transaction
+            if len(transactions) < min_results:
+                transactions.append(t)
+            elif t.timestamp > old_threshold:
+                transactions.append(t)
+            else:
+                return transactions   
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         return super().get_context_data(**kwargs) | {
             "account_list": Account.objects.grouped(),
             "product_list": Product.objects.grouped(),
-            "transaction_list": Transaction.objects\
-                .filter(closing_balance=None)\
-                .order_by('-timestamp')\
-                .annotate_timejump()\
-                .annotate_revertible(user=self.request.user)\
-                .select_related('account'),
+            "transaction_list": self.get_transactions(),
             'js_config': js_config(),
         }
-        
-
 
 def test(request: HttpRequest):
     return render(request, "ledger/test.html", {
@@ -169,6 +301,15 @@ def test(request: HttpRequest):
                 .select_related('account'),
         'js_config': js_config(),
     })
+
+def test_event(request: HttpRequest):
+    print(f"Registering for events")
+    return EventstreamResponse('test')
+
+from .eventstream import send_event
+def send_test_event(request: HttpRequest):
+    send_event('test', data=request.GET.get('message', 'Default Message'))
+    return HttpResponse()
 
 
 @idempotent(required=True, post_field='idempotency-key')
@@ -356,5 +497,13 @@ def transaction_events(request: HttpRequest):
         except (ValueError, Transaction.DoesNotExist):
             pass
 
-    return EventstreamResponse(channel='transaction', initial_event=initial_event)
+    return EventstreamResponse(channel='transaction', identifier=f"{request.META['REMOTE_ADDR']}:{request.META['REMOTE_PORT']}", initial_event=initial_event)
+
+def transaction_ping(request: HttpRequest):
+    nonce = request.GET.get('nonce')
+    if not nonce:
+        return HttpResponseBadRequest()
+    
+    send_event('transaction', 'ping', nonce)
+    return HttpResponse('ok')
 

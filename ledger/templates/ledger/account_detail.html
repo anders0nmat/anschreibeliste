@@ -22,7 +22,7 @@
 			{{ account.display_name }}
 		</h2>
 		<div style="flex-grow: 1"></div>
-		<a href="{% url 'account_list' %}" class="slim transparent center button">
+		<a href="{% url 'ledger:account_list' %}" class="slim transparent center button">
 			{% icon "x" %}
 		</a>
 	</div>
@@ -32,21 +32,21 @@
 			{% icon "chevron-right" %}
 		</summary>
 		<form class="pretty-form" method="post">
-			{% csrf_token %}
+            {% csrf_token %}
 			{{ form }}
 			{% if form.has_enabled_fields %}
 			<input type="submit" class="primary button" value="{% translate "Save" %}">
 			{% endif %}
 		</form>
 	</details>
-
+    
 	{% if deposit_form %}
 	<details>
-		<summary>
-			<h3>{% translate "Deposit" %}</h3>
-			{% icon "chevron-right" %}
+        <summary>
+            <h3>{% translate "Deposit" %}</h3>
+            {% icon "chevron-right" %}
 		</summary>
-		<form action="{% url 'api_deposit' %}" method="POST" id="deposit-transaction" class="pretty-form">
+		<form action="{% url 'ledger:transaction_deposit' %}" method="POST" id="deposit-transaction" class="pretty-form">
 			{% csrf_token %}
 			{% idempotency_key %}
 			<div>
@@ -95,7 +95,7 @@
 			{% icon "chevron-right" %}
 		</summary>
 		
-		<form action="{% url 'api_withdraw' %}" method="post" id="withdraw-transaction" class="pretty-form">
+		<form action="{% url 'ledger:transaction_withdraw' %}" method="post" id="withdraw-transaction" class="pretty-form">
 			{% csrf_token %}
 			{% idempotency_key %}
 			<div>
@@ -127,7 +127,7 @@
 		<ul id="transactions">
 			{% include "ledger/snippets/transaction_history.html" with transactions=transactions revert_form="transaction-revert" only %}
 		</ul>
-		<form id="transaction-revert" action="{% url 'account_revert' account.pk %}" method="POST" >
+		<form id="transaction-revert" action="{% url 'ledger:account_revert' account.pk %}" method="POST" >
 			{% csrf_token %}
 			{% idempotency_key %}
 		</form>

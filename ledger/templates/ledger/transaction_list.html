@@ -1,0 +1,113 @@
+{% extends 'index.html' %}
+
+{% load static %}
+{% load i18n %}
+
+{% block import %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'ledger/transaction_history.css' %}">
+    <link rel="stylesheet" href="{% static 'ledger/transaction_list.css' %}">
+
+    <script type="module" src="{% static 'ledger/transaction_list.js' %}"></script>
+{% endblock import %}
+
+{% block content %}
+
+<form method="GET" id="filters">
+    <div id="header">
+        <h2>{% trans "Filters" %}</h2>
+        <label hidden class="css-show slim transparent center button">
+            <input type="checkbox" id="show-filters" autocomplete="off">
+            {% icon "funnel" %}
+        </label>
+        <div style="flex: 1"></div>
+        <span><span id="result-count">{{ transaction_list|length }}</span> {% trans "Entries" context "number of items" %}</span>
+    </div>
+    <section>
+        <details open>
+            <summary>
+                {{ filters.account.label }}
+                {% icon "chevron-right" %}
+            </summary>
+            <div class="js-show filter-buttons" hidden>
+                <button type="button" class="slim transparent vcenter button" data-action="select-all">
+                    {% icon "square" %}
+                    {% trans "All" context "item selection" %}
+                </button>
+                <button type="button" class="slim transparent vcenter button" data-action="select-none">
+                    {% icon "square-dashed" %}
+                    {% trans "None" context "item selection" %}
+                </button>
+                <button type="button" class="slim transparent vcenter button" data-action="select-invert">
+                    {% icon "squares-subtract" %}
+                    {% trans "Invert" context "item selection" %}
+                </button>
+            </div>
+            {{ filters.account }}
+        </details>
+        <details open>
+            <summary>
+                {{ filters.type.label }}
+                {% icon "chevron-right" %}
+            </summary>
+            <div class="js-show filter-buttons" hidden>
+                <button type="button" class="slim transparent vcenter button" data-action="select-all">
+                    {% icon "square" %}
+                    {% trans "All" context "item selection" %}
+                </button>
+                <button type="button" class="slim transparent vcenter button" data-action="select-none">
+                    {% icon "square-dashed" %}
+                    {% trans "None" context "item selection" %}
+                </button>
+                <button type="button" class="slim transparent vcenter button" data-action="select-invert">
+                    {% icon "squares-subtract" %}
+                    {% trans "Invert" context "item selection" %}
+                </button>
+            </div>
+            {{ filters.type }}
+        </details>
+        <div>
+            {{ filters.start.label_tag }}
+            <div>
+                {{ filters.start }}
+                <button type="button" hidden class="js-show slim transparent center button" data-action="input-clear">
+                    {% icon "x" %}
+                </button>
+            </div>
+        </div>
+        <div>
+            {{ filters.end.label_tag }}
+            <div>
+                {{ filters.end }}
+                <button type="button" hidden class="js-show slim transparent center button" data-action="input-clear">
+                    {% icon "x" %}
+                </button>
+            </div>
+        </div>
+        <button type="submit" class="js-hide button">{% trans "Apply Filters" %}</button>
+        <div>
+            <button type="submit" formaction="./csv/" class="button">{% trans "Export CSV" %}</button>
+            <button type="submit" formaction="./xlsx/" class="button">{% trans "Export XLSX" %}</button>
+        </div>
+    </section>
+</form>
+<div>
+    <h2 class="css-hide">{% trans "Results" %}</h2>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20ch">{% trans "Account" %}</th>
+                <th style="width: 40ch">{% trans "Reason" %}</th>
+                <th style="width: 10ch">{% trans "Date" %}</th>
+                <th style="width: 5ch">{% trans "Time" %}</th>
+                <th style="width: 4ch">{% trans "Type" context "transaction" %}</th>
+                <th style="width: 5ch">{% trans "Amount" context "money-related" %}</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            {% include 'ledger/transaction_list_results.html' %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock content %}

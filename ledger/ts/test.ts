@@ -1,90 +1,133 @@
-
-class DrunkMoney extends HTMLElement {
-	static observedAttributes = ['amount']
-
-	connectedCallback() {
-		const money_template = (document.getElementById(`${this.tagName.toLowerCase()}-template`)! as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
-		this.appendChild(money_template)
-		this._update()
-	}
-	attributeChangedCallback(_name, _oldValue, _newValue: string) {
-		if (this.childElementCount == 0) { return }
-		this._update()
-	}
-	_update() {
-		const amount = parseInt(this.getAttribute('amount') ?? '0')
-		const padded = Math.abs(amount).toString().padStart(3, '0')
-		this.toggleAttribute('negative', amount < 0)
-		this.querySelector('.wholes')!.textContent = padded.slice(0, -2)
-		this.querySelector('.cents')!.textContent = padded.slice(-2)
-	}
-
-	get amount(): number { return parseInt(this.getAttribute('amount') ?? '0') ?? 0 }
-	set amount(value: number) { this.setAttribute('amount', value.toString()) }
-}
-window.customElements.define('drunk-money', DrunkMoney)
-
-class DrunkTransaction extends HTMLElement {
-	constructor() {
-		super()
-
-		//const drunk_template: HTMLElement = (document.getElementById(`${this.tagName.toLowerCase()}-template`) as HTMLTemplateElement).content.cloneNode(true) as HTMLElement
-		//if (this.childElementCount == 0) {
-		//	this.appendChild(drunk_template)
-		//}
-	}
-
-	connectedCallback() {
-		console.log("DrunkTransaction is connected")
-	}
-
-	get account(): string { return this.querySelector('.name')!.textContent ?? '' }
-	set account(value: string) { this.querySelector('.name')!.textContent = value }
-
-	get reason(): string { return this.querySelector('.reason')!.textContent ?? '' }
-	set reason(value: string) { this.querySelector('.reason')!.textContent = value }
-
-	get money(): DrunkMoney { return this.querySelector<DrunkMoney>('drunk-money')! }
-
-	get transaction_id(): string | null { return this.getAttribute('transaction-id') }
-	set transaction_id(value: string | null) {
-		if (value === null) {
-			this.removeAttribute('transaction-id')
-		}
-		else {
-			this.setAttribute('transaction-id', value)
-		}
-	}
-
-	get pending_id(): string | null { return this.getAttribute('pending-id') }
-	set pending_id(value: string | null) {
-		if (value === null) {
-			this.removeAttribute('pending-id')
-		}
-		else {
-			this.setAttribute('pending-id', value)
-		}
-	}
-
-	revert() {
-		console.log("reverting", this)
-	}
-}
-window.customElements.define('drunk-transaction', DrunkTransaction)
-
-
+/*
 let c = 0
 document.getElementById('send-event')!.addEventListener('click', _ => {
-	fetch(`/test/send_event/?counter=${c}`)
+	fetch(`/test/send_event/?message=server_message_${c}`)
 	c += 1
 })
 
+// document.getElementById('event-status')!.addEventListener('click', _ => {
+// 	const li = document.createElement('li')
+// 	li.append(`status. EventSource.readyState=${STATES[events?.readyState ?? 3]}`)
+// 	document.getElementById('event-list')!.append(li)
+// })
+
+// document.getElementById('event-close')!.addEventListener('click', _ => {
+// 	events?.close()
+// })
+
+
+const STATES = ['CONNECTING', 'OPEN', 'CLOSED', 'null']
+
 let events = new EventSource('/test/events/')
-events.onmessage = ev => {
-	console.log(ev.data)
+events = new EventSource('/test/events/')
+events = new EventSource('/test/events/')
+
+events.onopen = ev => {
 	const li = document.createElement('li')
-	li.append(ev.data)
+	li.append(`open event.`)
 	document.getElementById('event-list')!.append(li)
 }
 
+events.onmessage = ev => {
+	const li = document.createElement('li')
+	li.append(`message event. ${ev.data}`)
+	document.getElementById('event-list')!.append(li)
+}
+
+events.onerror = (ev: Event) => {
+	const li = document.createElement('li')
+	li.append(`error event. EventSource.readyState=${STATES[(ev.target as EventSource).readyState ?? 3]}`)
+	document.getElementById('event-list')!.append(li)
+	}*/
+	
+function list_item(text: string) {
+	const li = document.createElement("li")
+	li.textContent = text
+	document.getElementById('event-list')!.append(li)
+}
+
+let server: WebSocket | undefined = undefined
+let server_reconnect: ReturnType<typeof setTimeout> | undefined = undefined
+
+function connect_ws(): WebSocket {
+	server = new WebSocket("/ws/test")
+	server.onopen = ev => {
+		clearTimeout(server_reconnect)
+		server_reconnect = undefined
+		list_item("WS Server connected")
+	}
+	server.onclose = ev => {
+		list_item("WS Server closed")
+	}
+	server.onerror = ev => {
+		list_item("WS Server errored, attempting reconnect")
+		clearTimeout(server_reconnect)
+		server_reconnect = setTimeout(() => {
+			server = connect_ws()
+		}, 2000)
+	}
+	server.onmessage = ev => list_item("WS Server recieved message: " + ev.data)
+	return server
+}
+
+server = connect_ws()
+
+let c = 0
+document.getElementById('send-event')!.addEventListener('click', _ => {
+	server?.send(JSON.stringify({message: `Counter is ${c}`}))
+	c += 1
+})
+
+/*
+let events1 = new EventSource('/test/events/')
+let events2 = new EventSource('/test/events/')
+let events3 = new EventSource('/test/events/')
+
+function _onopen(tag) {
+	return ev => {
+		const li = document.createElement('li')
+		li.append(`open event. tag=${tag}`)
+		document.getElementById('event-list')!.append(li)
+	}
+}
+
+function _onmessage(tag) {
+	return ev => {
+		const li = document.createElement('li')
+		li.append(`message event. tag=${tag} ${ev.data}`)
+		document.getElementById('event-list')!.append(li)
+	}
+}
+
+function _onerror(tag) {
+	return (ev: Event) => {
+		const li = document.createElement('li')
+		li.append(`error event. tag=${tag} EventSource.readyState=${STATES[(ev.target as EventSource).readyState ?? 3]}`)
+		document.getElementById('event-list')!.append(li)
+	}
+}
+
+//events = new EventSource('/test/events/')
+events1.onopen = _onopen(1)
+events2.onopen = _onopen(2)
+events3.onopen = _onopen(3)
+events1.onmessage = _onmessage(1)
+events2.onmessage = _onmessage(2)
+events3.onmessage = _onmessage(3)
+events1.onerror = _onerror(1)
+events2.onerror = _onerror(2)
+events3.onerror = _onerror(3)*/
+
+
+// document.getElementById('event-open')!.addEventListener('click', _ => {
+// 	events = new EventSource('/test/events/')
+// })
+
+document.addEventListener('visibilitychange', ev => {
+	const li = document.createElement('li')
+	li.append(`page visibility changed to ${document.visibilityState}`)
+	document.getElementById('event-list')!.append(li)
+
+	
+})
 

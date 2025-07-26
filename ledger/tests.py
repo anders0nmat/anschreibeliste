@@ -221,7 +221,7 @@ class TransactionEventTest(TestCase):
 
         client = AsyncClient()
         await client.aforce_login(self.user)
-        response = await client.get(reverse('api_events'), follow=True, )
+        response = await client.get(reverse('ledger:api:events'), follow=True, )
 
         await sync_to_async(send_event)(channel='transaction', event='dummy')
 
@@ -245,7 +245,7 @@ class TransactionEventTest(TestCase):
         """
         client = AsyncClient()
         await client.aforce_login(self.user)
-        response = await client.get(reverse('api_events'), follow=True, query_params={
+        response = await client.get(reverse('ledger:api:events'), follow=True, query_params={
             'last_transaction': self.transactions[-1].pk
         })
 
@@ -270,7 +270,7 @@ class TransactionEventTest(TestCase):
         """
         client = AsyncClient()
         await client.aforce_login(self.user)
-        response = await client.get(reverse('api_events'), follow=True, query_params={
+        response = await client.get(reverse('ledger:api:events'), follow=True, query_params={
             'last_transaction': self.transactions[-2].pk
         })
 
@@ -296,7 +296,7 @@ class TransactionEventTest(TestCase):
         """
         client = AsyncClient()
         await client.aforce_login(self.user)
-        response = await client.get(reverse('api_events'), follow=True, query_params={
+        response = await client.get(reverse('ledger:api:events'), follow=True, query_params={
             'last_transaction': 'not_a_number'
         })
 
@@ -322,7 +322,7 @@ class TransactionEventTest(TestCase):
         """
         client = AsyncClient()
         await client.aforce_login(self.user)
-        response = await client.get(reverse('api_events'), follow=True, query_params={
+        response = await client.get(reverse('ledger:api:events'), follow=True, query_params={
             'last_transaction': self.transactions[-1].pk + 3
         })
 

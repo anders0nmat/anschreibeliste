@@ -137,18 +137,63 @@ export class Transaction extends HTMLWrapper {
 		})
 	}
 
+	private static ping_nonce: number | undefined = undefined
+	private static ping_eventsource() {
+		try {
+			this.ping_nonce = Date.now().valueOf()
+			fetch(this.api.ping + `?nonce=${this.ping_nonce}`)
+
+			setTimeout(_ => {
+				if (this.ping_nonce !== undefined) {
+					console.log("Transaction eventsource ping failed, reconnecting...")
+					this.reconnect()
+				}
+				else {
+					console.log(("Transaction eventsource ping succeded"))
+				}
+			}, 500)
+		}
+		catch {
+			// No internet?
+			// Server down?
+		}
+	}
+
 	private static reconnect_interval?: number = undefined
 	private static event_source: EventSource | undefined = undefined
-	static listen(ontransaction?: (event: ServerEvent) => void, reconnect: boolean = false) {
+	private static eventsource_handlers: {
+		ontransaction?: (event: ServerEvent) => void
+	} = {}
+	private static async reconnect() {
+		this.event_source?.close()
+		await this.listen(this.eventsource_handlers.ontransaction, true)
+	}
+	static attachPing() {
+		document.addEventListener('visibilitychange', ev => {
+			if (document.visibilityState == "visible") {
+				this.ping_eventsource()
+			}
+		})
+	}
+	static async listen(ontransaction?: (event: ServerEvent) => void, reconnect: boolean = false) {
 		const url = new URL(this.api.events, document.location.origin)
+
+		this.eventsource_handlers.ontransaction = ontransaction
 		
 		const all_transaction_ids = this.all().map(t => parseInt(t.id))
 		if (reconnect && all_transaction_ids.length > 0) {
 			const max_transaction_id = Math.max(...all_transaction_ids).toString()
 			url.searchParams.set('last_transaction', max_transaction_id)
 		}
-
+		
 		this.event_source = new EventSource(url)
+
+		this.event_source.addEventListener('ping', event => {
+			const nonce = parseInt(event.data)
+			if (nonce == this.ping_nonce) {
+				this.ping_nonce = undefined
+			}
+		})
 		this.event_source.addEventListener('reload', _ => { location.reload() })
 		this.event_source.addEventListener('create', event => {
 			const data = JSON.parse(event.data) as ServerEvent
@@ -177,11 +222,13 @@ export class Transaction extends HTMLWrapper {
 
 		this.event_source.addEventListener('open', _ => {
 			// Successful connection, do not try to reconnect anymore
+			console.log('Eventsource connected')
 			clearInterval(this.reconnect_interval)
 			this.reconnect_interval = undefined	
 		})
 		
 		this.event_source.addEventListener('error', _ => {
+			this.ping_nonce = undefined
 			if (this.event_source?.readyState == EventSource.CLOSED) {
 				// Browser will not retry on its own
 				// Retry every 10s

@@ -38,6 +38,7 @@ document.querySelectorAll('.slide-indicator').forEach(e => {
     e.addEventListener('click', _ => { changeSlide(e.dataset.slide ?? ''); });
 });
 // Hook up to server events for new transactions
+Transaction.attachPing();
 Transaction.listen(event => {
     const account = Account.byId(event.account.toString());
     if (!account) {
