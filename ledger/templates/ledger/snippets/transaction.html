@@ -7,7 +7,7 @@
 <li class="transaction" data-transaction-id="{{ transaction.pk }}">
 	<span class="account">{{ transaction.account.display_name }}</span>
 	<span class="reason">{{ transaction.reason }}</span>
-	{{ transaction.normalized_amount|default:0|money }}
+    {{ transaction.fp_amount|default:0|money }}
 	<span class="time">{{ transaction.timestamp }}</span>
 
 

@@ -7,7 +7,13 @@
 
 	{% load static %}
 	<link rel="stylesheet" href="{% static 'base.css' %}">
-	<link rel="manifest" href="{% static 'manifest.json' %}">
+
+	<link rel="icon" type="image/png" href="{% static 'favicon-96x96.png' %}?v=2" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}?v=2" />
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}?v=2" />
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}?v=2" />
+    <link rel="manifest" href="{% static 'site.webmanifest' %}" />
+
 	<meta
 		name="theme-color"
 		content="rgb(255, 255, 255)"
@@ -16,13 +22,20 @@
 		name="theme-color"
 		content="rgb(30, 30, 30)"
 		media="(prefers-color-scheme: dark)" />
+    <meta
+        name="color-scheme"
+        content="light dark">
 
 	{% if js_config %}
 	{{ js_config|json_script:"js-config" }}
 	{% endif %}
 	{% block import %}{% endblock import %}
+
 </head>
 <body>
+    <div style="width:0;height:0;position:absolute;overflow:hidden">
+        {% icon_masks %}
+    </div>
 	{% block body %}{% endblock body %}
      <script>
         document.querySelectorAll('.js-show').forEach(e => e.hidden = false)

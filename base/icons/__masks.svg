@@ -1,0 +1,12 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+>
+    <defs>
+        <mask id="svg-mask-checkmark" stroke-width="3">
+            <rect width="100%" height="100%" fill="white" />
+            <path d="m9 12 2 2 4-4" stroke="black"/>
+        </mask>
+    </defs>
+</svg>

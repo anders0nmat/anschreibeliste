@@ -24,10 +24,10 @@ urlpatterns = [
 	])),
     
 	path("api/transaction/", include(([
-		path("deposit/", views.custom_transaction_ajax, {'action': 'deposit'}, name='deposit'),
-		path("withdraw/", views.custom_transaction_ajax, {'action': 'withdraw'}, name="withdraw"),
-		path("order/", views.product_transaction_ajax, name='order'),
-		path("revert/", views.revert_transaction_ajax, name='revert'),
+		path("deposit/", views.custom_transaction, {'action': 'deposit'}, name='deposit'),
+		path("withdraw/", views.custom_transaction, {'action': 'withdraw'}, name="withdraw"),
+		path("order/", views.product_transaction, name='order'),
+		path("revert/", views.revert_transaction, name='revert'),
 		path("events/", views.transaction_events, name="events"),
 		path("ping/", views.transaction_ping, name="ping"),
 	], "api"))),

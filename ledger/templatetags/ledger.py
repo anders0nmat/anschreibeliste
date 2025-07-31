@@ -4,6 +4,8 @@ from typing import Any
 from time import time_ns
 from decimal import Decimal
 
+from ..models import fpint
+
 register = template.Library()
 
 @register.filter("money")
@@ -47,12 +49,7 @@ def money(value):
     """
 
     if isinstance(value, int):
-        value: int # Type hint for IDE
-        neg, value = value < 0, abs(value)
-        wholes, cents = divmod(value, 100)
-        sign = "negative" if neg else ""
-        
-        return mark_safe(f'<span class="money" {sign}><span class="wholes">{wholes}</span><span class="cents">{cents:02d}</span></span>')
+        value = fpint(value)
     if isinstance(value, Decimal):
         value: Decimal
         neg, value = value < 0, abs(value)
@@ -61,6 +58,8 @@ def money(value):
         sign = "negative" if neg else ""
         
         return mark_safe(f'<span class="money" {sign}><span class="wholes">{wholes}</span><span class="cents">{cents:02d}</span></span>')
+    if isinstance(value, fpint):
+        return value.__html__()
     return value
 
 @register.simple_tag(name="ensure_group_leading")

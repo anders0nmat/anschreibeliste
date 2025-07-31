@@ -50,20 +50,7 @@
 
 <a href="{% url 'ledger:main' %}">Back to main</a>
 
-{% icon "badge" 256 style="width: 256px; height: 250px" %}
-
-<svg
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 24 24"
-  width="256"
-  height="256"
-  style="filter: invert(1); background: black; stroke: white">
-  <path
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="3"
-    d="m9 12 2 2 4-4"/><rect width="24" height="24" stroke-width="1" stroke="gray" fill="none" />
-</svg>
+{% icon "badge" 256 %}
 
 <div>
     {{ request.META }}

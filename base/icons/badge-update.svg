@@ -9,19 +9,8 @@
     stroke-linecap="round"
     stroke-linejoin="round"
 >
-    <!--mask>
-<svg
-  xmlns="http://www.w3.org/2000/svg"
-  style="filter: invert(1); background: black; stroke: white">
-  <path
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="2.5"
-    d="m8 12 2.5 2.5 5-5"/>
-</svg>
-    </mask-->
     <path
-        style="mask: url(data:image/svg+xml;base64,PHN2ZwogIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICBzdHlsZT0iZmlsdGVyOiBpbnZlcnQoMSk7IGJhY2tncm91bmQ6IGJsYWNrOyBzdHJva2U6IHdoaXRlIj4KICA8cGF0aAogICAgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIgogICAgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIKICAgIHN0cm9rZS13aWR0aD0iMi41IgogICAgZD0ibTggMTIgMi41IDIuNSA1LTUiLz4KPC9zdmc+) luminance view-box"
+        mask="url(#svg-mask-checkmark)"
         fill="currentColor"
         d="m 17.65,6.16 c -0.618802,0.3572656 -1.381198,0.3572656 -2,0 L 15.22,5.91 C 14.601832,5.553101 14.220732,4.8937984 14.22,4.18 V 2 H 9.78 v 2.18 c -7.321e-4,0.7137984 -0.3818319,1.373101 -1,1.73 L 8.35,6.16 c -0.6188022,0.3572656 -1.3811978,0.3572656 -2,0 L 4.4369973,5.1397319 2.3129114,8.8086076 4.13,10.02 c 0.6150891,0.355105 0.9957131,1.009778 1,1.72 v 0.51 c 0.00285,0.71737 -0.3787316,1.381318 -1,1.74 L 2.2651563,15.108906 4.4369973,18.860268 6.35,17.84 c 0.6188022,-0.357266 1.3811978,-0.357266 2,0 l 0.43,0.25 c 0.6181681,0.356899 0.9992679,1.016202 1,1.73 V 22 h 4.44 v -2.18 c 7.32e-4,-0.713798 0.381832,-1.373101 1,-1.73 l 0.43,-0.25 c 0.618802,-0.357266 1.381198,-0.357266 2,0 L 19.582063,18.870434 21.765007,15.00067 19.87,13.99 c -0.621268,-0.358682 -1.002848,-1.02263 -1,-1.74 v -0.5 c -0.0028,-0.71737 0.378732,-1.381318 1,-1.74 L 21.734844,8.8910938 19.563003,5.1397319 Z"
         id="path2"

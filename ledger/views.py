@@ -3,7 +3,7 @@ from http import HTTPStatus
 from io import BytesIO, TextIOWrapper
 import csv
 from datetime import timedelta
-from importlib.util import find_spec
+from importlib.util import find_spec as module_exists
 from django import http
 from django.core.exceptions import PermissionDenied, ValidationError, BadRequest, ImproperlyConfigured
 from django.contrib.auth.decorators import permission_required
@@ -14,7 +14,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, UpdateView, CreateView, TemplateView
-from json import loads
+from json import loads, dumps
 from django.utils.timezone import now
 from django.utils.translation import gettext as _, pgettext
 from django.conf import settings
@@ -26,6 +26,7 @@ from .models import Account, Transaction, Product
 from .forms import TransactionForm, ProductTransactionForm, RevertTransactionForm, CreateAccountForm, RestrictedCreateAccountForm, EditAccountForm, TransactionListFilter
 from .utils.banking import EPCCode
 from .utils import server_language
+from .utils.transaction import order_product, custom_transaction as custom_transaction_api, transaction_event
 
 def js_config() -> dict[str, Any]:
     return {
@@ -59,8 +60,8 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
         return reverse('account_detail', kwargs={'pk': self.object.pk})
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
-        # key=(action, permanent)
         PERMS = {
+        #   (action, permanent)
             ('deposit', False): 'ledger.add_deposit_transaction',
             ('withdraw', False): 'ledger.add_withdraw_transaction',
             ('deposit', True): 'ledger.add_permanent_deposit_transaction',
@@ -148,21 +149,12 @@ class AccountCreate(PermissionRequiredMixin, CreateView):
 
 class TransactionList(ListView):
     model = Transaction
-
     output_format = 'html'
 
     def get_queryset(self) -> QuerySet[Any]:
         queryset = super().get_queryset().order_by('-timestamp')
-        return self.filter_queryset(queryset)
-    
-    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
-        filter_form = TransactionListFilter(self.request.GET, label_suffix='')
 
-        return super().get_context_data(**kwargs) | {
-            'filters': filter_form,
-        }
-    
-    def filter_queryset(self, queryset: QuerySet):
+        # Filter Queryset according to GET params
         account_filter = self.get_filter('account', convert=int)
         if account_filter:
             queryset = queryset.filter(account__in=account_filter)
@@ -180,6 +172,11 @@ class TransactionList(ListView):
             queryset = queryset.filter(timestamp__date__lte=end_date_filter)
 
         return queryset
+    
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        return super().get_context_data(**kwargs) | {
+            'filters': TransactionListFilter(self.request.GET, label_suffix=''),
+        }
     
     def get_filter[T](self, query_name: str, convert: Callable[[str], T] = lambda x: x) -> list[T]:
         def convert_skip_exception(value):
@@ -245,7 +242,7 @@ class TransactionList(ListView):
             b.seek(0)
             return FileResponse(b, filename=f"Transaction List.csv", as_attachment=True)
 
-        if self.output_format == 'xlsx' and find_spec('openpyxl'):
+        if self.output_format == 'xlsx' and module_exists('openpyxl'):
             b = BytesIO()
             self.render_to_xlsx(b, context['object_list'])
             b.seek(0)
@@ -311,176 +308,104 @@ def send_test_event(request: HttpRequest):
     send_event('test', data=request.GET.get('message', 'Default Message'))
     return HttpResponse()
 
-
+@require_POST
+@permission_required('ledger.add_transaction', raise_exception=True)
 @idempotent(required=True, post_field='idempotency-key')
-def _product_transaction(request: HttpRequest, form: ProductTransactionForm) -> Transaction | None:
+def product_transaction(request: HttpRequest):
+    is_json = request.content_type == 'application/json'
+    if is_json:
+        try:
+            form = ProductTransactionForm(loads(request.body))
+        except:
+            return JsonResponse({"error": "Invalid JSON body"}, status=HTTPStatus.BAD_REQUEST)
+    else:
+        form = ProductTransactionForm(request.POST)
+
     if form.is_valid():
         try:
-            account: Account = form.cleaned_data['account']
-            product: Product = form.cleaned_data['product']
-            amount: int = form.cleaned_data['amount']
-            invert_member: bool = form.cleaned_data['invert_member']
-
-            price = product.member_cost if account.member != invert_member else product.cost
-            price *= amount
-
-            if account.current_budget < price:
-                raise ValidationError(_('The account has not enough money'), code='out_of_money')
-            
-            reason = product.name
-            if amount > 1:
-                reason = f'{amount}x {reason}'
-            if invert_member:
-                with server_language():
-                    # Translators: Used as a prefix for transaction reason if a member buys something on behalf of a non-member
-                    for_extern = _('For extern')
-                    # Translators: Used as a prefix for transaction reason if a non-member buys something on behalf of a member
-                    for_intern = _('For intern')
-                reason = f'{for_extern if account.member else for_intern}: {reason}'
-
-            return Transaction.objects.create(
-                account=account,
-                amount=price,
-                reason=reason,
+            transaction = order_product(
+                account=form.cleaned_data['account'],
+                product=form.cleaned_data['product'],
                 issuer=request.user,
-                type=Transaction.TransactionType.ORDER,
-                extra={
-                    'product': product.pk,
-                    'amount': amount,
-                },
-                idempotency_key=request.idempotency_key)
-        except ValidationError as error:
-            form.add_error(None, error)
-    return None
+                amount=form.cleaned_data['amount'],
+                invert_member_status=form.cleaned_data['invert_member'],
+                extra_data={'idempotency_key': request.idempotency_key})
+            if is_json:
+                return JsonResponse({"transaction_id": transaction.pk})
+            else:
+                return HttpResponseRedirect(reverse('main'))
+        except (Account.NotEnoughFunds, ):
+            form.add_error(None, ValidationError(_('The account has not enough money'), code='out_of_money'))
 
+    if is_json:
+        return JsonResponse(form.errors.as_json(), safe=False, status=HTTPStatus.BAD_REQUEST)
+    else:
+        return HttpResponseBadRequest(form.errors.as_ul())
+
+@require_POST
 @idempotent(required=True, post_field='idempotency-key')
-def _custom_transaction(request: HttpRequest, form: TransactionForm, action: Literal['deposit', 'withdraw']) -> Transaction | None:
+def custom_transaction(request: HttpRequest, action: Literal['deposit', 'withdraw']):
+    is_json = request.content_type == 'application/json'
+    if is_json:
+        try:
+            form = TransactionForm(loads(request.body))
+        except:
+            return JsonResponse({"error": "Invalid JSON body"}, status=HTTPStatus.BAD_REQUEST)
+    else:
+        form = TransactionForm(request.POST)
     if form.is_valid():
         try:
-            account: Account = form.cleaned_data['account']
-            amount: int = form.cleaned_data['amount']
-            reason: str = form.cleaned_data['reason']
-            
-            # key=(action, permanent)
-            PERMS = {
-                ('deposit', False): 'ledger.add_deposit_transaction',
-                ('withdraw', False): 'ledger.add_withdraw_transaction',
-                ('deposit', True): 'ledger.add_permanent_deposit_transaction',
-                ('withdraw', True): 'ledger.add_permanent_withdraw_transaction',
-            }
-            required_permission = PERMS[(action, account.permanent)]
-            if not request.user.has_perm(required_permission):
-                deposit_reason = _('Not authorized to deposit to this account')
-                withdraw_reason = _('Not authorized to withdraw from this account')
-                raise ValidationError(deposit_reason if action == 'deposit' else withdraw_reason, code='user_permission')
-            
-            if not reason:
-                amount_str = str(amount)
-                wholes, cents = amount_str[:-2], amount_str[-2:]
-                with server_language():
-                    deposit_reason = _('Deposit')
-                    withdraw_reason = _('Withdraw')
-                reason = f"{deposit_reason if action == 'deposit' else withdraw_reason}: {wholes:>01},{cents:>02}€"
-
-            if action == 'withdraw':
-                if account.current_budget - amount < 0:
-                    raise ValidationError(_('The account has not enough money'), code='out_of_money')
-
-            return Transaction.objects.create(
-                account=account,
-                amount=amount,
-                reason=reason,
+            transaction = custom_transaction_api(
+                account=form.cleaned_data['account'],
+                action=action,
+                amount=form.cleaned_data['amount'],
                 issuer=request.user,
-                type=Transaction.TransactionType.DEPOSIT if action == 'deposit' else Transaction.TransactionType.WITHDRAW,
-                idempotency_key=request.idempotency_key)
-        except ValidationError as error:
-            form.add_error(None, error)
+                reason=form.cleaned_data['reason'],
+                extra_data={'idempotency_key': request.idempotency_key}
+            )
+            if is_json:
+                return JsonResponse({"transaction_id": transaction.pk})
+            else:
+                return HttpResponseRedirect(reverse('account_detail', kwargs={"pk": transaction.account.pk}))
+        except PermissionDenied:
+            form.add_error(ValidationError(_('Not authorized to perform this transaction for this account'), code='user_permission'))        
+        except Account.NotEnoughFunds:
+            form.add_error(ValidationError(_('The account has not enough money'), code='out_of_money'))
+    if is_json:
+        return JsonResponse(form.errors.as_json(), safe=False, status=HTTPStatus.BAD_REQUEST)
+    else:
+        return HttpResponseBadRequest(form.errors.as_ul())
 
+@require_POST
 @idempotent(required=True, post_field='idempotency-key')
-def _revert_transaction(request: HttpRequest, form: RevertTransactionForm) -> Transaction | None:
-    if form.is_valid():
-        transaction: Transaction = form.cleaned_data['transaction']
+def revert_transaction(request: HttpRequest, pk: int = None):
+    is_json = request.content_type == 'application/json'
+    if is_json:
         try:
-            return transaction.revert(issuer=request.user, idempotency_key=request.idempotency_key)
+            form = RevertTransactionForm(loads(request.body))
+        except:
+            return JsonResponse({"error": "Invalid JSON body"}, status=HTTPStatus.BAD_REQUEST)   
+    else:
+        form = RevertTransactionForm(request.POST)
+
+    if form.is_valid():
+        try:
+            transaction = form.cleaned_data['transaction'].revert(
+                issuer=request.user,
+                idempotency_key=request.idempotency_key)
+            if is_json:
+                return JsonResponse({"transaction_id": transaction.pk})   
+            else:
+                return HttpResponseRedirect(reverse('account_detail', args=[pk]) if pk else reverse('main'))    
         except Transaction.AlreadyReverted:
             form.add_error(None, ValidationError(_('Transaction already reverted'), code='already_reverted'))
         except PermissionDenied:
-            form.add_error(None, ValidationError(_('Not authorized to revert this transaction'), code='user_permission'))        
-    return None
-
-
-@require_POST
-@permission_required('ledger.add_transaction', raise_exception=True)
-def product_transaction(request: HttpRequest):
-    form = ProductTransactionForm(request.POST)
-
-    if _product_transaction(request, form):
-        return HttpResponseRedirect(reverse('main'))
-
-    return HttpResponseBadRequest(form.errors.as_ul())
-
-@require_POST
-@permission_required('ledger.add_transaction', raise_exception=True)
-def product_transaction_ajax(request: HttpRequest):
-    try:
-        data = loads(request.body)
-    except:
-        return JsonResponse({"error": "Invalid JSON body"}, status=HTTPStatus.BAD_REQUEST)
+            form.add_error(None, ValidationError(_('Not authorized to revert this transaction'), code='user_permission'))
     
-    form = ProductTransactionForm(data)
-
-    new_transaction = _product_transaction(request, form)
-    if new_transaction:
-        return JsonResponse({"transaction_id": new_transaction.pk})
-
-    return JsonResponse(form.errors.as_json(), safe=False, status=HTTPStatus.BAD_REQUEST)
-
-@require_POST
-def custom_transaction(request: HttpRequest, action: Literal['deposit', 'withdraw']):
-    form = TransactionForm(request.POST)
-    new_transaction = _custom_transaction(request, form, action)
-    if new_transaction:
-        return HttpResponseRedirect(reverse('account_detail', kwargs={"pk": new_transaction.account.pk}))
-        
-    return HttpResponseBadRequest(form.errors.as_ul())
-
-@require_POST
-def custom_transaction_ajax(request: HttpRequest, action: Literal['deposit', 'withdraw']):
-    try:
-        data = loads(request.body)
-    except:
-        return JsonResponse({"error": "Invalid JSON body"}, status=HTTPStatus.BAD_REQUEST)
-    
-    form = TransactionForm(data)
-
-    new_transaction = _custom_transaction(request, form, action)
-    if new_transaction:
-        return JsonResponse({"transaction_id": new_transaction.pk})
-
-    return JsonResponse(form.errors.as_json(), safe=False, status=HTTPStatus.BAD_REQUEST)
-
-@require_POST
-def revert_transaction(request: HttpRequest, pk: int = None):
-    next_url = reverse('account_detail', args=[pk]) if pk else reverse('main')
-
-    form = RevertTransactionForm(request.POST)
-    if _revert_transaction(request, form):
-        return HttpResponseRedirect(next_url)
-    return HttpResponseBadRequest(form.errors.as_ul())
-
-@require_POST
-def revert_transaction_ajax(request: HttpRequest):
-    try:
-        data = loads(request.body)
-    except:
-        return JsonResponse({"error": "Invalid JSON body"}, status=HTTPStatus.BAD_REQUEST)
-    
-    form = RevertTransactionForm(data)
-    new_transaction = _revert_transaction(request, form)
-    if new_transaction:
-        return JsonResponse({"transaction_id": new_transaction.pk})
-
-    return JsonResponse(form.errors.as_json(), safe=False, status=HTTPStatus.BAD_REQUEST)
+    if is_json:
+        return JsonResponse(form.errors.as_json(), safe=False, status=HTTPStatus.BAD_REQUEST)
+    else:
+        return HttpResponseBadRequest(form.errors.as_ul())
 
 def transaction_events(request: HttpRequest):
     initial_event = None
@@ -489,11 +414,9 @@ def transaction_events(request: HttpRequest):
     if latest_client_transaction_id:
         try:
             latest_client_transaction_id = int(latest_client_transaction_id)
-            latest_transaction: Transaction = Transaction.objects.latest('timestamp')
-            if latest_client_transaction_id != latest_transaction.pk:
-                # client has not the latest transactions
-                # -> command client to reload page
-                initial_event = StreamEvent(event='reload')
+            last_client_transaction: Transaction = Transaction.objects.get(pk=latest_client_transaction_id)
+            missing_transactions: list[Transaction] = Transaction.objects.order_by('-timestamp').filter(timestamp__gt=last_client_transaction.timestamp)
+            initial_event = [StreamEvent('create', dumps(transaction_event(transaction))) for transaction in missing_transactions]
         except (ValueError, Transaction.DoesNotExist):
             pass
 

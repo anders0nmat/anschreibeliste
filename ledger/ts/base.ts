@@ -46,11 +46,22 @@ export function _money(balance: number): HTMLElement {
 }
 
 export function _set_money(element: HTMLElement, amount: number) {
-	element.toggleAttribute('negative', amount < 0)
+	element.classList.toggle('negative', amount < 0)
 
 	const amount_string = Math.abs(amount).toString().padStart(3, '0')
-	element.querySelector('.wholes')!.textContent = amount_string.slice(0, -2)
-	element.querySelector('.cents')!.textContent = amount_string.slice(-2)
+    if (amount < 0) {
+        if (!element.querySelector('.sign')) {
+            const sign = document.createElement('span')
+            sign.classList.add("sign")
+            sign.textContent = '-'
+            element.prepend(sign)
+        }
+    }
+    else {
+        element.querySelector('.sign')?.remove()
+    }
+	element.querySelector('.integer')!.textContent = amount_string.slice(0, -2)
+	element.querySelector('.fraction')!.textContent = amount_string.slice(-2)
 }
 
 export function _cloneTemplate(id: string): DocumentFragment {

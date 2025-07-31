@@ -3,27 +3,14 @@ from django.dispatch import receiver
 
 from .eventstream import send_event
 from .models import Transaction
+from .utils.transaction import transaction_event
 
 @receiver(post_save, sender=Transaction)
 def notify_clients(instance: Transaction, created: bool, **_):
 	if not created:
 		return
 	
-	data = {
-		"id": instance.pk,
-		"account": instance.account.pk,
-		"account_name": instance.account.display_name,
-		"balance": instance.account.current_balance,
-		"amount": instance.normalized_amount,
-		"reason": instance.reason,
-	}
-	# Reversal transaction
-	if instance.related_transaction is not None:
-		data["related"] = instance.related_transaction.pk
-	
-	# Associate transaction with request
-	if instance.idempotency_key is not None:
-		data["idempotency_key"] = instance.idempotency_key
+	data = transaction_event(instance)
 
 	send_event("transaction", "create", data)
 

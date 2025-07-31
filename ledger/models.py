@@ -11,6 +11,7 @@ from django.conf import settings
 from django.contrib.admin import display
 from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth import get_user_model
+from .utils import fpint
 # Create your models here.
 # TODO : Better terminologiy regarding money:
 # TODO : User A has amount k and additionally is allowed to go amount n into debt
@@ -68,7 +69,7 @@ class Account(models.Model):
 
     display_name = models.CharField(verbose_name=_('display name'), max_length=255)
     full_name = models.CharField(verbose_name=_('full name'), max_length=255, default='', blank=True)
-    credit = PositiveFixedPrecisionField(verbose_name=_('credit'), decimal_places=2, default=0)
+    credit = PositiveFixedPrecisionField(verbose_name=_('credit'), decimal_places=fpint.__precision__, default=0)
     group = models.ForeignKey(AccountGroup, verbose_name=_('group'), on_delete=models.SET_NULL, null=True, default=None, blank=True)
     
     member = models.BooleanField(verbose_name=_('member'))
@@ -140,7 +141,7 @@ class Account(models.Model):
 class AccountBalance(models.Model):
     account = models.ForeignKey(Account, verbose_name=_('account'), on_delete=models.CASCADE, related_name='balances')
     timestamp = models.DateTimeField(verbose_name=_('timestamp'), auto_now_add=True)
-    closing_balance = FixedPrecisionField(verbose_name=_('closing balance'), decimal_places=2)
+    closing_balance = FixedPrecisionField(verbose_name=_('closing balance'), decimal_places=fpint.__precision__)
     previous_balance = models.OneToOneField("self", verbose_name=_('previous balance'), on_delete=models.CASCADE, null=True)
 
     class Meta:
@@ -171,7 +172,7 @@ class Transaction(models.Model):
 
     closing_balance = models.ForeignKey(AccountBalance, verbose_name=_('closing balance'), on_delete=models.CASCADE, related_name='transactions', null=True, default=None, blank=True)
     account = models.ForeignKey(Account, verbose_name=_('account'), on_delete=models.CASCADE, related_name='transactions')
-    amount = PositiveFixedPrecisionField(verbose_name=pgettext_lazy('money-related', 'amount'), decimal_places=2)
+    amount = PositiveFixedPrecisionField(verbose_name=pgettext_lazy('money-related', 'amount'), decimal_places=fpint.__precision__)
     timestamp = models.DateTimeField(verbose_name=_('timestamp'), auto_now_add=True)
     reason = models.CharField(verbose_name=_('reason'), max_length=255)
     issuer = models.ForeignKey(UserModel, verbose_name=_('issuer'), on_delete=models.SET_NULL, null=True)
@@ -203,23 +204,16 @@ class Transaction(models.Model):
         self.idempotency_key = idempotency_key
 
     def __str__(self) -> str:
-        amount_str = str(self.amount)
-        wholes, cents = amount_str[:-2], amount_str[-2:]
-        return f"{self.account.display_name}: {self.reason} ({wholes:>01},{cents:>02}€)"
-
-    @property
-    @display(description=_('Amount'))
-    def formatted_amount(self) -> str:
-        amount_str = str(self.amount).rjust(self.__class__._meta.get_field('amount').decimal_places + 1, '0')
-        wholes, cents = amount_str[:-2], amount_str[-2:]
-        decimal_separator = get_format('DECIMAL_SEPARATOR')
-        sign = '-' if self.type in self.TransactionType.withdraws() else ''
-        return f"{sign}{wholes}{decimal_separator}{cents}"
+        return f"{self.account.display_name}: {self.reason} ({self.fp_amount.locale_str}€)"
 
     @property
     @display(description=_('Signed amount'))
+    def fp_amount(self) -> fpint:
+        return fpint(self.amount, negative=self.type in self.TransactionType.withdraws())
+
+    @property
     def normalized_amount(self) -> int:
-        return -self.amount if self.type in self.TransactionType.withdraws() else self.amount
+        return int(self.fp_amount)
 
     @property
     def can_revert(self) -> bool:
@@ -281,8 +275,8 @@ class Product(models.Model):
     objects = ProductManager()
 
     name = models.CharField(verbose_name=_('name'), max_length=255)
-    cost = PositiveFixedPrecisionField(verbose_name=_('cost'), decimal_places=2)
-    member_cost = PositiveFixedPrecisionField(verbose_name=_('member cost'), decimal_places=2, blank=True)
+    cost = PositiveFixedPrecisionField(verbose_name=_('cost'), decimal_places=fpint.__precision__)
+    member_cost = PositiveFixedPrecisionField(verbose_name=_('member cost'), decimal_places=fpint.__precision__, blank=True)
     visible = models.BooleanField(verbose_name=_('visible'), default=True)
     
     group = models.ForeignKey(ProductGroup, verbose_name=_('group'), on_delete=models.SET_NULL, null=True, default=None, blank=True)

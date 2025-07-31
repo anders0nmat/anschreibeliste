@@ -45,3 +45,8 @@ def icon(name: str, size: int = None, **kwargs):
 
     return mark_safe(ET.tostring(icon, encoding="unicode", method="html"))
 
+@register.simple_tag
+def icon_masks():
+    icon = get_icon('__masks')
+    return mark_safe(ET.tostring(icon, encoding="unicode", method="html"))
+

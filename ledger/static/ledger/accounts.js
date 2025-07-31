@@ -1,4 +1,4 @@
-import { _money, HTMLIdentifierWrapper } from "./base.js";
+import { _set_money, HTMLIdentifierWrapper } from "./base.js";
 export class Account extends HTMLIdentifierWrapper {
     static all_selector = '#accounts .item';
     static id_attribute = 'data-account-id';
@@ -17,7 +17,7 @@ export class Account extends HTMLIdentifierWrapper {
     get balance() { return parseInt(this.element.dataset.balance ?? '0'); }
     set balance(value) {
         this.element.dataset.balance = value.toString();
-        this.element.querySelector('.money').replaceWith(_money(value));
+        _set_money(this.element.querySelector('.money'), value);
     }
     get disabled() { return this.radio.disabled; }
     set disabled(value) { this.radio.disabled = value; }

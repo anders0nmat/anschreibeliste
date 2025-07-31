@@ -234,7 +234,7 @@ export class Transaction extends HTMLWrapper {
 				// Retry every 10s
 				if (this.reconnect_interval === undefined) {
 					this.reconnect_interval = setInterval(() => {
-						this.listen(ontransaction)
+						this.listen(ontransaction, true)
 					}, 10_000);
 				}
 			}

@@ -1,5 +1,5 @@
 
-import { _money, HTMLIdentifierWrapper } from "./base.js"
+import { _money, _set_money, HTMLIdentifierWrapper } from "./base.js"
 
 interface Product {
 	totalCost(member: boolean): number
@@ -27,7 +27,7 @@ export class Account extends HTMLIdentifierWrapper {
 	get balance(): number { return parseInt(this.element.dataset.balance ?? '0') }
 	set balance(value: number) {
 		this.element.dataset.balance = value.toString()
-		this.element.querySelector<HTMLElement>('.money')!.replaceWith(_money(value))
+        _set_money(this.element.querySelector('.money')!, value)
 	}
 
 	get disabled(): boolean { return this.radio.disabled }

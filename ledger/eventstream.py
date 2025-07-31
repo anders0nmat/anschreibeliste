@@ -105,10 +105,9 @@ def send_event(channel: str, event: str | None = None, data: Any | str = '', id:
         ) 
     )
 
-async def listen(channel: str | Iterable[str], identifier: str, initial_event: Callable[[], StreamEvent] | StreamEvent = None):
+async def listen(channel: str | Iterable[str], identifier: str, initial_event: Iterable[StreamEvent] | StreamEvent = None):
     if isinstance(initial_event, StreamEvent):
-        _initial_event = initial_event
-        initial_event = lambda: _initial_event
+        initial_event = [initial_event]
     if isinstance(channel, str):
         channel = [channel]
 
@@ -117,7 +116,8 @@ async def listen(channel: str | Iterable[str], identifier: str, initial_event: C
         listener = StreamListener(identifier=identifier)
         await listener.events.put(StreamEvent(event='open'))
         if initial_event:
-            await listener.events.put(initial_event())
+            for event in initial_event:
+                await listener.events.put(event)
         for ch in ev_channels:
             ch.add_listener(listener)
 
@@ -132,7 +132,7 @@ class EventstreamResponse(StreamingHttpResponse):
     """
     Http response for connecting client to channels of a eventstream
     """
-    def __init__(self, channel: str | Iterable[str], *args, identifier: str, initial_event: Callable[[], StreamEvent] | StreamEvent = None, **kwargs) -> None:
+    def __init__(self, channel: str | Iterable[str], *args, identifier: str, initial_event: Iterable[StreamEvent] | StreamEvent = None, **kwargs) -> None:
         """
         Requires a list of channels the client will receive events from
         """
