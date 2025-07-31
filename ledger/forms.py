@@ -1,6 +1,6 @@
 from typing import Any
 from django.forms import ModelForm, Form, CharField, IntegerField, HiddenInput, ModelChoiceField, BooleanField, ModelMultipleChoiceField, MultipleChoiceField, DateField
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, pgettext_lazy
 from django.forms.widgets import TextInput, NumberInput, CheckboxSelectMultiple
 
 from .models import Account, Product, Transaction
@@ -59,7 +59,7 @@ class RevertTransactionForm(Form):
     transaction = ModelChoiceField(Transaction.objects) 
 
 class TransactionListFilter(Form):
-    account = ModelMultipleChoiceField(Account.objects, required=False, widget=CheckboxSelectMultiple)
-    type = MultipleChoiceField(choices=Transaction.TransactionType.choices, required=False, widget=CheckboxSelectMultiple)
-    start = DateField(required=False, widget=NativeDateInput)
-    end = DateField(required=False, widget=NativeDateInput)
+    account = ModelMultipleChoiceField(Account.objects, label=_('Account'), required=False, widget=CheckboxSelectMultiple)
+    type = MultipleChoiceField(choices=Transaction.TransactionType.choices, label=pgettext_lazy('transaction', 'Type'), required=False, widget=CheckboxSelectMultiple)
+    start = DateField(required=False, widget=NativeDateInput, label=_('Start'))
+    end = DateField(required=False, widget=NativeDateInput, label=_('End'))

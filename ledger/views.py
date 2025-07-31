@@ -254,6 +254,8 @@ class TransactionList(ListView):
 class IndexView(TemplateView):
     template_name = "ledger/main.html"
 
+    product_category = Product.ProductCategory.ARTICLE
+
     def get_transactions(self) -> list[Transaction]:
         """
         Return all transactions newer than `old_threshold`.
@@ -281,7 +283,7 @@ class IndexView(TemplateView):
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         return super().get_context_data(**kwargs) | {
             "account_list": Account.objects.grouped(),
-            "product_list": Product.objects.grouped(),
+            "product_list": Product.objects.grouped().filter(category=self.product_category),
             "transaction_list": self.get_transactions(),
             'js_config': js_config(),
         }

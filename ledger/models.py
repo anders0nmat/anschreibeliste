@@ -177,7 +177,7 @@ class Transaction(models.Model):
     reason = models.CharField(verbose_name=_('reason'), max_length=255)
     issuer = models.ForeignKey(UserModel, verbose_name=_('issuer'), on_delete=models.SET_NULL, null=True)
     
-    type = models.CharField(verbose_name=pgettext_lazy('transaction', 'type'), max_length=4, choices=TransactionType.choices)
+    type = models.CharField(verbose_name=pgettext_lazy('transaction', 'Type'), max_length=4, choices=TransactionType.choices)
 
     extra = models.JSONField(verbose_name=_('extra'), default=dict, blank=True)
     
@@ -272,9 +272,14 @@ class ProductGroup(models.Model):
         verbose_name_plural = _('product groups')
 
 class Product(models.Model):
+    class ProductCategory(models.TextChoices):
+        ARTICLE = 'ATCL', _('Article')
+        STOCK = 'STCK', _('Stock')
+
     objects = ProductManager()
 
-    name = models.CharField(verbose_name=_('name'), max_length=255)
+    full_name = models.CharField(verbose_name=_('name'), max_length=255)
+    display_name = models.CharField(verbose_name=_('display name'), max_length=255, blank=True)
     cost = PositiveFixedPrecisionField(verbose_name=_('cost'), decimal_places=fpint.__precision__)
     member_cost = PositiveFixedPrecisionField(verbose_name=_('member cost'), decimal_places=fpint.__precision__, blank=True)
     visible = models.BooleanField(verbose_name=_('visible'), default=True)
@@ -288,6 +293,9 @@ class Product(models.Model):
         db_index=True
     )
 
+    order_number = models.CharField(verbose_name=_('order number'), max_length=255, default='', blank=True)
+    category = models.CharField(verbose_name=_('category'), choices=ProductCategory, max_length=4, default=ProductCategory.ARTICLE)
+
     class Meta:
         ordering = ['group', 'order']
         indexes = [
@@ -297,12 +305,13 @@ class Product(models.Model):
         verbose_name_plural = _('products')
 
     def __str__(self) -> str:
-        return self.name
+        return self.full_name
     
     def clean(self) -> None:
         if self.member_cost is None:
             self.member_cost = self.cost
-
+        if self.display_name is None:
+            self.display_name = self.full_name
 
 # https://stackoverflow.com/questions/29688982/derived-account-balance-vs-stored-account-balance-for-a-simple-bank-account/29713230#29713230
         

@@ -32,8 +32,8 @@ class ProductGroupAdmin(SortableAdminMixin, admin.ModelAdmin):
 
 @admin.register(models.Product)
 class ProductAdmin(SortableAdminMixin, admin.ModelAdmin):
-    list_display = ["order", "name", "cost", "member_cost", "group", "visible", ]
-    list_filter = ["visible", "group", ]
+    list_display = ["order", "full_name", "display_name", "category", "cost", "member_cost", "group", "visible", ]
+    list_filter = ["category", "visible", "group", ]
     ordering = ['order', ]
     
 

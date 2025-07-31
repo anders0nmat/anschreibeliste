@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-26 23:02+0200\n"
+"POT-Creation-Date: 2025-07-31 21:59+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,23 +23,37 @@ msgstr ""
 msgid "Enter a number with {decimal_places} decimal places."
 msgstr "Gib eine Zahl mit {decimal_places} Nachkommastellen ein."
 
-#: forms.py:30 models.py:105
+#: forms.py:30 models.py:106
 msgid "Balance"
 msgstr "Guthaben"
 
-#: forms.py:48 templates/ledger/account_create.html:18
+#: forms.py:48 forms.py:62 templates/ledger/account_create.html:18
 #: templates/ledger/account_detail.html:31
-#: templates/ledger/transaction_list.html:99 views.py:197
+#: templates/ledger/transaction_list.html:99 views.py:194
 msgid "Account"
 msgstr "Account"
 
-#: forms.py:49 models.py:211
+#: forms.py:49
 msgid "Amount"
 msgstr "Menge"
 
-#: forms.py:50 templates/ledger/transaction_list.html:100 views.py:198
+#: forms.py:50 templates/ledger/transaction_list.html:100 views.py:195
 msgid "Reason"
 msgstr "Verwendungszweck"
+
+#: forms.py:63 models.py:180 templates/ledger/transaction_list.html:103
+#: views.py:198
+msgctxt "transaction"
+msgid "Type"
+msgstr "Type"
+
+#: forms.py:64
+msgid "Start"
+msgstr "Start"
+
+#: forms.py:65
+msgid "End"
+msgstr "Ende"
 
 #: modelfield.py:28
 #, python-format
@@ -55,179 +69,190 @@ msgstr ""
 "Positive Dezimalzahl mit fester Präzision (bis zu %(decimal_places)i "
 "Nachkommastellen)"
 
-#: models.py:24 models.py:263 models.py:283
+#: models.py:25 models.py:257 models.py:281
 msgid "name"
 msgstr "Name"
 
-#: models.py:26 models.py:265 models.py:290
+#: models.py:27 models.py:259 models.py:289
 msgid "order"
 msgstr "Reihenfolge"
 
-#: models.py:38
+#: models.py:39
 msgid "account group"
 msgstr "Account-Gruppe"
 
-#: models.py:39
+#: models.py:40
 msgid "account groups"
 msgstr "Account-Gruppen"
 
-#: models.py:69
+#: models.py:70 models.py:282
 msgid "display name"
 msgstr "Anzeigename"
 
-#: models.py:70
+#: models.py:71
 msgid "full name"
 msgstr "Vollständiger Name"
 
-#: models.py:71
+#: models.py:72
 msgid "credit"
 msgstr "Kredit"
 
-#: models.py:72 models.py:288
+#: models.py:73 models.py:287
 msgid "group"
 msgstr "Gruppe"
 
-#: models.py:74
+#: models.py:75
 msgid "member"
 msgstr "Mitglied"
 
-#: models.py:75
+#: models.py:76
 msgid "permanent"
 msgstr "Permanent"
 
-#: models.py:77
+#: models.py:78
 msgid "active"
 msgstr "Aktiv"
 
-#: models.py:93 models.py:141 models.py:173
+#: models.py:94 models.py:142 models.py:174
 msgid "account"
 msgstr "Account"
 
-#: models.py:94
+#: models.py:95
 msgid "accounts"
 msgstr "Accounts"
 
-#: models.py:100
+#: models.py:101
 msgid "Last closing balance"
 msgstr "Letzte Schlussbilanz"
 
-#: models.py:142 models.py:175
+#: models.py:143 models.py:176
 msgid "timestamp"
 msgstr "Zeitstempel"
 
-#: models.py:143 models.py:172
+#: models.py:144 models.py:173
 msgid "closing balance"
 msgstr "Schlussbilanz"
 
-#: models.py:144
+#: models.py:145
 msgid "previous balance"
 msgstr "Basis-Bilanz"
 
-#: models.py:148
+#: models.py:149
 msgid "account balance"
 msgstr "Schlussbilanz"
 
-#: models.py:149
+#: models.py:150
 msgid "account balances"
 msgstr "Schlussbilanzen"
 
-#: models.py:152
+#: models.py:153
 #, python-brace-format
 msgid "{account}: {closing_balance} at {timestamp}"
-msgstr "{account}: {closing_balance} zum {timestamp}"
+msgstr "{account}: {closing_balance} am {timestamp}"
 
-#: models.py:158 templates/ledger/account_detail.html:46 views.py:381
+#: models.py:159 templates/ledger/account_detail.html:46
 msgid "Deposit"
 msgstr "Einzahlung"
 
-#: models.py:159 templates/ledger/account_detail.html:94 views.py:382
+#: models.py:160 templates/ledger/account_detail.html:94
 msgid "Withdraw"
 msgstr "Auszahlung"
 
-#: models.py:160
+#: models.py:161
 msgctxt "verb, getting a product"
 msgid "Order"
 msgstr "Bestellung"
 
-#: models.py:161
+#: models.py:162
 msgid "Revert-Deposit"
 msgstr "Storno-Einzahlung"
 
-#: models.py:162
+#: models.py:163
 msgid "Revert-Withdraw"
 msgstr "Storno-Auszahlung"
 
-#: models.py:174
+#: models.py:175
 msgctxt "money-related"
 msgid "amount"
 msgstr "Betrag"
 
-#: models.py:176
+#: models.py:177
 msgid "reason"
 msgstr "Verwendungszweck"
 
-#: models.py:177
+#: models.py:178
 msgid "issuer"
 msgstr "Auftraggeber"
 
-#: models.py:179
-msgctxt "transaction"
-msgid "type"
-msgstr "Typ"
-
-#: models.py:181
+#: models.py:182
 msgid "extra"
 msgstr "Extra"
 
-#: models.py:183
+#: models.py:184
 msgid "related transaction"
 msgstr "Verwandte Transaktion"
 
-#: models.py:183
+#: models.py:184
 msgid "Used to track and associate canceled transactions"
 msgstr "Dient der Verfolgung und Zuordnung stornierter Transaktionen"
 
-#: models.py:198
+#: models.py:199
 msgid "transaction"
 msgstr "Transaktion"
 
-#: models.py:199
+#: models.py:200
 msgid "transactions"
 msgstr "Transaktionen"
 
-#: models.py:220
+#: models.py:210
 msgid "Signed amount"
 msgstr "Vorzeichenbehafteter Betrag"
 
-#: models.py:245
+#: models.py:239
 msgid "Canceled"
 msgstr "Storniert"
 
-#: models.py:277
+#: models.py:271
 msgid "product group"
 msgstr "Produkt-Gruppe"
 
-#: models.py:278
+#: models.py:272
 msgid "product groups"
 msgstr "Produkt-Gruppen"
 
-#: models.py:284
+#: models.py:276
+msgid "Article"
+msgstr "Artikel"
+
+#: models.py:277
+msgid "Stock"
+msgstr "Vorrat"
+
+#: models.py:283
 msgid "cost"
 msgstr "Preis"
 
-#: models.py:285
+#: models.py:284
 msgid "member cost"
 msgstr "Preis für Mitglieder"
 
-#: models.py:286
+#: models.py:285
 msgid "visible"
 msgstr "Sichtbar"
 
-#: models.py:302
+#: models.py:296
+msgid "order number"
+msgstr "Artikelnummer"
+
+#: models.py:297
+msgid "category"
+msgstr "Kategorie"
+
+#: models.py:304
 msgid "product"
 msgstr "Produkt"
 
-#: models.py:303
+#: models.py:305
 msgid "products"
 msgstr "produkte"
 
@@ -262,7 +287,7 @@ msgstr "Verwendungszweck"
 msgid "All"
 msgstr "Alles"
 
-#: templates/ledger/account_detail.html:124 templates/ledger/main.html:108
+#: templates/ledger/account_detail.html:124 templates/ledger/main.html:104
 msgid "Transactions"
 msgstr "Transaktionen"
 
@@ -282,15 +307,15 @@ msgstr "Accounts"
 msgid "Search..."
 msgstr "Suche..."
 
-#: templates/ledger/main.html:60
+#: templates/ledger/main.html:56
 msgid "Amount:"
 msgstr "Menge:"
 
-#: templates/ledger/main.html:87
+#: templates/ledger/main.html:83
 msgid "Select account"
 msgstr "Account auswählen"
 
-#: templates/ledger/main.html:91
+#: templates/ledger/main.html:87
 msgid "Select product"
 msgstr "Produkt auswählen"
 
@@ -346,56 +371,65 @@ msgstr "XLSX exportieren"
 msgid "Results"
 msgstr "Ergebnisse"
 
-#: templates/ledger/transaction_list.html:101 views.py:199
+#: templates/ledger/transaction_list.html:101 views.py:196
 msgid "Date"
 msgstr "Datum"
 
-#: templates/ledger/transaction_list.html:102 views.py:200
+#: templates/ledger/transaction_list.html:102 views.py:197
 msgid "Time"
 msgstr "Uhrzeit"
 
-#: templates/ledger/transaction_list.html:103 views.py:201
-msgctxt "transaction"
-msgid "Type"
-msgstr "Type"
-
-#: templates/ledger/transaction_list.html:104 views.py:202
+#: templates/ledger/transaction_list.html:104 views.py:199
 msgctxt "money-related"
 msgid "Amount"
 msgstr "Menge"
 
+#: utils/transaction.py:31
+msgid "From Stock: "
+msgstr "Warenentnahme: "
+
+#: utils/transaction.py:33
+#, python-brace-format
+msgid "{amount}x {product}"
+msgstr ""
+
+#. Translators: Used as transaction reason if a member buys something on behalf of a non-member
+#: utils/transaction.py:37
+msgid "For extern: {reason}"
+msgstr "Für Extern: {reason}"
+
+#. Translators: Used as transaction reason if a non-member buys something on behalf of a member
+#: utils/transaction.py:40
+msgid "For intern: {reason}"
+msgstr "Für Clubbi: {reason}"
+
+#: utils/transaction.py:79
+msgctxt "Default transaction reason"
+msgid "Deposit"
+msgstr "Einzahlung"
+
+#: utils/transaction.py:81
+msgctxt "Default transaction reason"
+msgid "Withdraw"
+msgstr "Auszahlung"
+
 #. Translators: Used for account creation with initial balance
-#: views.py:140
+#: views.py:141
 msgid "Initial Deposit"
 msgstr "Startguthaben"
 
-#: views.py:328 views.py:387
+#: views.py:340 views.py:375
 msgid "The account has not enough money"
 msgstr "Der ausgewählte Account hat nicht genug Guthaben"
 
-#. Translators: Used as a prefix for transaction reason if a member buys something on behalf of a non-member
-#: views.py:336
-msgid "For extern"
-msgstr "Für Extern"
-
-#. Translators: Used as a prefix for transaction reason if a non-member buys something on behalf of a member
-#: views.py:338
-msgid "For intern"
-msgstr "Für Clubbi"
-
 #: views.py:373
-msgid "Not authorized to deposit to this account"
-msgstr "Nicht berechtigt, in diesen Account einzuzahlen"
+msgid "Not authorized to perform this transaction for this account"
+msgstr "Nicht berechtigt, diese Transaktion durchzuführen"
 
-#: views.py:374
-msgid "Not authorized to withdraw from this account"
-msgstr "Nicht berechtigt, von diesem Account auszuzahlen"
-
-#: views.py:406
+#: views.py:403
 msgid "Transaction already reverted"
 msgstr "Transaktion bereits zurückgezogen"
 
-#: views.py:408
+#: views.py:405
 msgid "Not authorized to revert this transaction"
 msgstr "Nicht berechtigt, diese Transaktion zurückzuziehen"
-

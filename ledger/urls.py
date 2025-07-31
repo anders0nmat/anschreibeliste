@@ -2,10 +2,12 @@ from django.conf import settings
 from django.urls import path, include
 
 from . import views
+from .models import Product
 
 app_name = "ledger"
 urlpatterns = [
     path("", views.IndexView.as_view(), name="main"),
+    path("stock/", views.IndexView.as_view(product_category=Product.ProductCategory.STOCK), name="stock"),
     path("accounts/", views.AccountList.as_view(), name="account_list"),
     path("accounts/new/", views.AccountCreate.as_view(), name="account_create"),
     path("accounts/<pk>/", views.AccountDetail.as_view(), name="account_detail"),

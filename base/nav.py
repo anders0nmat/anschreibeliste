@@ -12,6 +12,7 @@ navbar = [
         'ledger:account_detail',
         'ledger:account_create']),
     NavItem(title=_("Transactions"), paths=['ledger:transaction_list']),
+    NavItem(title=_('Stock'), paths=['ledger:stock']),
 ]
 
 if settings.DEBUG:

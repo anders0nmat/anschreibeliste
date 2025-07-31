@@ -26,9 +26,11 @@ def order_product(account: Account, product: Product, issuer: UserModel, amount=
         raise Account.NotEnoughFunds()
     
     with server_language():
-        reason = product.name
+        reason = product.full_name
         if amount > 1:
             reason = _("{amount}x {product}").format(amount=amount, product=reason)
+        if product.category == Product.ProductCategory.STOCK:
+            reason = _('From Stock: ') + reason
         if invert_member_status:
             if account.member:
                 # Translators: Used as transaction reason if a member buys something on behalf of a non-member
