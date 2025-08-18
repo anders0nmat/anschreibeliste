@@ -1,0 +1,70 @@
+{% extends 'index.html' %}
+
+{% load static %}
+{% load i18n %}
+
+{% block import %}
+    {{ block.super }}
+
+    <link rel="stylesheet" href="{% static 'wiki/wiki.css' %}">
+    <link rel="stylesheet" href="{% static 'wiki/code-highlight.css' %}">
+    <script type="module" src="{% static 'wiki/detail.js' %}"></script>
+{% endblock import %}
+
+{% block content %}
+<aside>
+    <div class="toolbar">
+        <label class="slim transparent vcenter button">
+            <input type="checkbox" id="article-list" style="display: none" autocomplete="off">
+            {% icon "list" %}
+            {% trans "Articles" %}
+        </label>
+        
+        <div class="toolbar-filler" style="flex: 1 0px"></div>
+        {% block toolbar %}
+
+        <a class="transparent vcenter button" href="{% url 'wiki:article_create' %}" id="new-article">
+            {% icon "plus" %}
+            {% trans "New article" %}
+        </a>
+        
+        <a class="slim transparent vcenter button" href="{% url 'wiki:article_update' slug=article.slug|default:slug %}">
+            {% icon "pencil" %}
+            {% trans "Edit" %}
+        </a>
+        
+        <a class="slim transparent vcenter button" href="#top">
+            {% icon "arrow-up" %}
+            {% trans "Back to top" %}
+        </a>
+        {% endblock toolbar %}
+    </div>
+    <ul>
+        {% include 'wiki/snippets/article_tree.html' %}
+    </ul>
+    
+</aside>
+<div id="article-content">
+{% csrf_token %}
+{% block article %}
+    {% if article %}
+    <article id="top">
+        {{ article.content_html|safe }}
+    </article>
+    {% else %}
+    {% block noarticle %}
+    <article>
+        <h1>{% trans "Article does not exist" %}</h1>
+        <p>
+            {% url 'wiki:article_update' slug=slug as create_url %}
+            {% blocktrans with create_url=create_url trimmed %}
+            The article you were looking for does not exist.<br>
+            You can <a href="{{ create_url }}">create this article</a>.
+            {% endblocktrans %}
+        </p>
+    </article>
+    {% endblock noarticle %}
+    {% endif %}
+{% endblock article %}
+</div>
+{% endblock content %}

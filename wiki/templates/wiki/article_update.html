@@ -1,0 +1,171 @@
+{% extends 'wiki/article_detail.html' %}
+
+{% load static %}
+{% load i18n %}
+
+{% block import %}
+    {{ block.super }}
+
+    <link rel="stylesheet" href="{% static 'ledger/pretty-forms.css' %}">
+    <script type="module" src="{% static 'wiki/edit.js' %}"></script>
+{% endblock import %}
+
+{% block toolbar %}
+    <div class="tabs">
+        <label class="vcenter transparent button">
+            <input type="radio" name="tab" data-tab="article" checked>
+            {% icon "file-text" %}
+            {% trans "Article" %}
+        </label>
+        <label class="vcenter transparent button">
+            <input type="radio" name="tab" data-tab="files">
+            {% icon "image" %}
+            {% trans "Files" %}
+        </label>
+    </div>
+    
+    <div class="preview">
+        <span class="caption">{% trans "Preview" %}</span>
+        <label class="vcenter transparent button">
+            <input type="radio" name="preview" data-preview="none" checked>
+            {% icon "square" %}
+        </label>
+        <label class="vcenter transparent button">
+            <input type="radio" name="preview" data-preview="vertical">
+            {% icon "panel-bottom-dashed" %}
+        </label>
+        <label class="vcenter transparent button">
+            <input type="radio" name="preview" data-preview="horizontal">
+            {% icon "panel-right-dashed" %}
+        </label>
+    </div>
+
+    <div class="typing-helpers">
+        <span class="caption">{% trans "Typing" %}</span>
+        {% comment %}Translators: used as a hint on a button{% endcomment %}
+        <label class="vcenter transparent button" title="{% trans "Auto-close brackets &amp; quotation marks" %}">
+            <input type="checkbox" data-typing="brackets" checked>
+            {% icon "parentheses" %}
+        </label>
+        {% comment %}Translators: used as a hint on a button{% endcomment %}
+        <label class="vcenter transparent button" title="{% trans "Keep indentation on new lines" %}">
+            <input type="checkbox" data-typing="indent" checked>
+            {% icon "text-quote" %}
+        </label>
+    </div>
+
+    <button type="submit" class="transparent vcenter button" form="article-form">
+        {% icon "save" %}
+        {% trans "Save" %}
+    </button>
+
+    <details open id="attachment-list">
+        <summary class="transparent vcenter button">
+            {% icon "image" %}
+            {% trans "Files" %}
+            <div style="flex: 1"></div>
+            {% icon "chevron-right" %}
+        </summary>
+        <div class="drop-zone">
+            {% icon "plus" %}
+            {% trans "Drop your files here" %}
+        </div>
+        <ul>
+            <template id="quick-access-file">
+                <li data-name="">
+                    <img src="">
+                    <div>
+                        <span>{% trans "Name" %}</span>
+                        <span></span>
+                    </div>
+                </li>
+            </template>
+            <li class="empty">
+                {% trans "No images available" %}
+            </li>
+            {% for attachment in attachment_list %}
+            
+            {% endfor %}
+        </ul>
+    </details>
+{% endblock toolbar %}
+
+
+{% block article %}
+<form method="POST" id="article-form" autocomplete="off" {% if formset.is_multipart %}enctype="multipart/form-data"{% endif %}>
+    {% csrf_token %}
+    {{ form.order }}
+
+    <style>
+        main:has(input[data-tab="article"]:checked) div[data-tab]:not([data-tab="article"]),
+        main:has(input[data-tab="files"]:checked) div[data-tab]:not([data-tab="files"]) {
+            display: none;
+        }
+    </style>
+
+    <div data-tab="article">
+        <div class="article-edit">
+            <p style="font-size: 70%">
+                {% blocktrans trimmed %}
+                <b>Tip:</b>
+                Articles get grouped together if they have a matching prefix.
+                {% endblocktrans %}
+                <label class="slim transparent vcenter button" id="tip-info">
+                    <input type="checkbox" autocomplete="off" class="css-hide">
+                    {% icon "info" %}
+                </label>
+                <span>
+                    {% blocktrans trimmed %}
+                    E.g. `animal_cat` and `animal_dog` get grouped under a new `animal` article.
+                    {% endblocktrans %}
+                </span>
+            </p>
+            <div class="metadata">
+                <div>
+                    {{ form.slug.label_tag }}
+                    {{ form.slug }}
+                </div>
+                <div>
+                    {{ form.explicit_title.label_tag }}
+                    {{ form.explicit_title }}
+                </div>
+            </div>
+            {{ form.errors }}
+            <div>
+                <div class="drop-zone">
+                    {% icon "plus" %}
+                    {% trans "Drop your files here" %}
+                </div>
+                {{ form.raw_content }}
+            </div>
+        </div>
+        <article hidden class="js-show" id="preview"></article>
+    </div>
+
+    <div data-tab="files" id="attachments">
+        <div class="drop-zone">
+            {% icon "plus" %}
+            {% trans "Drop your files here" %}
+        </div>
+        <ul>
+            <template id="file-upload-template">
+                <li>
+                    {% include 'wiki/snippets/attachment_form.html' with form=formset.empty_form %}
+                </li>
+            </template>
+            {{ formset.management_form }}
+
+            <li hidden></li>
+            {% for form in formset %}
+            <li>
+                {% include 'wiki/snippets/attachment_form.html' %}
+            </li>
+            {% endfor %}
+            <button type="button" class="transparent vcenter button" id="attachment-add">
+                {% icon "plus" %}
+                {% trans "Add file" %}
+            </button>
+        </ul>
+    </div>
+</form>
+{% endblock article %}

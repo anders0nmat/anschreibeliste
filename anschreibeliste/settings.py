@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'daphne',
     'base.apps.BaseConfig',
     'ledger.apps.LedgerConfig',
+    'wiki.apps.WikiConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

@@ -1,0 +1,17 @@
+{% for article in article_tree %}
+<li>
+    {% if article.children %}
+    <details {% if article.current %}open{% endif %}>
+        <summary>
+            {% include 'wiki/snippets/article_item.html' %}
+            {% icon "chevron-right" %}
+        </summary>
+        <ul>
+            {% include 'wiki/snippets/article_tree.html' with article_tree=article.ordered_children %}
+        </ul>
+    </details>
+    {% else %}
+    {% include 'wiki/snippets/article_item.html' %}
+    {% endif %}
+</li>
+{% endfor %}

@@ -1,0 +1,16 @@
+{% extends 'wiki/article_detail.html' %}
+
+{% load i18n %}
+
+{% block noarticle %}
+<article>
+    <h1>{% trans "Wiki" %}</h1>
+    <p>
+        {% url 'wiki:article_update' slug="_start" as update_url %}
+        {% blocktrans with update_url=update_url trimmed %}
+        This is the wiki landing page.<br>
+        You can customize it by <a href="{{ update_url }}">creating a landing page</a>.
+        {% endblocktrans %}
+    </p>
+</article>
+{% endblock noarticle %}

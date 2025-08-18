@@ -1,0 +1,14 @@
+{% if article.slug %}
+<a class="transparent vcenter button {% if article.current %}current{% endif %}" href="{% url 'wiki:article_detail' slug=article.slug %}">
+    {% if article.slug == '_start' %}
+        {% if article.current %}
+            {% icon "house" stroke_width="3" %}
+        {% else %}
+            {% icon "house" %}
+        {% endif %}
+    {% endif %}
+    {{ article.title }}
+</a>
+{% else %}
+<span>{{ article.title }}</span>
+{% endif %}

@@ -1,5 +1,5 @@
 from django import template
-from django.utils.safestring import mark_safe
+from django.utils.safestring import mark_safe, SafeText
 from django.conf import settings
 from zipfile import ZipFile
 import xml.etree.ElementTree as ET
@@ -31,8 +31,7 @@ def get_icon(name: str) -> ET.Element:
         except KeyError:
             raise ValueError(f"Icon '{name}' not found")
 
-@register.simple_tag
-def icon(name: str, size: int = None, **kwargs):
+def icon(name: str, size: int = None, **kwargs) -> SafeText:
     icon = get_icon(name)
     if size:
         kwargs.setdefault("width", str(size))
@@ -44,6 +43,8 @@ def icon(name: str, size: int = None, **kwargs):
     icon.attrib.update({key.replace('_', '-'): value for key, value in kwargs.items()})
 
     return mark_safe(ET.tostring(icon, encoding="unicode", method="html"))
+
+register.simple_tag(icon, name="icon")
 
 @register.simple_tag
 def icon_masks():
