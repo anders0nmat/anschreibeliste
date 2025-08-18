@@ -98,6 +98,22 @@ select {
 	--input-label-selected: color-mix(in srgb, var(--input-border-selected), var(--highlight-color) 40%);
 	--input-fieldset-separator: rgb(77, 77, 77);
 
+    /* Markdown Colors */
+
+    --md-heading-border: var(--separator-color);
+    --md-code-bg: light-dark(rgb(231, 231, 231), rgb(29, 29, 29));
+    --md-blockquote-bg: color-mix(in srgb, var(--secondary-bg-color), transparent 50%);
+    --md-blockquote-border: light-dark(rgb(212, 212, 212), rgb(65, 65, 65));
+    --md-admonition-default: gray;
+    --md-admonition-info: light-dark(rgb(109, 180, 228), rgb(0, 98, 190));
+    --md-admonition-tip: light-dark(rgb(113, 190, 62), rgb(57, 179, 27));
+    --md-admonition-important: light-dark(rgb(147, 105, 224), rgb(120, 60, 216));
+    --md-admonition-warning: light-dark(rgb(214, 185, 18), rgb(170, 135, 19));
+    --md-admonition-caution: var(--negative-color);
+    --md-mark: light-dark(rgba(228, 206, 109, 0.5), rgba(109, 103, 50, 0.5));
+    --md-footnote-highlight: var(--md-mark);
+
+
 	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 	font-size: 0.9rem;
 
@@ -324,6 +340,7 @@ header {
 	padding: 0.5em 0.75em;
 	margin: 0;
 	display: block;
+    text-decoration: none;
 	
 	@media (hover: hover) {
 		&:not([disabled]):hover {

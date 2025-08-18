@@ -1,0 +1,26 @@
+{% load i18n %}
+
+<label>
+    <img src="{{ form.content.value.url }}">
+    {{ form.content }}
+</label>
+<div>
+    {% for field in form.hidden_fields %}
+        {{ field }}
+    {% endfor %}
+    {{ form.name.label_tag }}
+    {{ form.name }}
+    <div class="tools">
+        <label for="{{ form.content.id_for_label }}" class="vcenter transparent button">
+            {% icon "upload" %}
+            {% trans "Upload" %}
+        </label>
+        {% if formset.can_delete %}
+        <label class="vcenter transparent button remove">
+            {{ form.DELETE }}
+            {% icon "trash-2" %}
+            {% trans "Delete" %}
+        </label>
+        {% endif %}
+    </div>
+</div>

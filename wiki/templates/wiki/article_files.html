@@ -1,0 +1,13 @@
+{% extends 'wiki/article_detail.html' %}
+
+{% block article %}
+<ul id="attachments">
+    {% for file in file_list %}
+    <li>
+        {{ file.name }}
+        <img src="{{ file.content.url }}">
+    </li>
+    {% endfor %}
+</ul>
+
+{% endblock article %}
