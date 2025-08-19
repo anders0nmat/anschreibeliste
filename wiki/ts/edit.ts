@@ -371,7 +371,7 @@ textarea.addEventListener('input', (ev: InputEvent) => {
             const lastLine = textarea.value.substring(startOfLine, endOfLine + 1)
             console.log(`Last line is: (${startOfLine}, ${endOfLine}) "${lastLine}"`)
             
-            const re = /^[ \t]+|[ \t]*-[ \t]|[ \t]*\d+\.[ \t]|(?:[ \t]*>[ \t])+/
+            const re = /^(?:[ \t]+|[ \t]*-[ \t]|[ \t]*\d+\.[ \t]|(?:[ \t]*>[ \t])+)/
             const prefix = lastLine.match(re)?.[0]
             if (prefix) {
                 document.execCommand('insertText', false, prefix)

@@ -526,6 +526,10 @@ article {
         }
     }
 
+    p {
+        margin-bottom: 1em;
+    }
+
     ul,
     ol {
         margin-block: 0.5em;

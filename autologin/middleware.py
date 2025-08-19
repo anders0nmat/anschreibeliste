@@ -3,13 +3,15 @@ from typing import Any, Callable
 from django.http import HttpRequest, HttpResponse
 from django.contrib.auth import login
 
-from datetime import timedelta
-
 from .models import AutoLogin
+from .conf import settings
+from logging import getLogger
+
+logger = getLogger('autologin')
 
 class AutoLoginMiddleware:
-    COOKIE_KEY = 'autologin_user'
-    COOKIE_MAX_AGE = timedelta(weeks=12)
+    COOKIE_KEY = settings.COOKIE_KEY
+    COOKIE_MAX_AGE = settings.COOKIE_MAX_AGE
 
     def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
         self.get_response = get_response
@@ -34,6 +36,7 @@ class AutoLoginMiddleware:
         try:
             rule = AutoLogin.objects.get(user=cookie_user, device=device)
             login(request, rule.user)
+            logger.info(f'Successful auto-login user={rule.user} for {device=}')
         except AutoLogin.DoesNotExist:
             return
 

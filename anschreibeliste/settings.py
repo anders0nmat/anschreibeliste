@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'base.apps.BaseConfig',
     'ledger.apps.LedgerConfig',
     'wiki.apps.WikiConfig',
+    'autologin.apps.AutologinConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -62,7 +63,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'base.middleware.AutoLoginMiddleware',
+    'autologin.middleware.AutoLoginMiddleware',
     'django.contrib.auth.middleware.LoginRequiredMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -218,4 +219,3 @@ LEDGER_CONFIG = {
 }
 
 update_recursive(LEDGER_CONFIG, CONFIG.get('ledger', {}))
-

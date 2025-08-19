@@ -40,7 +40,7 @@ msgstr "Warenentnahme"
 
 #: templates/index.html:29
 msgid "Admin-Panel"
-msgstr "Admin-Panem"
+msgstr "Admin-Panel"
 
 #: templates/index.html:37
 msgid "Fullscreen"
