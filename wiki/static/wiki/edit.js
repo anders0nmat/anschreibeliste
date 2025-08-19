@@ -34,6 +34,9 @@ class Attachment {
         }
         this.element.querySelectorAll('input').forEach(e => e.addEventListener('change', ev => {
             this.updateElement();
+            if (e.name.endsWith('-name')) {
+                Attachment.attachments.set(this.name, this);
+            }
         }));
     }
     updateQuickAccess() {
@@ -274,6 +277,11 @@ function _updatePreviewImages(root) {
             if (Attachment.attachments.has(fileName)) {
                 e.src = Attachment.attachments.get(fileName).imageUrl;
             }
+        }
+    });
+    root.querySelectorAll('picture > source').forEach(e => {
+        if (Attachment.attachments.has(e.srcset)) {
+            e.srcset = Attachment.attachments.get(e.srcset).imageUrl;
         }
     });
 }

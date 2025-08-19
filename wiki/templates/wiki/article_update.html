@@ -84,7 +84,13 @@
                 {% trans "No images available" %}
             </li>
             {% for attachment in attachment_list %}
-            
+            <li data-name="{{ attachment.name }}">
+                <img src="{{ attachment.content.url }}">
+                <div>
+                    <span>{% trans "Name" %}</span>
+                    <span>{{ attachment.name }}</span>
+                </div>
+            </li>
             {% endfor %}
         </ul>
     </details>

@@ -45,6 +45,9 @@ class Attachment {
 
         this.element.querySelectorAll<HTMLInputElement>('input').forEach(e => e.addEventListener('change', ev => {
             this.updateElement()
+            if (e.name.endsWith('-name')) {
+                Attachment.attachments.set(this.name, this)
+            }
         }))
     }
 
@@ -331,6 +334,12 @@ function _updatePreviewImages(root: HTMLElement) {
             if (Attachment.attachments.has(fileName)) {
                 e.src = Attachment.attachments.get(fileName)!.imageUrl
             }
+        }
+    })
+
+    root.querySelectorAll<HTMLSourceElement>('picture > source').forEach(e => {        
+        if (Attachment.attachments.has(e.srcset)) {
+            e.srcset = Attachment.attachments.get(e.srcset)!.imageUrl
         }
     })
 }

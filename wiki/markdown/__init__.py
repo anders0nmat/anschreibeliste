@@ -3,6 +3,7 @@ from markdown import markdown
 
 from .base_path import BasePath
 from .admonition import IconAdmonition
+from .adaptive_image import AdaptiveImages
 
 from pymdownx.emoji import to_alt
 
@@ -43,6 +44,7 @@ def render_markdown(content: str, image_base_path='') -> str:
                     'alias': ['danger'],
                 },
             }),
+            AdaptiveImages(),
             'pymdownx.superfences',
             'pymdownx.highlight',
             'pymdownx.saneheaders',
