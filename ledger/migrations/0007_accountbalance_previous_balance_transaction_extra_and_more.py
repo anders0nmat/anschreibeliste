@@ -28,9 +28,9 @@ class Migration(migrations.Migration):
             field=models.CharField(choices=[('DEPT', 'Deposit'), ('WDRW', 'Withdraw'), ('ORDR', 'Order'), ('RVDP', 'Revert-Deposit'), ('RVWD', 'Revert-Withdraw')], default='ORDR', max_length=4, verbose_name='type'),
             preserve_default=False,
         ),
-        migrations.AlterField(
-            model_name='transaction',
-            name='amount',
-            field=ledger.modelfield.PositiveFixedPrecisionField(decimal_places=2, verbose_name='amount'),
-        ),
+        #migrations.AlterField(
+        #    model_name='transaction',
+        #    name='amount',
+        #    field=ledger.modelfield.PositiveFixedPrecisionField(decimal_places=2, verbose_name='amount'),
+        #),
     ]

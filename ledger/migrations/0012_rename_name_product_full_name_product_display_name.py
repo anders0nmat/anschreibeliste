@@ -12,7 +12,7 @@ def assign_display_name(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ledger', '0012_product_category_product_order_number'),
+        ('ledger', '0011_product_category_product_order_number'),
     ]
 
     operations = [

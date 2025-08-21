@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ledger', '0011_delete_page_delete_projectuser_and_more'),
+        ('ledger', '0010_alter_transaction_extra'),
     ]
 
     operations = [
