@@ -45,7 +45,7 @@ msgstr "Verwendungszweck"
 #: views.py:198
 msgctxt "transaction"
 msgid "Type"
-msgstr "Type"
+msgstr "Typ"
 
 #: forms.py:64
 msgid "Start"

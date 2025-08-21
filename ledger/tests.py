@@ -139,10 +139,11 @@ class ProductFormTest(TestCase):
         product_form = modelform_factory(Product, fields='__all__')
 
         form_data = {
-            'name': 'Bierchen',
+            'full_name': 'Bierchen',
             'cost': '2',
             'member_cost': '1',
             'order': 0,
+            'category': 'ATCL',
         }
 
         form = product_form(form_data)
@@ -155,9 +156,10 @@ class ProductFormTest(TestCase):
         product_form = modelform_factory(Product, fields='__all__')
 
         form_data = {
-            'name': 'Bierchen',
+            'full_name': 'Bierchen',
             'cost': '2',
             'order': 0,
+            'category': 'ATCL',
         }
 
         form = product_form(form_data)
@@ -170,13 +172,15 @@ class ProductFormTest(TestCase):
         product_form = modelform_factory(Product, fields='__all__')
         
         form_data = {
-            'name': 'Bierchen',
+            'full_name': 'Bierchen',
             'cost': '2',
             'member_cost': None,
             'order': 0,
+            'category': 'ATCL',
         }
 
         form = product_form(form_data)
+        
         self.assertEqual(form.is_valid(), True)
         instance: Product = form.save()
 
@@ -186,10 +190,11 @@ class ProductFormTest(TestCase):
         product_form = modelform_factory(Product, fields='__all__')
 
         form_data = {
-            'name': 'Bierchen',
+            'full_name': 'Bierchen',
             'cost': '2',
             'member_cost': 'not_a_number',
             'order': 0,
+            'category': 'ATCL',
         }
 
         form = product_form(form_data)

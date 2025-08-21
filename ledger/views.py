@@ -17,8 +17,8 @@ from django.views.generic import ListView, UpdateView, CreateView, TemplateView
 from json import loads, dumps
 from django.utils.timezone import now
 from django.utils.translation import gettext as _, pgettext
-from django.conf import settings
 
+from .conf import settings
 from .decorators import idempotent
 from .eventstream import EventstreamResponse, StreamEvent
 from .mixins import EnableFieldsMixin
@@ -29,6 +29,8 @@ from .utils import server_language
 from .utils.transaction import order_product, custom_transaction as custom_transaction_api, transaction_event
 
 def js_config() -> dict[str, Any]:
+    transaction_timeout: timedelta = settings.TRANSACTION_TIMEOUT
+    submit_overlay: timedelta = settings.SUBMIT_OVERLAY
     return {
         'transaction': {
             'deposit': reverse('ledger:api:deposit'),
@@ -38,8 +40,8 @@ def js_config() -> dict[str, Any]:
             'events': reverse('ledger:api:events'),
             'ping': reverse('ledger:api:ping'),
         },
-        'transaction_timeout': settings.LEDGER_CONFIG['transaction-timeout'],
-        'submit_overlay': settings.LEDGER_CONFIG['submit-overlay'],
+        'transaction_timeout': transaction_timeout.total_seconds() * 1_000,
+        'submit_overlay': submit_overlay.total_seconds() * 1_000,
     }
 
 class AccountList(ListView):
@@ -56,8 +58,8 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
 
     def get_success_url(self) -> str:
         if not self.object.active:
-            return reverse('account_list')
-        return reverse('account_detail', kwargs={'pk': self.object.pk})
+            return reverse('ledger:account_list')
+        return reverse('ledger:account_detail', kwargs={'pk': self.object.pk})
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         PERMS = {
@@ -120,7 +122,7 @@ class AccountCreate(PermissionRequiredMixin, CreateView):
         }
 
     def get_success_url(self) -> str:
-        return reverse('account_detail', args=[self.object.pk])
+        return reverse('ledger:account_detail', args=[self.object.pk])
 
     def get_form_kwargs(self) -> Dict[str, Any]:
         return super().get_form_kwargs() | { 'label_suffix': '' }
@@ -206,7 +208,7 @@ class TransactionList(ListView):
                 f"{transaction.timestamp:%Y-%m-%d}",
                 f"{transaction.timestamp:%H:%M}",
                 transaction.get_type_display(),
-                transaction.formatted_amount,
+                str(transaction.fp_amount),
             ])
         return (headers, values)
 
@@ -242,7 +244,9 @@ class TransactionList(ListView):
             b.seek(0)
             return FileResponse(b, filename=f"Transaction List.csv", as_attachment=True)
 
-        if self.output_format == 'xlsx' and module_exists('openpyxl'):
+        if self.output_format == 'xlsx':
+            if not module_exists('openpyxl'):
+                raise ImproperlyConfigured('Output Format "xlsx" requires "openpyxl" to be installed')
             b = BytesIO()
             self.render_to_xlsx(b, context['object_list'])
             b.seek(0)
@@ -335,7 +339,7 @@ def product_transaction(request: HttpRequest):
             if is_json:
                 return JsonResponse({"transaction_id": transaction.pk})
             else:
-                return HttpResponseRedirect(reverse('main'))
+                return HttpResponseRedirect(reverse('ledger:main'))
         except (Account.NotEnoughFunds, ):
             form.add_error(None, ValidationError(_('The account has not enough money'), code='out_of_money'))
 
@@ -368,7 +372,7 @@ def custom_transaction(request: HttpRequest, action: Literal['deposit', 'withdra
             if is_json:
                 return JsonResponse({"transaction_id": transaction.pk})
             else:
-                return HttpResponseRedirect(reverse('account_detail', kwargs={"pk": transaction.account.pk}))
+                return HttpResponseRedirect(reverse('ledger:account_detail', kwargs={"pk": transaction.account.pk}))
         except PermissionDenied:
             form.add_error(ValidationError(_('Not authorized to perform this transaction for this account'), code='user_permission'))        
         except Account.NotEnoughFunds:
@@ -398,7 +402,7 @@ def revert_transaction(request: HttpRequest, pk: int = None):
             if is_json:
                 return JsonResponse({"transaction_id": transaction.pk})   
             else:
-                return HttpResponseRedirect(reverse('account_detail', args=[pk]) if pk else reverse('main'))    
+                return HttpResponseRedirect(reverse('ledger:account_detail', args=[pk]) if pk else reverse('ledger:main'))    
         except Transaction.AlreadyReverted:
             form.add_error(None, ValidationError(_('Transaction already reverted'), code='already_reverted'))
         except PermissionDenied:

@@ -10,12 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
-from collections.abc import MutableMapping, Mapping
 from pathlib import Path
 import tomllib
-
-with Path("config.toml").open("rb") as f:
-    CONFIG = tomllib.load(f)
+from datetime import timedelta
 
 # Suppose this file lives under
 # 	/path/to/project/files/settings.py
@@ -26,16 +23,23 @@ with Path("config.toml").open("rb") as f:
 # 	BASE_DIR / 'subdir'
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+with (BASE_DIR / "secrets.toml").open("rb") as f:
+    SECRETS = tomllib.load(f)
+
 # Before deploy, check https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = CONFIG['secret-key']
-
+SECRET_KEY = SECRETS['SECRET_KEY']
+if not SECRET_KEY:
+    raise ValueError('No secret key specified. Did you forget to set it in your `secrets.toml`?')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = CONFIG['debug']
+DEBUG = True
 
-ALLOWED_HOSTS = CONFIG['allowed-hosts']
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+]
 
 
 # Application definition
@@ -100,7 +104,10 @@ ASGI_APPLICATION = 'anschreibeliste.asgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {key.upper(): value for key, value in CONFIG['database'].items()},
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    },
 }
 
 
@@ -161,61 +168,12 @@ LOGOUT_REDIRECT_URL = "/users/login/?next=/"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Used for custom configs, see below
-def update_recursive(d: MutableMapping, u: Mapping):
-    """
-    Updates a dict recursively.
-
-    ```
-    update_recursive({'a': 1}, {'b': 2})
-    # {'a': 1, 'b': 2}
-    
-    update_recursive({'a': 1}, {'a': 2})
-    # {'a': 2}
-    
-    update_recursive({'a': 1}, {'a': {'c': 5}})
-    # {'a': {'c': 5}}
-    
-    update_recursive({'a': {'b': 1, 'c': 3}}, {'a': {'c': 5}})
-    # {'a': {'b': 1, 'c': 5}}
-    ```
-    """
-    if not isinstance(d, MutableMapping):
-        return u
-    for k, v in u.items():
-        if isinstance(v, Mapping):
-            d[k] = update_recursive(d.get(k, {}), v)
-        else:
-            d[k] = v
-    return d
-
-
-# ========== Ledger ==========
-#
-# ? How to add new settings
-# Add a new key-value-pair to the `LEDGER_CONFIG`. This is used as the default value.
-# ```
-# LEDGER_CONFIG = {
-#   ...
-#   'ip-address': '0.0.0.0',
-# }
-# ```
-#
-# ? How to use these settings
-# ```
-# from django.conf import settings
-# config = settings.LEDGER_CONFIG
-# ip_address = config['ip-address']  
-# ```
-
-LEDGER_CONFIG = {
-    'transaction-timeout': 10_000,
-    'submit-overlay': 1_500,
-    'banking': None,
-    'transaction': {
-        'revert-threshold': 6,
-        'timejump-threshold': 12,
-    }
+LEDGER = {
+    'BANKING': {
+        'name': 'Ich und nur ich',
+        'iban': 'DE12 3456 7890 1234 5678 90',
+        'invoice-text': 'For mee from {name}'
+    },
+    'TRANSACTION_TIMEOUT': timedelta(seconds=30),
 }
 
-update_recursive(LEDGER_CONFIG, CONFIG.get('ledger', {}))

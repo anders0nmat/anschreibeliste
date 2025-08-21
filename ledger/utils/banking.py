@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 import re
-from django.conf import settings
+from ..conf import settings
 from typing import Optional
 
 import qrcode
@@ -95,7 +95,7 @@ class EPCCode:
 
     @classmethod
     def from_config(cls, name: str) -> Optional["EPCCode"]:
-        config = settings.LEDGER_CONFIG['banking']
+        config = settings.BANKING
         if config:
             return EPCCode(
                 name=config['name'],

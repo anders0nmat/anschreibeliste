@@ -6,12 +6,12 @@ from .modelfield import PositiveFixedPrecisionField, FixedPrecisionField
 from datetime import timedelta
 from django.core.exceptions import PermissionDenied
 from django.utils.formats import get_format
-from django.utils.translation import gettext, override as override_language, gettext_lazy as _, pgettext_lazy
-from django.conf import settings
+from django.utils.translation import gettext, gettext_lazy as _, pgettext_lazy
+from .conf import settings
 from django.contrib.admin import display
 from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth import get_user_model
-from .utils import fpint
+from .utils import fpint, server_language
 # Create your models here.
 # TODO : Better terminologiy regarding money:
 # TODO : User A has amount k and additionally is allowed to go amount n into debt
@@ -133,10 +133,9 @@ class Account(models.Model):
     
     @transaction.atomic
     def close_balance(self):
-        # TODO : New closing balance only if things changed
-        # got_transactions = self.transactions.filter(closing_balance=None).exists()
-        closing_balance = AccountBalance.objects.create(account=self, closing_balance=self.current_balance)
-        self.transactions.filter(closing_balance=None).update(closing_balance=closing_balance)
+        if self.transactions.filter(closing_balance=None).exists():
+            closing_balance = AccountBalance.objects.create(account=self, closing_balance=self.current_balance)
+            self.transactions.filter(closing_balance=None).update(closing_balance=closing_balance)
 
 class AccountBalance(models.Model):
     account = models.ForeignKey(Account, verbose_name=_('account'), on_delete=models.CASCADE, related_name='balances')
@@ -152,7 +151,6 @@ class AccountBalance(models.Model):
     def __str__(self) -> str:
         return gettext("{account}: {closing_balance} at {timestamp}").format(account=self.account, closing_balance=self.closing_balance, timestamp=self.timestamp)
 
-config = settings.LEDGER_CONFIG['transaction']
 class Transaction(models.Model):
     class AlreadyReverted(Exception): pass
     class TransactionType(models.TextChoices):
@@ -166,8 +164,8 @@ class Transaction(models.Model):
         def withdraws(cls) -> set["Transaction.TransactionType"]:
             return {cls.ORDER, cls.WITHDRAW, cls.REVERT_WITHDRAW}
 
-    revert_threshold = timedelta(hours=config['revert-threshold'])
-    timejump_threshold = timedelta(hours=config['timejump-threshold'])
+    revert_threshold = settings.REVERT_THRESHOLD
+    timejump_threshold = settings.TIMEJUMP_THRESHOLD
     objects: TransactionManager = TransactionQuerySet.as_manager()
 
     closing_balance = models.ForeignKey(AccountBalance, verbose_name=_('closing balance'), on_delete=models.CASCADE, related_name='transactions', null=True, default=None, blank=True)
@@ -235,7 +233,8 @@ class Transaction(models.Model):
         if not self.can_revert:
             raise Transaction.AlreadyReverted()
         
-        with override_language(settings.LANGUAGE_CODE):
+        
+        with server_language():
             revert_prefix = gettext('Canceled')
 
         revert_type = self.TransactionType.REVERT_DEPOSIT if self.type in self.TransactionType.withdraws() else self.TransactionType.REVERT_WITHDRAW

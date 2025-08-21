@@ -125,6 +125,7 @@ main {
     & input[type="date"] {
         border: thin solid var(--separator-color);
         background: none;
+        color: currentColor;
 
         padding: 0.25em 0.5em;
         flex-grow: 1;
