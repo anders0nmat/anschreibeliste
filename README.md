@@ -32,6 +32,8 @@
           - Language
           - App-specific settings (e.g. transaction timeout)
     2. Configure your secrets in the `secrets.toml` file
+       1. Rename the `secrets-template.toml` to `secrets.toml`
+       2. Configure as necessary
 3.  Initial setup
     1. Update/Create database
         ```bash
