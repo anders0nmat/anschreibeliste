@@ -142,4 +142,4 @@ GitHub.sublime-settings
 
 # Project Config #
 
-config.toml
+secrets.toml
