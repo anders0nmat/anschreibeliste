@@ -283,7 +283,8 @@ class IndexView(TemplateView):
             elif t.timestamp > old_threshold:
                 transactions.append(t)
             else:
-                return transactions   
+                break
+        return transactions 
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         return super().get_context_data(**kwargs) | {
