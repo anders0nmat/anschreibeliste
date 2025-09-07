@@ -309,7 +309,7 @@ class Product(models.Model):
     def clean(self) -> None:
         if self.member_cost is None:
             self.member_cost = self.cost
-        if self.display_name is None:
+        if not self.display_name:
             self.display_name = self.full_name
 
 # https://stackoverflow.com/questions/29688982/derived-account-balance-vs-stored-account-balance-for-a-simple-bank-account/29713230#29713230

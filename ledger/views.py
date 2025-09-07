@@ -1,4 +1,4 @@
-from typing import Any, Dict, Literal, Callable
+from typing import Any, Dict, Literal, Callable, TypeVar
 from http import HTTPStatus
 from io import BytesIO, TextIOWrapper
 import csv
@@ -180,7 +180,8 @@ class TransactionList(ListView):
             'filters': TransactionListFilter(self.request.GET, label_suffix=''),
         }
     
-    def get_filter[T](self, query_name: str, convert: Callable[[str], T] = lambda x: x) -> list[T]:
+    T = TypeVar('T')
+    def get_filter(self, query_name: str, convert: Callable[[str], T] = lambda x: x) -> list[T]:
         def convert_skip_exception(value):
             try:
                 return convert(value)
