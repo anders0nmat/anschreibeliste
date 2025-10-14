@@ -418,13 +418,13 @@ def revert_transaction(request: HttpRequest, pk: int = None):
 def transaction_events(request: HttpRequest):
     initial_event = None
 
-    latest_client_transaction_id = request.GET.get('last_transaction', None)
+    latest_client_transaction_id = request.headers.get('Last-Event-ID', None) or request.GET.get('last_transaction', None)
     if latest_client_transaction_id:
         try:
             latest_client_transaction_id = int(latest_client_transaction_id)
             last_client_transaction: Transaction = Transaction.objects.get(pk=latest_client_transaction_id)
             missing_transactions: list[Transaction] = Transaction.objects.order_by('-timestamp').filter(timestamp__gt=last_client_transaction.timestamp)
-            initial_event = [StreamEvent('create', dumps(transaction_event(transaction))) for transaction in missing_transactions]
+            initial_event = [StreamEvent('create', dumps(transaction_event(transaction)), id=transaction.pk) for transaction in missing_transactions]
         except (ValueError, Transaction.DoesNotExist):
             pass
 

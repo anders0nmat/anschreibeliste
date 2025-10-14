@@ -12,5 +12,5 @@ def notify_clients(instance: Transaction, created: bool, **_):
 	
 	data = transaction_event(instance)
 
-	send_event("transaction", "create", data)
+	send_event("transaction", "create", data, id=instance.pk)
 

@@ -4,7 +4,7 @@
 	<span class="separator before">{{ transaction.timestamp|date:"l, d. F Y H:i" }}</span>
 {% endif %}
 
-<li class="transaction" data-transaction-id="{{ transaction.pk }}">
+<li class="transaction" data-transaction-id>
 	<span class="account">{{ transaction.account.display_name }}</span>
 	<span class="reason">{{ transaction.reason }}</span>
     {{ transaction.fp_amount|default:0|money }}
