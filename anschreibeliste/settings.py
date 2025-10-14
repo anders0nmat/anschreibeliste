@@ -11,8 +11,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-import tomllib
-from datetime import timedelta
 
 # Suppose this file lives under
 # 	/path/to/project/files/settings.py
@@ -23,18 +21,13 @@ from datetime import timedelta
 # 	BASE_DIR / 'subdir'
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-with (BASE_DIR / "secrets.toml").open("rb") as f:
-    SECRETS = tomllib.load(f)
-
 # Before deploy, check https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = SECRETS['SECRET_KEY']
-if not SECRET_KEY:
-    raise ValueError('No secret key specified. Did you forget to set it in your `secrets.toml`?')
+SECRET_KEY = ''
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
@@ -168,12 +161,7 @@ LOGOUT_REDIRECT_URL = "/users/login/?next=/"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LEDGER = {
-    'BANKING': {
-        'name': 'Ich und nur ich',
-        'iban': 'DE12 3456 7890 1234 5678 90',
-        'invoice-text': 'For mee from {name}'
-    },
-    'TRANSACTION_TIMEOUT': timedelta(seconds=30),
-}
-
+try:
+    from .local_settings import *
+except ImportError:
+    pass
