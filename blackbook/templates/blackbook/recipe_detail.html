@@ -1,0 +1,73 @@
+{% extends 'index.html' %}
+
+{% load static %}
+{% load ledger %}
+
+{% block import %}
+    {{ block.super }}
+
+    <link rel="stylesheet" href="{% static 'blackbook/recipe.css' %}">
+{% endblock import %}
+
+{% block content %}
+
+<article>
+    <h2>{{ recipe.name }}</h2>
+    <p>
+        {{ recipe.description }}
+    </p>
+
+    <div class="traits">
+        {% icon recipe.serving_glass.name|lower %}
+        {% icon recipe.method.name|lower %}
+
+        <div style="flex:1"></div>
+
+        {% if recipe.product is not None %}
+        {{ recipe.product.cost|money }}
+        {{ recipe.product.member_cost|money }}
+        {% endif %}
+    </div>
+
+    <ol>
+        {% for step in recipe.steps.all %}
+        <li>
+            {% if step.unit is not None %}
+                <span class="amount">{{ step.formatted_amount }}</span>
+            {% endif %}
+            {% if step.ingredient is not None %}
+                <span class="ingredient {{ step.ingredient.category.name|default_if_none:""|lower }}">{{ step.ingredient.name }}</span>
+            {% endif %}
+            <span class="instruction">{{ step.instruction }}</span>
+        </li>
+        
+        {% endfor %}
+
+        {% comment %} <li>
+            <span class="ingredient">Eiswürfel</span>
+        </li>
+        <li>
+            <span class="amount">4 cl</span> <span class="ingredient liqueur">Amaretto</span>
+        </li>
+        <li>
+            <span class="amount">2 cl</span> <span class="ingredient additive">Sahne</span>
+        </li>
+        <li>
+            <span class="amount">2 cl</span> <span class="ingredient sirup">Kokossirup</span>
+        </li>
+        <li>
+            <span class="amount">1 cl</span> <span class="ingredient sirup">Grenadine</span> <span class="instruction">floaten</span>
+        </li>
+        <li>
+            <span class="amount">3 Teile</span> <span class="ingredient juice">Mangosaft</span>
+        </li>
+        <li>
+            <span class="amount">2 Teile</span> <span class="ingredient juice">Ananassaft</span>
+        </li>
+        <li>
+            <span class="instruction">Shaken</span>
+        </li> {% endcomment %}
+    </ol>
+</article>
+
+{% endblock content %}

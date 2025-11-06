@@ -1,0 +1,126 @@
+article {
+    margin-inline: auto;
+    margin-block: 1em;
+    padding: 1em 2em;
+    max-width: 50ch;
+
+    background-color: var(--secondary-bg-color);
+
+    & .traits {
+        margin-block: 1em 0.5em;
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+        padding-inline: 0.5em;
+
+        & .lucide {
+            width: 1.75em;
+            height: 1.75em;
+            stroke-width: 1.5px;
+        }
+    }
+
+    & .money + .money {
+        color: var(--secondary-text-color);
+    }
+}
+
+.toolbar {
+    padding: 0.5em;
+    display: flex;
+    justify-content: stretch;
+
+    & input {
+        width: 100%;
+    }
+}
+
+ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    display: grid;
+    grid-template-columns: max-content max-content auto;
+    column-gap: 1em;
+
+    li {
+        display: grid;
+        grid-template-columns: subgrid;
+        grid-column: 1 / -1;
+        padding: 0.25em 2em;
+
+        &:nth-of-type(odd) {
+            background-color: var(--primary-bg-color);
+        }
+
+        .amount {
+            grid-column: 1;
+            justify-self: end;
+
+            font-variant: small-caps;
+            color: var(--secondary-text-color);
+        }
+
+        .ingredient {
+            grid-column: 2;
+
+            &.liqueur {
+                color: palevioletred;
+            }
+
+            &.additive {
+                color: palegreen;
+            }
+
+            &.sirup {
+                color: violet;
+            }
+
+            &.juice {
+                color: palegoldenrod;
+            }
+        }
+
+        .instruction {
+            grid-column: 2;
+
+            font-style: italic;
+            color: var(--secondary-text-color);
+        }
+
+        .ingredient + .instruction {
+            grid-column: 3;
+        }
+    }
+}
+
+#recipes {
+    display: flex;
+    flex-flow: column;
+    padding: 0.5em;
+
+    h3 {
+        font-weight: normal;
+        font-variant: small-caps;
+        margin-block: 1em 0.5em;
+    }
+
+    ul {
+        display: grid;
+        padding: 0;
+        margin: 0;
+        gap: 0.5em;
+        grid-template-columns: repeat(auto-fill, 14ch);
+        grid-auto-rows: calc(2lh + 0.25em * 2);
+        list-style: none;
+
+        .item {
+            background-color: var(--secondary-bg-color);
+            padding: 0.25em;
+
+            color: currentColor;
+            text-decoration: none;
+        }
+    }
+}

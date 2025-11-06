@@ -24,6 +24,7 @@ urlpatterns = [
     path("", include("ledger.urls")),
     path("wiki/", include("wiki.urls")),
     path("users/", include("django.contrib.auth.urls")),
+    path("recipes/", include("blackbook.urls")),
 ]
 
 # Static file serving during development

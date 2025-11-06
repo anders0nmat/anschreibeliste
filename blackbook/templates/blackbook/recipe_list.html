@@ -1,0 +1,45 @@
+{% extends 'index.html' %}
+
+{% load static %}
+{% load ledger %}
+
+{% block import %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'blackbook/recipe.css' %}">
+
+    <script type="module" src="{% static 'blackbook/recipe.js' %}"></script>
+{% endblock import %}
+
+{% block content %}
+
+<div class="toolbar">
+    <input type="search">
+
+</div>
+
+<div id="recipes">
+    {% regroup recipe_list by group as item_groups %}
+    {% ensure_group_leading item_groups grouper=None as item_group %}
+
+    {% for group, items in item_groups %}
+    <div>
+        {% if group is not None %}
+        <h3>{{ group.name }}</h3>
+        {% endif %}
+        <ul>
+            <a class="item" href="#">
+                {% icon "plus" %}
+            </a>
+            {% for recipe in items %}
+            <a class="item" href="{% url 'blackbook:recipe' recipe.pk %}">
+                <h4>
+                    {{ recipe.name }}
+                </h4>
+            </a>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock content %}

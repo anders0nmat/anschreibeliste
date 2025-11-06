@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'base.apps.BaseConfig',
     'ledger.apps.LedgerConfig',
     'wiki.apps.WikiConfig',
+    'blackbook.apps.BlackbookConfig',
     'autologin.apps.AutologinConfig',
     'django.contrib.admin',
     'django.contrib.auth',

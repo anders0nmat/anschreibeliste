@@ -16,4 +16,5 @@ navbar = [
 if settings.DEBUG:
     navbar += [
         NavItem(title="Test", paths=['ledger:test_detail'], permissions=('view_transactions',)),
+        NavItem(title="Recipes", paths=['blackbook:recipes', 'blackbook:recipe'])
 	]

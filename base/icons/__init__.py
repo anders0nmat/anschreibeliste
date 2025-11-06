@@ -1,6 +1,7 @@
 from django import template
 from django.utils.safestring import mark_safe, SafeText
 from django.conf import settings
+from django.apps import apps
 from zipfile import ZipFile
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -14,12 +15,16 @@ default_class = "lucide"
 def get_icon(name: str) -> ET.Element:
     module_dir = Path(__file__).parent
 
-    path = module_dir / f"{name}.svg"
-    if path.is_file():
-        root = ET.parse(path).getroot()
-        for node in root.iter():
-            node.tag = node.tag.removeprefix('{http://www.w3.org/2000/svg}')
-        return root
+    app_paths = (Path(config.path) / 'icons' for config in apps.get_app_configs())
+    app_paths = [path for path in app_paths if path.is_dir()]
+
+    for app_icons in app_paths:
+        path = app_icons / f"{name}.svg"
+        if path.is_file():
+            root = ET.parse(path).getroot()
+            for node in root.iter():
+                node.tag = node.tag.removeprefix('{http://www.w3.org/2000/svg}')
+            return root
 
     with ZipFile(module_dir / "icons.zip") as archive:
         try:
@@ -44,7 +49,12 @@ def icon(name: str, size: int = None, **kwargs) -> SafeText:
 
     return mark_safe(ET.tostring(icon, encoding="unicode", method="html"))
 
-register.simple_tag(icon, name="icon")
+@register.simple_tag(name="icon")
+def tag_icon(name: str, size: int = None, **kwargs) -> SafeText:
+    try:
+        return icon(name=name, size=size, **kwargs)
+    except:
+        return ''
 
 @register.simple_tag
 def icon_masks():
