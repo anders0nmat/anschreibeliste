@@ -313,6 +313,13 @@ header {
 	& #user-menu-toggle svg {
 		margin-right: 0.25em;
 	}
+
+    & #session-id {
+        font-size: 75%;
+        color: var(--secondary-text-color);
+        text-align: right;
+        font-family: monospace;
+    }
 }
 
 

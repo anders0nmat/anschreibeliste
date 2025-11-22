@@ -47,6 +47,7 @@
 					</button>
 				</form>
 			</li>
+            <li id="session-id">{{ request.session.session_key|slice:":5" }}</li>
 		</ul>
 
 		
