@@ -1,0 +1,54 @@
+{% extends 'index.html' %}
+
+{% load static %}
+{% load ledger %}
+
+{% block import %}
+    {{ block.super }}
+
+    <link rel="stylesheet" href="{% static 'blackbook/recipe.css' %}">
+    <script type="module" src="{% static 'blackbook/edit.js' %}"></script>
+{% endblock import %}
+
+{% block content %}
+
+<article>
+    <form method="POST">
+        {% csrf_token %}
+        <div class="title">
+            <h2>{{ form.name }}</h2>
+            <div style="flex:1 1em"></div>
+            <button type="submit" class="slim transparent vcenter button">
+                {% icon "save" %}
+            </button>
+        </div>
+        <p>
+            {{ form.description }}
+        </p>
+        <div class="traits">
+            {{ form.serving_glass }}
+            {{ form.method }}
+            <div style="flex:1"></div>
+            {{ form.product }}
+        </div>
+        <ol>
+            <template id="step-template">
+                {% include 'blackbook/snippets/recipe_step.html' with form=formset.empty_form %}
+            </template>
+            {{ formset.management_form }}
+            <li>
+                <span>Menge</span>
+                <span>Zutat</span>
+                <span>Anweisung</span>
+            </li>
+            {% for step_form in formset %}
+            {% include 'blackbook/snippets/recipe_step.html' with form=step_form %}
+            {% endfor %}
+            <button type="button" id="add-step" class="transparent center vcenter button">
+                {% icon "plus" %}
+            </button>
+        </ol>
+    </form>
+</article>
+
+{% endblock content %}

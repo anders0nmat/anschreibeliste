@@ -12,11 +12,6 @@
 
 {% block content %}
 
-<div class="toolbar">
-    <input type="search">
-
-</div>
-
 <div id="recipes">
     {% regroup recipe_list by group as item_groups %}
     {% ensure_group_leading item_groups grouper=None as item_group %}
@@ -27,7 +22,7 @@
         <h3>{{ group.name }}</h3>
         {% endif %}
         <ul>
-            <a class="item" href="#">
+            <a class="item new" href="#">
                 {% icon "plus" %}
             </a>
             {% for recipe in items %}

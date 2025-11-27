@@ -1,30 +1,40 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.urls import reverse
 
 from ledger.models import Product
 
 # Create your models here.
 
-class ServingGlass(models.Model):
+class NamedModel(models.Model):
     name = models.CharField(verbose_name=_('name'), max_length=255)
+
+    class Meta:
+        abstract = True
 
     def __str__(self) -> str:
         return self.name
 
-class PrepMethod(models.Model):
-    name = models.CharField(verbose_name=_('name'), max_length=255)
+class ServingGlass(NamedModel): pass
+class PrepMethod(NamedModel): pass
+class IngredientCategory(NamedModel): pass
 
-    def __str__(self) -> str:
-        return self.name
+class Ingredient(NamedModel):
+    category = models.ForeignKey(IngredientCategory, on_delete=models.SET_NULL, null=True, blank=True, default=None)
 
-class RecipeGroup(models.Model):
-    name = models.CharField(verbose_name=_('name'), max_length=255)
+class RecipeGroup(NamedModel):
+    order = models.PositiveIntegerField(
+        verbose_name=_('order'),
+        default=0,
+        blank=False,
+        null=False,
+        db_index=True
+    )
 
-    def __str__(self) -> str:
-        return self.name
+    class Meta:
+        ordering = ['order']
 
-class Recipe(models.Model):
-    name = models.CharField(verbose_name=_('name'), max_length=255)
+class Recipe(NamedModel):
     description = models.TextField(verbose_name=_('description'), blank=True)
 
     group = models.ForeignKey(RecipeGroup, on_delete=models.SET_NULL, null=True, blank=True, default=None)
@@ -35,32 +45,12 @@ class Recipe(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True, default=None)
 
     steps: models.QuerySet["RecipeStep"]
-
-    def __str__(self) -> str:
-        return self.name
     
     class Meta:
-        ordering = ['group', 'name']
+        ordering = ['group__order', 'name']
 
-class Unit(models.Model):
-    name = models.CharField(verbose_name=_('name'), max_length=255)
-    format = models.CharField(verbose_name=_('format'), max_length=255)
-
-    def __str__(self) -> str:
-        return self.name
-
-class IngredientCategory(models.Model):
-    name = models.CharField(verbose_name=_('name'), max_length=255)
-
-    def __str__(self) -> str:
-        return self.name
-
-class Ingredient(models.Model):
-    name = models.CharField(verbose_name=_('name'), max_length=255)
-    category = models.ForeignKey(IngredientCategory, on_delete=models.SET_NULL, null=True, blank=True, default=None)
-
-    def __str__(self) -> str:
-        return self.name
+    def get_absolute_url(self) -> str:
+        return reverse('blackbook:recipe', kwargs={'pk': self.pk})
 
 class RecipeStep(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='steps')
@@ -72,8 +62,7 @@ class RecipeStep(models.Model):
         db_index=True
     )
 
-    amount = models.DecimalField(verbose_name=_('amount'), max_digits=5, decimal_places=2, null=True, blank=True, default=None)
-    unit = models.ForeignKey(Unit, on_delete=models.CASCADE, null=True, blank=True, default=None)
+    amount = models.CharField(verbose_name=_('amount'), max_length=64, blank=True, default="")
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE, null=True, blank=True, default=None)
     instruction = models.CharField(verbose_name=_('instruction'), max_length=255, blank=True)
 
@@ -83,30 +72,12 @@ class RecipeStep(models.Model):
             models.Index(models.F('recipe'), 'order', name="idx_recipe_order")
         ]
 
-
-    def formatted_amount(self) -> str:
-        if self.amount is not None:
-            amount = str(self.amount).strip('0')
-            if amount.startswith('.'):
-                amount = '0' + amount
-            if amount.endswith('.'):
-                amount = amount[:-1]
-            if amount == '':
-                amount = '0'
-        else:
-            amount = ''
-
-        return self.unit.format.format(amount=amount)
-
     def __str__(self) -> str:
-        s = f"{self.recipe.name} > ({self.order})"
+        s = f"{self.recipe.name}.{self.order}:"
 
-        if self.unit is not None:
-            amount = str(self.amount) if self.amount is not None else ''
-            s += f" {self.unit.format.format(amount=amount)}"
-        if self.ingredient is not None:
-            s += f" {self.ingredient.name}"
+        if self.ingredient:
+            s += f" {self.amount} {self.ingredient.name}"
 
         s += f" {self.instruction}"
-        return s
+        return s.strip()
 

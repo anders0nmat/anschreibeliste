@@ -25,6 +25,16 @@ article {
     }
 }
 
+.title {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+}
+
+main {
+    overflow-y: auto;
+}
+
 .toolbar {
     padding: 0.5em;
     display: flex;
@@ -122,5 +132,78 @@ ol {
             color: currentColor;
             text-decoration: none;
         }
+
+        .item.new {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 125%;
+            background-color: transparent;
+
+            &:hover {
+                background-color: var(--secondary-bg-color);
+            }
+        }
+    }
+}
+
+form {
+    input, textarea, select {
+        background-color: transparent;
+        border: thin solid var(--separator-color);
+        color: currentColor;
+        width: 100%;
+        padding: 0.25em 0.5em;
+    }
+
+    input[name$='-amount'] {
+        width: 8ch;
+    }
+
+    textarea {
+        resize: vertical;
+    }
+
+    li {
+        padding-inline: 0.5em;
+    }
+
+    li:first-of-type {
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .amount input {
+        text-align: right;
+    }
+
+    ol {
+        column-gap: 0.5em;
+    }
+
+    ol :is(input, select) {
+        border: none;
+    }
+
+    h2 input {
+        padding-block: 0;
+    }
+
+    .title {
+
+        margin-bottom: 0.5em;
+    }
+
+    .traits {
+        padding-inline: 0;
+    }
+
+    article:has(&) {
+        padding-inline: 1em;
+    }
+
+    #add-step {
+        grid-column: 1 / -1;
+        margin-block: 0.5em;
     }
 }

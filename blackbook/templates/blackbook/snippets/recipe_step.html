@@ -1,0 +1,11 @@
+<li>
+    <div draggable="true">
+        {% icon "chevron-up" %}
+    </div>
+    {{ form.id }}
+    {{ form.recipe }}
+    {{ form.order.as_hidden }}
+    <span class="amount">{{ form.amount }}</span>   
+    <span class="ingredient">{{ form.ingredient }}</span>
+    <span class="instruction">{{ form.instruction }}</span>
+</li>
