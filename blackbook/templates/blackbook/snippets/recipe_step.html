@@ -1,11 +1,13 @@
-<li>
-    <div draggable="true">
-        {% icon "chevron-up" %}
-    </div>
+<li draggable="true">
+    {% icon "grip-vertical" class="drag-indicator"%}
     {{ form.id }}
     {{ form.recipe }}
     {{ form.order.as_hidden }}
     <span class="amount">{{ form.amount }}</span>   
     <span class="ingredient">{{ form.ingredient }}</span>
     <span class="instruction">{{ form.instruction }}</span>
+    <label class="delete">
+        {{ form.DELETE }}
+        {% icon "trash-2" %}
+    </label>
 </li>

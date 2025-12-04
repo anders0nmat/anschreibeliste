@@ -31,12 +31,13 @@
             <div style="flex:1"></div>
             {{ form.product }}
         </div>
-        <ol>
+        <ol id="steps">
             <template id="step-template">
                 {% include 'blackbook/snippets/recipe_step.html' with form=formset.empty_form %}
             </template>
             {{ formset.management_form }}
             <li>
+                <span></span>
                 <span>Menge</span>
                 <span>Zutat</span>
                 <span>Anweisung</span>

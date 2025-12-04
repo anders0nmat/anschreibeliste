@@ -65,7 +65,7 @@ ol {
         }
 
         .amount {
-            grid-column: 1;
+            /* grid-column: 1; */
             justify-self: end;
 
             font-variant: small-caps;
@@ -73,7 +73,7 @@ ol {
         }
 
         .ingredient {
-            grid-column: 2;
+            /* grid-column: 2; */
 
             &.liqueur {
                 color: palevioletred;
@@ -93,14 +93,14 @@ ol {
         }
 
         .instruction {
-            grid-column: 2;
+            /* grid-column: 2; */
 
             font-style: italic;
             color: var(--secondary-text-color);
         }
 
         .ingredient + .instruction {
-            grid-column: 3;
+            /* grid-column: 3; */
         }
     }
 }
@@ -168,6 +168,10 @@ form {
         padding-inline: 0.5em;
     }
 
+    li#dragged-element {
+        opacity: 0.2;
+    }
+
     li:first-of-type {
         text-align: center;
         font-weight: bold;
@@ -179,6 +183,7 @@ form {
 
     ol {
         column-gap: 0.5em;
+        grid-template-columns: max-content max-content max-content auto max-content;
     }
 
     ol :is(input, select) {
@@ -206,4 +211,28 @@ form {
         grid-column: 1 / -1;
         margin-block: 0.5em;
     }
+
+    .delete {
+        display: contents;
+
+        & svg {
+            align-self: center;
+        }
+
+        & input {
+            display: none;
+
+            li:has(&:checked) {
+                background-color: color-mix(in srgb, var(--negative-color), transparent 80%);
+            }
+        }
+    }
 }
+
+.drag-indicator {
+    user-select: none;
+    -webkit-user-select: none;
+    justify-self: center;
+    align-self: center;
+}
+
