@@ -98,7 +98,7 @@ export class Transaction extends HTMLWrapper {
             }
         });
     }
-    static async listen(ontransaction, reconnect = false) {
+    static async listen(ontransaction, reconnect = false, account) {
         const url = new URL(this.api.events, document.location.origin);
         this.eventsource_handlers.ontransaction = ontransaction;
         const all_transaction_ids = this.all().map(t => parseInt(t.id));
@@ -122,6 +122,10 @@ export class Transaction extends HTMLWrapper {
                 confirmed_transaction.applyServerEvent(data);
             }
             else {
+                if (account !== undefined && data.account != account) {
+                    // Ignore transactions by other accounts than the one specified
+                    return;
+                }
                 const new_transaction = Transaction.create();
                 new_transaction.applyServerEvent(data);
                 new_transaction.status?.element.remove();

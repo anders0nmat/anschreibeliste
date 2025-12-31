@@ -34,6 +34,7 @@ withdraw_all?.addEventListener('click', _ => {
     const newValue = Math.max(parseInt(selected_account.dataset.balance ?? '0'), 0).toString().padStart(3, '0');
     input.value = newValue.slice(0, -2) + decimalSeparator + newValue.slice(-2);
 });
+const account_id = parseInt(document.getElementById('withdraw-transaction').elements.namedItem('account').value);
 Transaction.all(); // Register undo buttons
 Transaction.listen(event => {
     const account = Account.byId(event.account.toString());
@@ -42,7 +43,7 @@ Transaction.listen(event => {
     }
     account.balance = event.balance;
     account.disabled = account.budget <= 0;
-}, false);
+}, false, account_id);
 /* ===== Progressive Enhancement ===== */
 // Submit without reload
 function submit_custom_transaction(action) {

@@ -150,7 +150,7 @@ class AccountCreate(PermissionRequiredMixin, CreateView):
         return response
 
 class TransactionList(ListView):
-    model = Transaction
+    queryset = Transaction.objects.filter(closing_balance=None)
     output_format = 'html'
 
     def get_queryset(self) -> QuerySet[Any]:

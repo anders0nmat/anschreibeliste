@@ -238,6 +238,10 @@ header {
 			text-decoration: none;
 			color: var(--secondary-text-color);
 		}
+
+        & h1 a {
+            color: var(--primary-text-color);
+        }
 	}
 }
 

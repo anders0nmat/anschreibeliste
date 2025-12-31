@@ -44,13 +44,15 @@ withdraw_all?.addEventListener('click', _ => {
 	input.value = newValue.slice(0, -2) + decimalSeparator + newValue.slice(-2)
 })
 
+const account_id = parseInt(((document.getElementById('withdraw-transaction') as HTMLFormElement).elements.namedItem('account') as HTMLInputElement).value)
+
 Transaction.all() // Register undo buttons
 Transaction.listen(event => {
 	const account = Account.byId(event.account.toString())
 	if (!account) { return }
 	account.balance = event.balance
 	account.disabled = account.budget <= 0
-}, false)
+}, false, account_id)
 
 /* ===== Progressive Enhancement ===== */
 
