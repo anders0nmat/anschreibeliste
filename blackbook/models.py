@@ -2,6 +2,8 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 
+from colorfield.fields import ColorField
+
 from ledger.models import Product
 
 # Create your models here.
@@ -15,9 +17,15 @@ class NamedModel(models.Model):
     def __str__(self) -> str:
         return self.name
 
-class ServingGlass(NamedModel): pass
-class PrepMethod(NamedModel): pass
-class IngredientCategory(NamedModel): pass
+class ServingGlass(NamedModel):
+    icon = models.TextField(default="", blank=True)
+
+class PrepMethod(NamedModel):
+    icon = models.TextField(default="", blank=True)
+    
+class IngredientCategory(NamedModel):
+    light_color = ColorField(verbose_name=_('Light Color'), null=True, blank=True, default=None)
+    dark_color = ColorField(verbose_name=_('Dark Color'), null=True, blank=True, default=None)
 
 class Ingredient(NamedModel):
     category = models.ForeignKey(IngredientCategory, on_delete=models.SET_NULL, null=True, blank=True, default=None)
@@ -37,12 +45,12 @@ class RecipeGroup(NamedModel):
 class Recipe(NamedModel):
     description = models.TextField(verbose_name=_('description'), blank=True)
 
-    group = models.ForeignKey(RecipeGroup, on_delete=models.SET_NULL, null=True, blank=True, default=None)
+    group = models.ForeignKey(RecipeGroup, verbose_name=_('group'), on_delete=models.SET_NULL, null=True, blank=True, default=None)
 
-    serving_glass = models.ForeignKey(ServingGlass, on_delete=models.SET_NULL, null=True, blank=True, default=None)
-    method = models.ForeignKey(PrepMethod, on_delete=models.SET_NULL, null=True, blank=True, default=None)
+    serving_glass = models.ForeignKey(ServingGlass, verbose_name=_('Glass'), on_delete=models.SET_NULL, null=True, blank=True, default=None)
+    method = models.ForeignKey(PrepMethod, verbose_name=_('method'), on_delete=models.SET_NULL, null=True, blank=True, default=None)
 
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True, default=None)
+    product = models.ForeignKey(Product, verbose_name=_('Product'), on_delete=models.SET_NULL, null=True, blank=True, default=None)
 
     steps: models.QuerySet["RecipeStep"]
     

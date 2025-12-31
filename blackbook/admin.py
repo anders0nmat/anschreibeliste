@@ -2,14 +2,14 @@ from django.contrib import admin
 
 from adminsortable2.admin import SortableInlineAdminMixin, SortableAdminBase, SortableAdminMixin
 
-from . import models
+from . import models, forms
 
 # Register your models here.
 
 admin.site.register(models.Ingredient)
 admin.site.register(models.IngredientCategory)
-admin.site.register(models.PrepMethod)
-admin.site.register(models.ServingGlass)
+admin.site.register(models.PrepMethod, form=forms.PrepMethodForm)
+admin.site.register(models.ServingGlass, form=forms.ServingGlassForm)
 
 @admin.register(models.RecipeGroup)
 class RecipeGroupAdmin(SortableAdminMixin, admin.ModelAdmin):

@@ -12,6 +12,7 @@
 {% block content %}
 
 <article>
+    <div class="group">{{ recipe.group.name }}</div>
     <div class="title">
         <h2>{{ recipe.name }} </h2>
         <div style="flex: 1"></div>
@@ -20,25 +21,42 @@
     <p>
         {{ recipe.description }}
     </p>
-
+    
     <div class="traits">
-        {% icon recipe.serving_glass.name|lower %}
-        {% icon recipe.method.name|lower %}
-
+        <div>
+            {{ recipe.serving_glass.icon|safe }}
+            <div class="caption">{{ recipe.serving_glass.name }}</div>
+        </div>
+        
+        <div>
+            {{ recipe.method.icon|safe }}
+            <div class="caption">{{ recipe.method.name }}</div>
+        </div>
+        
+        
         <div style="flex:1"></div>
-
+        
         {% if recipe.product is not None %}
         {{ recipe.product.cost|money }}
         {{ recipe.product.member_cost|money }}
         {% endif %}
     </div>
-
     <ol>
         {% for step in recipe.steps.all %}
         <li>
             <span class="amount">{{ step.amount }}</span>
             {% if step.ingredient is not None %}
-                <span class="ingredient {{ step.ingredient.category.name|default_if_none:""|lower }}">{{ step.ingredient.name }}</span>
+                {% with step.ingredient.category as category %}
+                    <span 
+                        class="ingredient"
+                        
+                        {% if category.light_color is not None %}
+                        style="--light-color: {{ category.light_color }}; --dark-color: {{ category.dark_color|default_if_none:category.light_color }}"
+                        {% endif %}
+                    >
+                        {{ step.ingredient.name }}
+                    </span>
+                {% endwith %}
             {% endif %}
             <span class="instruction">{{ step.instruction }}</span>
         </li>

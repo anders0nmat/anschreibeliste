@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load ledger %}
+{% load i18n %}
 
 {% block import %}
     {{ block.super }}
@@ -12,29 +13,22 @@
 
 {% block content %}
 
-<div id="recipes">
-    {% regroup recipe_list by group as item_groups %}
-    {% ensure_group_leading item_groups grouper=None as item_group %}
-
-    {% for group, items in item_groups %}
-    <div>
-        {% if group is not None %}
-        <h3>{{ group.name }}</h3>
-        {% endif %}
-        <ul>
-            <a class="item new" href="#">
-                {% icon "plus" %}
-            </a>
-            {% for recipe in items %}
-            <a class="item" href="{% url 'blackbook:recipe' recipe.pk %}">
-                <h4>
-                    {{ recipe.name }}
-                </h4>
-            </a>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endfor %}
+<div class="toolbar">
+    <input type="search" name="" id="recipe-search" placeholder="{% trans "Search" %}">
+    <a href="{% url 'blackbook:recipe_new' %}" class="slim transparent vcenter button">
+        {% icon "plus" %}
+    </a>
 </div>
+
+<ul id="recipes">
+    {% for recipe in recipe_list %}
+    <a class="recipe" role="item" href="{{ recipe.get_absolute_url }}">
+
+        <span class="caption">{{ recipe.group.name }}</span>
+        <h4>{{ recipe.name }}</h4>
+        <p>{{ recipe.description }}</p>
+    </a>
+    {% endfor %}
+</ul>
 
 {% endblock content %}

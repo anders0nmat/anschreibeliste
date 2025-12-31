@@ -16,7 +16,7 @@ function debounce(func, wait, immediate = false) {
     };
 }
 // An array of [name, element] pairs, for faster search
-const search_items = [...document.querySelectorAll('#recipes a.item')].map(e => [e.textContent ?? '', e]);
+const search_items = [...document.querySelectorAll('#recipes a.recipe')].map(e => [e.textContent ?? '', e]);
 search_bar.addEventListener('input', debounce(_ => {
     const searchTerms = search_bar.value.toLowerCase().split(' ');
     search_items.forEach(([name, element]) => {

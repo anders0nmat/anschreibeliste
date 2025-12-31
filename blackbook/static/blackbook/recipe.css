@@ -1,16 +1,17 @@
 article {
     margin-inline: auto;
     margin-block: 1em;
-    padding: 1em 2em;
+    padding: 1em 1em;
     max-width: 50ch;
 
     background-color: var(--secondary-bg-color);
 
     & .traits {
-        margin-block: 1em 0.5em;
+        /* margin-block: 1em 0.5em; */
+        margin-bottom: 0.5em;
         display: flex;
         align-items: center;
-        gap: 0.5em;
+        gap: 0.75em;
         padding-inline: 0.5em;
 
         & .lucide {
@@ -20,19 +21,59 @@ article {
         }
     }
 
+    &:has(form) {
+        max-width: 60ch;
+    }
+
+    & p {
+        margin-block: 0.5em;
+    }
+
     & .money + .money {
         color: var(--secondary-text-color);
     }
 }
 
+main {
+    /* display: flex; */
+    /* justify-content: stretch; */
+}
+
 .title {
     display: flex;
     flex-flow: row nowrap;
+    align-items: baseline;
+    gap: 0.5em;
+}
+
+.caption {
+    color: var(--secondary-text-color);
+    font-variant: small-caps;
+    font-size: 85%;
+}
+
+div:has(> .caption) {
+    display: flex;
+    flex-direction: column;
     align-items: center;
+}
+
+.group {
+    display: flex;
+    justify-content: start;
+    font-variant: small-caps;
+    font-size: 85%;
+    color: var(--secondary-text-color);
 }
 
 main {
     overflow-y: auto;
+    /* display: flex; */
+    justify-content: space-around;
+    align-items: start;
+    /* display: grid;
+    justify-items: center;
+    align-items: start; */
 }
 
 .toolbar {
@@ -58,10 +99,11 @@ ol {
         display: grid;
         grid-template-columns: subgrid;
         grid-column: 1 / -1;
-        padding: 0.25em 2em;
+        padding: 0.25em 1em;
 
         &:nth-of-type(odd) {
             background-color: var(--primary-bg-color);
+            --input-background: var(--primary-bg-color);
         }
 
         .amount {
@@ -74,22 +116,9 @@ ol {
 
         .ingredient {
             /* grid-column: 2; */
-
-            &.liqueur {
-                color: palevioletred;
-            }
-
-            &.additive {
-                color: palegreen;
-            }
-
-            &.sirup {
-                color: violet;
-            }
-
-            &.juice {
-                color: palegoldenrod;
-            }
+            --light-color: var(--primary-text-color);
+            --dark-color: var(--primary-text-color);
+            color: light-dark(var(--light-color), var(--dark-color));
         }
 
         .instruction {
@@ -105,15 +134,45 @@ ol {
     }
 }
 
+#recipe-search {
+    background: none;
+    border: thin solid var(--separator-color);
+    padding: 0.25em 0.5em;
+    max-width: 50ch;
+
+    .toolbar:has(> &) {
+        justify-content: center;
+        gap: 0.5em;
+    }
+}
+
 #recipes {
-    display: flex;
-    flex-flow: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, calc(min(100%, 40ch)));
+    justify-content: center;
+    
     padding: 0.5em;
+    gap: 0.5em 2em;
+    margin: 0;
+    list-style: none;
 
     h3 {
         font-weight: normal;
         font-variant: small-caps;
         margin-block: 1em 0.5em;
+    }
+
+    .recipe {
+        padding: 0.5em 0.75em;
+        background-color: var(--secondary-bg-color);
+        text-decoration: none;
+        color: currentColor;
+        display: flex;
+        flex-flow: column;
+
+        p {
+            font-size: 85%;
+        }
     }
 
     ul {
@@ -156,6 +215,23 @@ form {
         padding: 0.25em 0.5em;
     }
 
+    h2 {
+        flex: auto;
+    }
+
+    h2 label {
+        font-size: 1rem;
+        font-weight: normal;
+
+        &:has(+ input:placeholder-shown:not(:focus)) {
+            translate: 0 25% !important;
+        }
+    }
+
+    h2 input {
+        padding: 0.25em 0.5em;
+    }
+
     input[name$='-amount'] {
         width: 8ch;
     }
@@ -165,7 +241,7 @@ form {
     }
 
     li {
-        padding-inline: 0.5em;
+        padding-inline: 0.125em 0.5em;
     }
 
     li#dragged-element {
@@ -196,11 +272,17 @@ form {
 
     .title {
 
-        margin-bottom: 0.5em;
+        /* margin-bottom: 0.5em; */
     }
 
     .traits {
         padding-inline: 0;
+        justify-content: stretch;
+        margin: 0;
+
+        & > div {
+            flex: 1;
+        }
     }
 
     article:has(&) {
@@ -227,6 +309,21 @@ form {
             }
         }
     }
+
+    input[id$="-order"] {
+        width: 5ch;
+        text-align: right;
+        padding: 0;
+    }
+
+    .group {
+        color: currentColor;
+        /* margin-bottom: 0.5em; */
+
+        select {
+            width: auto;
+        }
+    }
 }
 
 .drag-indicator {
@@ -234,5 +331,23 @@ form {
     -webkit-user-select: none;
     justify-self: center;
     align-self: center;
+}
+
+.drag-indicator > div {
+    display: none;
+}
+
+ol:has(#order-arrows:checked) {
+    label:has(#order-arrows:checked) {
+        color: var(--selected-color);
+    }
+
+    .drag-indicator > div {
+        display: flex;
+    }
+
+    .drag-indicator > *:first-child {
+        display: none;
+    }
 }
 

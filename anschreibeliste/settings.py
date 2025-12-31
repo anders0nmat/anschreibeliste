@@ -39,6 +39,7 @@ ALLOWED_HOSTS = [
 
 INSTALLED_APPS = [
     'daphne',
+    'colorfield',
     'base.apps.BaseConfig',
     'ledger.apps.LedgerConfig',
     'wiki.apps.WikiConfig',

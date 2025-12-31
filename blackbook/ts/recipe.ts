@@ -17,7 +17,7 @@ function debounce<Args extends any[], F extends (...args: Args) => any>(func: F,
 }
 
 // An array of [name, element] pairs, for faster search
-const search_items: [string, HTMLElement][] = [...document.querySelectorAll<HTMLElement>('#recipes a.item')].map(e => [e.textContent ?? '', e])
+const search_items: [string, HTMLElement][] = [...document.querySelectorAll<HTMLElement>('#recipes a.recipe')].map(e => [e.textContent ?? '', e])
 
 search_bar.addEventListener('input', debounce(_ => {
 	const searchTerms = search_bar.value.toLowerCase().split(' ')

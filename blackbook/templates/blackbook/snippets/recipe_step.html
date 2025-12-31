@@ -1,11 +1,28 @@
 <li draggable="true">
-    {% icon "grip-vertical" class="drag-indicator"%}
+    <span class="drag-indicator">
+        {% icon "grip-vertical" %}
+
+        <div style="align-items: center">
+            <button type="button" data-dir="up" class="slim transparent vcenter button">
+                {% icon "chevron-up" %}
+            </button>
+            <button type="button" data-dir="down" class="slim transparent vcenter button">
+                {% icon "chevron-down" %}
+            </button>
+        </div>
+    </span>
+    {{ form.order.as_hidden }}
     {{ form.id }}
     {{ form.recipe }}
-    {{ form.order.as_hidden }}
-    <span class="amount">{{ form.amount }}</span>   
-    <span class="ingredient">{{ form.ingredient }}</span>
-    <span class="instruction">{{ form.instruction }}</span>
+    <div class="amount">
+        {{ form.amount }}
+    </div>  
+    <div class="ingredient">
+        {{ form.ingredient }}
+    </div>
+    <div class="instruction">
+        {{ form.instruction }}
+    </div>
     <label class="delete">
         {{ form.DELETE }}
         {% icon "trash-2" %}

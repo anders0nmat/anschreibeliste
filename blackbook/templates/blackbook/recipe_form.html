@@ -2,34 +2,56 @@
 
 {% load static %}
 {% load ledger %}
+{% load i18n %}
 
 {% block import %}
     {{ block.super }}
 
     <link rel="stylesheet" href="{% static 'blackbook/recipe.css' %}">
+    <link rel="stylesheet" href="{% static 'ledger/pretty-forms.css' %}">
     <script type="module" src="{% static 'blackbook/edit.js' %}"></script>
 {% endblock import %}
 
 {% block content %}
 
 <article>
-    <form method="POST">
+    <form method="POST" class="pretty-form">
         {% csrf_token %}
+        <div class="group">
+            <div>
+                {{ form.group.label_tag }}
+                {{ form.group }}
+                {{ form.group.errors }}
+            </div>
+        </div>
         <div class="title">
-            <h2>{{ form.name }}</h2>
-            <div style="flex:1 1em"></div>
+            <h2>
+                <div>
+                    {{ form.name.label_tag }}
+                    {{ form.name }}
+                </div>
+            </h2>
             <button type="submit" class="slim transparent vcenter button">
                 {% icon "save" %}
             </button>
         </div>
-        <p>
+        <div>
+            {{ form.description.label_tag }}
             {{ form.description }}
-        </p>
+        </div>
         <div class="traits">
-            {{ form.serving_glass }}
-            {{ form.method }}
-            <div style="flex:1"></div>
-            {{ form.product }}
+            <div>
+                {{ form.serving_glass.label_tag }}
+                {{ form.serving_glass }}
+            </div>
+            <div>
+                {{ form.method.label_tag }}
+                {{ form.method }}
+            </div>
+            <div>
+                {{ form.product.label_tag }}
+                {{ form.product }}
+            </div>
         </div>
         <ol id="steps">
             <template id="step-template">
@@ -37,10 +59,15 @@
             </template>
             {{ formset.management_form }}
             <li>
-                <span></span>
-                <span>Menge</span>
-                <span>Zutat</span>
-                <span>Anweisung</span>
+                <span>
+                    <label class="button vcenter slim transparent">
+                        <input type="checkbox" id="order-arrows" style="display: none">
+                        {% icon "arrow-up-down" %}
+                    </label>
+                </span>
+                <span>{% trans "Amount" %}</span>
+                <span>{% trans "Ingredient" %}</span>
+                <span>{% trans "Instruction" %}</span>
             </li>
             {% for step_form in formset %}
             {% include 'blackbook/snippets/recipe_step.html' with form=step_form %}
