@@ -62,11 +62,15 @@
    ```bash
    git pull
    ```
-3. Migrate database
+2. Update python packages
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Migrate database
    ```bash
    python manage.py migrate
    ```
-4. Collect static files
+5. Collect static files
    ```bash
    python manage.py collectstatic
    ```
