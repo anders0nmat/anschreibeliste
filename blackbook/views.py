@@ -1,69 +1,35 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpRequest, HttpResponseRedirect, HttpResponse
-from django.forms import inlineformset_factory
+from django.http import HttpRequest, HttpResponseRedirect
 
-from .models import Recipe, RecipeStep
-from .forms import RecipeForm
+from .models import Recipe
+from .forms import RecipeForm, RecipeStepFormset
 
 # Create your views here.
 
-RecipeStepFormset = inlineformset_factory(Recipe, RecipeStep, fields='__all__')
-
-RecipeForm.base_fields['name'].widget.attrs['placeholder'] = ' '
-RecipeForm.base_fields['description'].widget.attrs['placeholder'] = ' '
-
-
-def recipe_new(request: HttpRequest):
-    if request.method == "POST":
-        form = RecipeForm(request.POST)
-
-        if form.is_valid():
-            recipe = form.save()
-
-            formset = RecipeStepFormset(request.POST, instance=recipe)
-            if formset.is_valid():
-                formset.save()
-            else:
-                return HttpResponse(form.errors.as_text() + '\n' + '\n'.join(e.as_text() for e in formset.errors))
-        else:
-            return HttpResponse(form.errors.as_text() + '\n' + '\n'.join(e.as_text() for e in formset.errors))
-        
-        return HttpResponseRedirect(recipe.get_absolute_url())
-    else:
-        RecipeForm.base_fields['description'].widget.attrs['rows'] = '3'
-
-        form = RecipeForm(label_suffix='')
-        formset = RecipeStepFormset(form_kwargs={'label_suffix': ''})
-
-        return render(request, 'blackbook/recipe_form.html', {
-            'form': form,
-            'formset': formset,
-        })
-
 def recipe_edit(request: HttpRequest, pk):
-    if request.method == "POST":
+    recipe = None
+    if pk is not None:
         recipe = get_object_or_404(Recipe, pk=pk)
+
+    if request.method == "POST":
         form = RecipeForm(request.POST, instance=recipe)
         formset = RecipeStepFormset(request.POST, instance=recipe)
 
         if form.is_valid() and formset.is_valid():
-            form.save()
+            recipe: Recipe = form.save()
+            formset.instance = recipe
             formset.save()
-        else:
-            return HttpResponse(form.errors.as_text() + '\n' + '\n'.join(e.as_text() for e in formset.errors))
-        
-        return HttpResponseRedirect(recipe.get_absolute_url())
+            return HttpResponseRedirect(recipe.get_absolute_url())
+    
+        formset.remove_temporary()
     else:
-        recipe = get_object_or_404(Recipe, pk=pk)
-        RecipeForm.base_fields['description'].widget.attrs['rows'] = '3'
+        form = RecipeForm(instance=recipe)
+        formset = RecipeStepFormset(instance=recipe)
 
-        form = RecipeForm(instance=recipe, label_suffix='')
-        formset = RecipeStepFormset(instance=recipe, form_kwargs={'label_suffix': ''})
-
-        return render(request, 'blackbook/recipe_form.html', {
-            'form': form,
-            'formset': formset,
-        })
+    return render(request, 'blackbook/recipe_form.html', {
+        'form': form,
+        'formset': formset,
+    })
 
 def recipe_search():
     """

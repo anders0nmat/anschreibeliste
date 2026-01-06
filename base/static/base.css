@@ -79,8 +79,9 @@ select {
 	--negative-color: light-dark(rgb(228, 109, 109), rgb(146, 37, 37));
 
 	--primary-bg-color: light-dark(rgb(243, 243, 243), rgb(18, 18, 18));
-	--secondary-bg-color: light-dark(rgb(255, 255, 255), rgb(30, 30, 30));
+	--secondary-bg-color: light-dark(rgb(255, 255, 255), rgb(24, 24, 24));
 	--selected-color: var(--positive-color);
+    --focus-color: #006eff;
 	--separator-color: light-dark(rgb(204, 204, 204), rgb(41, 41, 41));
 	
 	--highlight-color: light-dark(black, white);
@@ -319,6 +320,11 @@ header {
 	}
 }
 
+hr {
+    width: 100%;
+    border: none;
+    border-bottom: thin solid var(--separator-color);
+}
 
 .money {
 	&::after {
@@ -394,6 +400,94 @@ header {
 	}
 }
 
+.icon-checkbox > input[type="checkbox"] {
+    display: none;
+    
+    :has(> &:checked) {
+        color: var(--selected-color);
+    }
+}
+
+.icon-container {
+    vertical-align: middle;
+    line-height: 1;
+}
+
+.icon-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 4px;
+    border: none;
+    --bg: transparent;
+    background: var(--bg);
+    color: currentColor;
+
+    @media (hover: hover) {
+        &:not([disabled]):hover {
+            background: color-mix(in srgb, var(--bg), var(--highlight-color) 10%);
+        }
+    }
+
+    & > svg {
+        vertical-align: middle;
+    }
+}
+
+.negative {
+    --selected-color: var(--negative-color);
+}
+
+.vstack,
+.hstack {
+    display: flex;
+
+    & > hr.spacer {
+        width: 0;
+        border: none;
+    }
+    
+    &.gap-m {
+        gap: 0.5em;
+    }
+
+    &.gap-l {
+        gap: 1em;
+    }
+
+    &.stretch {
+        justify-content: stretch;   
+    }
+
+    &.stretch-children {
+        justify-content: stretch;
+        & > * {
+            flex: 1;
+        }
+    }
+
+    &.center-along {
+        justify-content: center;
+    }
+
+    &.center-across {
+        align-items: center;
+    }
+
+    &.centered {
+        justify-content: center;
+        align-items: center;
+    }
+}
+
+.p-m {
+    padding: .5em;
+}
+
+.vstack {
+    flex-direction: column;
+}
+
 .badge {
 	color: color-mix(in srgb, var(--selected-color), var(--highlight-color) 25%);
 }
@@ -405,6 +499,13 @@ header {
 
 .spacer {
 	flex-grow: 1;
+}
+
+input:not(:is([type="checkbox"], [type="radio"], [type="button"], [type="submit"])), select, textarea {
+    background-color: transparent;
+    border: thin solid var(--separator-color);
+    color: currentColor;
+    width: 100%;
 }
 
 .css-hidden,

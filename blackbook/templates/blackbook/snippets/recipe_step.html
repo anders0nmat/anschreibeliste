@@ -1,30 +1,26 @@
-<li draggable="true">
-    <span class="drag-indicator">
+<tr draggable="true">
+    <td class="icon-container drag-gripper">
         {% icon "grip-vertical" %}
-
-        <div style="align-items: center">
-            <button type="button" data-dir="up" class="slim transparent vcenter button">
-                {% icon "chevron-up" %}
-            </button>
-            <button type="button" data-dir="down" class="slim transparent vcenter button">
-                {% icon "chevron-down" %}
-            </button>
-        </div>
-    </span>
-    {{ form.order.as_hidden }}
-    {{ form.id }}
-    {{ form.recipe }}
-    <div class="amount">
-        {{ form.amount }}
-    </div>  
-    <div class="ingredient">
-        {{ form.ingredient }}
-    </div>
-    <div class="instruction">
-        {{ form.instruction }}
-    </div>
-    <label class="delete">
-        {{ form.DELETE }}
-        {% icon "trash-2" %}
-    </label>
-</li>
+        {{ subform.order.as_hidden }}
+    </td>
+    <td class="vstack drag-arrows">
+        <button type="button" class="icon-button" data-dir="up">
+            {% icon "chevron-up" %}
+        </button>
+        <button type="button" class="icon-button" data-dir="down">
+            {% icon "chevron-down" %}
+        </button>
+    </td>
+    <td>{{ subform.amount }}</td>
+    <td>{{ subform.ingredient }}</td>
+    <td>{{ subform.instruction }}</td>
+    <td class="icon-checkbox negative">
+        {{ subform.DELETE }}
+        <label class="icon-button" for="{{ subform.DELETE.id_for_label }}">
+            {% icon "trash-2" %}
+        </label>
+    </td>
+    {% for field in subform.hidden_fields %}
+    {{ field }}
+    {% endfor %}
+</tr>

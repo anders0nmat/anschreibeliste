@@ -1,49 +1,18 @@
 article {
     margin-inline: auto;
     margin-block: 1em;
-    padding: 1em 1em;
+    padding: 1em;
     max-width: 50ch;
 
     background-color: var(--secondary-bg-color);
-
-    & .traits {
-        /* margin-block: 1em 0.5em; */
-        margin-bottom: 0.5em;
-        display: flex;
-        align-items: center;
-        gap: 0.75em;
-        padding-inline: 0.5em;
-
-        & .lucide {
-            width: 1.75em;
-            height: 1.75em;
-            stroke-width: 1.5px;
-        }
-    }
 
     &:has(form) {
         max-width: 60ch;
     }
 
-    & p {
-        margin-block: 0.5em;
-    }
-
     & .money + .money {
         color: var(--secondary-text-color);
     }
-}
-
-main {
-    /* display: flex; */
-    /* justify-content: stretch; */
-}
-
-.title {
-    display: flex;
-    flex-flow: row nowrap;
-    align-items: baseline;
-    gap: 0.5em;
 }
 
 .caption {
@@ -52,98 +21,15 @@ main {
     font-size: 85%;
 }
 
-div:has(> .caption) {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.group {
-    display: flex;
-    justify-content: start;
-    font-variant: small-caps;
-    font-size: 85%;
-    color: var(--secondary-text-color);
-}
-
 main {
     overflow-y: auto;
-    /* display: flex; */
     justify-content: space-around;
     align-items: start;
-    /* display: grid;
-    justify-items: center;
-    align-items: start; */
-}
-
-.toolbar {
-    padding: 0.5em;
-    display: flex;
-    justify-content: stretch;
-
-    & input {
-        width: 100%;
-    }
-}
-
-ol {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-
-    display: grid;
-    grid-template-columns: max-content max-content auto;
-    column-gap: 1em;
-
-    li {
-        display: grid;
-        grid-template-columns: subgrid;
-        grid-column: 1 / -1;
-        padding: 0.25em 1em;
-
-        &:nth-of-type(odd) {
-            background-color: var(--primary-bg-color);
-            --input-background: var(--primary-bg-color);
-        }
-
-        .amount {
-            /* grid-column: 1; */
-            justify-self: end;
-
-            font-variant: small-caps;
-            color: var(--secondary-text-color);
-        }
-
-        .ingredient {
-            /* grid-column: 2; */
-            --light-color: var(--primary-text-color);
-            --dark-color: var(--primary-text-color);
-            color: light-dark(var(--light-color), var(--dark-color));
-        }
-
-        .instruction {
-            /* grid-column: 2; */
-
-            font-style: italic;
-            color: var(--secondary-text-color);
-        }
-
-        .ingredient + .instruction {
-            /* grid-column: 3; */
-        }
-    }
 }
 
 #recipe-search {
-    background: none;
-    border: thin solid var(--separator-color);
-    padding: 0.25em 0.5em;
+    padding: 0.5em 1em;
     max-width: 50ch;
-
-    .toolbar:has(> &) {
-        justify-content: center;
-        gap: 0.5em;
-    }
 }
 
 #recipes {
@@ -156,12 +42,6 @@ ol {
     margin: 0;
     list-style: none;
 
-    h3 {
-        font-weight: normal;
-        font-variant: small-caps;
-        margin-block: 1em 0.5em;
-    }
-
     .recipe {
         padding: 0.5em 0.75em;
         background-color: var(--secondary-bg-color);
@@ -172,182 +52,102 @@ ol {
 
         p {
             font-size: 85%;
-        }
-    }
-
-    ul {
-        display: grid;
-        padding: 0;
-        margin: 0;
-        gap: 0.5em;
-        grid-template-columns: repeat(auto-fill, 14ch);
-        grid-auto-rows: calc(2lh + 0.25em * 2);
-        list-style: none;
-
-        .item {
-            background-color: var(--secondary-bg-color);
-            padding: 0.25em;
-
-            color: currentColor;
-            text-decoration: none;
+            display: -webkit-box;
+            line-clamp: 1;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
-        .item.new {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 125%;
-            background-color: transparent;
-
-            &:hover {
-                background-color: var(--secondary-bg-color);
-            }
+        .empty {
+            visibility: hidden;
         }
     }
 }
 
 form {
-    input, textarea, select {
-        background-color: transparent;
-        border: thin solid var(--separator-color);
-        color: currentColor;
-        width: 100%;
-        padding: 0.25em 0.5em;
-    }
-
-    h2 {
-        flex: auto;
-    }
-
-    h2 label {
-        font-size: 1rem;
-        font-weight: normal;
-
-        &:has(+ input:placeholder-shown:not(:focus)) {
-            translate: 0 25% !important;
-        }
-    }
-
-    h2 input {
-        padding: 0.25em 0.5em;
-    }
-
-    input[name$='-amount'] {
-        width: 8ch;
-    }
-
     textarea {
         resize: vertical;
     }
 
-    li {
-        padding-inline: 0.125em 0.5em;
-    }
-
-    li#dragged-element {
-        opacity: 0.2;
-    }
-
-    li:first-of-type {
-        text-align: center;
-        font-weight: bold;
-    }
-
-    .amount input {
+    input[id$="-amount"] {
         text-align: right;
+        font-variant: small-caps;
     }
 
-    ol {
-        column-gap: 0.5em;
-        grid-template-columns: max-content max-content max-content auto max-content;
-    }
-
-    ol :is(input, select) {
-        border: none;
-    }
-
-    h2 input {
-        padding-block: 0;
-    }
-
-    .title {
-
-        /* margin-bottom: 0.5em; */
-    }
-
-    .traits {
-        padding-inline: 0;
-        justify-content: stretch;
-        margin: 0;
-
-        & > div {
-            flex: 1;
-        }
-    }
-
-    article:has(&) {
-        padding-inline: 1em;
-    }
-
-    #add-step {
-        grid-column: 1 / -1;
-        margin-block: 0.5em;
-    }
-
-    .delete {
-        display: contents;
-
-        & svg {
-            align-self: center;
-        }
-
-        & input {
-            display: none;
-
-            li:has(&:checked) {
-                background-color: color-mix(in srgb, var(--negative-color), transparent 80%);
-            }
-        }
-    }
-
-    input[id$="-order"] {
-        width: 5ch;
-        text-align: right;
-        padding: 0;
-    }
-
-    .group {
-        color: currentColor;
-        /* margin-bottom: 0.5em; */
-
-        select {
-            width: auto;
-        }
+    input[id$="-amount"],
+    input[id$="-instruction"] {
+        color: var(--secondary-text-color) !important;
     }
 }
 
-.drag-indicator {
+.drag-gripper {
     user-select: none;
     -webkit-user-select: none;
-    justify-self: center;
-    align-self: center;
 }
 
-.drag-indicator > div {
+#dragged-element {
+    opacity: 0.3;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+
+    td, th {
+        padding: 0.25em;
+        padding-bottom: 0.5em;
+    }
+
+    tbody tr {
+        --bg: var(--secondary-bg-color);
+        background-color: var(--bg);
+    }
+
+    tbody tr:nth-of-type(odd) {
+        --bg: var(--primary-bg-color);
+    }
+
+    thead th {
+        border-bottom: thin solid var(--separator-color);
+    }
+    tfoot td {
+        border-top: thin solid var(--separator-color);
+    }
+}
+
+tr:has(input[id$="-DELETE"]:checked) {
+    background-color: color-mix(in srgb, var(--bg), var(--negative-color) 25%);
+}
+
+#add-step {
+    width: 100%;
+    padding-block: .5em;
+}
+
+td:has(#add-step) {
+    padding: 0;
+}
+
+table:has(#order-arrows:checked) .drag-gripper,
+table:has(#order-arrows:not(:checked)) .drag-arrows {
     display: none;
 }
 
-ol:has(#order-arrows:checked) {
-    label:has(#order-arrows:checked) {
-        color: var(--selected-color);
-    }
+.amount {
+    text-align: right;
 
-    .drag-indicator > div {
-        display: flex;
-    }
-
-    .drag-indicator > *:first-child {
-        display: none;
-    }
+    font-variant: small-caps;
+    color: var(--secondary-text-color);
 }
 
+.ingredient {
+    --light-color: var(--primary-text-color);
+    --dark-color: var(--primary-text-color);
+    color: light-dark(var(--light-color), var(--dark-color));
+}
+
+.instruction {
+    font-style: italic;
+    color: var(--secondary-text-color);
+}

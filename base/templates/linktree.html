@@ -1,15 +1,10 @@
-{% for link in links %}
-{% if link.active %}
+{% for link in links %}{% if link.active %}
 <h1>
-	<label id="link-hamburger" hidden class="css-show slim transparent center button">
+    <label id="link-hamburger" hidden class="css-show slim transparent center button">
         <input type="checkbox">
         {% icon "menu" %}
     </label>
-	<a href={% url link.path %}>{{ link.title }}</a>
+    <a href={% url link.path %}>{{ link.title }}</a>
 </h1>
 {% else %}
-<li>
-	<a href={% url link.path %}>{{ link.title }}</a>
-</li>
-{% endif %}
-{% endfor %}
+<li><a href={% url link.path %}>{{ link.title }}</a></li>{% endif %}{% endfor %}

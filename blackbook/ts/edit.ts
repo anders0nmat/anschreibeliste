@@ -18,7 +18,7 @@ function decForms() {
 /* Remove extra initial attachments */
 /* These are no longer required as we can dynamically attach new ones */
 
-document.querySelectorAll<HTMLElement>('li:has([id^="id_steps-"][id$="-id"]:not([value]))').forEach(e => {
+document.querySelectorAll<HTMLElement>('tr:has([id^="id_steps-"][id$="-id"]:not([value]))').forEach(e => {
     e.remove()
     decForms()
 })
@@ -27,63 +27,23 @@ const add_button = document.querySelector<HTMLButtonElement>('#add-step')!
 
 function addStep() {
     const html = stepFormHtml.replaceAll('__prefix__', formCount.value)
-    const dummy = document.createElement('div')
+    const dummy = document.createElement('tbody')
     dummy.innerHTML = html
     const newElement = dummy.firstElementChild as HTMLElement
-    newElement.addEventListener('dragstart', ev => {
-        ev.dataTransfer!.effectAllowed = "move"
-        ev.dataTransfer!.setData("recipe-step", "")
-        newElement.id = 'dragged-element'
-    })
-    newElement.addEventListener('dragend', _ => {
-        newElement.removeAttribute('id')
-    })
 
-    newElement.querySelectorAll<HTMLButtonElement>('[data-dir]').forEach(e => e.addEventListener('click', changeOrder(e)))
+    registerHandlers(newElement)
 
-    const lastStepOrder = Array.from(add_button.parentElement!.querySelectorAll<HTMLInputElement>('li[draggable] input[id$="-order"]')).at(-1)
-    if (lastStepOrder !== undefined) {
-        newElement.querySelector<HTMLInputElement>('input[id$="-order"]')!.value = (parseInt(lastStepOrder.value) + 1).toString()
-    }
-    add_button.insertAdjacentElement("beforebegin", newElement)
+    const rows = document.querySelector<HTMLElement>('#steps tbody')!
+    rows.append(newElement)
     incForms()
+    updateOrder()
 }
 
 add_button.addEventListener('click', addStep)
 
-document.querySelectorAll<HTMLElement>('ol > li').forEach(e => {
-    e.addEventListener('dragstart', ev => {
-        ev.dataTransfer!.effectAllowed = "move"
-        ev.dataTransfer!.setData("recipe-step", "")
-        e.id = 'dragged-element'
-        //document.querySelector<HTMLElement>('.drag-placeholder')!.style.height = e.clientHeight.toString() + 'px'
+document.querySelectorAll<HTMLElement>('tr[draggable]').forEach(registerHandlers)
 
-        //placePlaceholder(ev)
-    })
-    e.addEventListener('dragend', _ => {
-        e.removeAttribute('id')
-    })
-})
-
-const stepList = document.querySelector<HTMLElement>('#steps')!
-
-function placePlaceholder(event: MouseEvent) {
-    const placeholder = stepList.querySelector<HTMLElement>('.drag-placeholder')!
-    let placed = false
-    for (let e of stepList.querySelectorAll(':scope > li[draggable]')) {
-        const middle = e.getBoundingClientRect().bottom - e.clientHeight / 2
-        if (middle > event.clientY) {
-            placeholder.remove()
-            e.insertAdjacentElement("beforebegin", placeholder)
-            placed = true
-            break
-        }
-    }
-    if (!placed) {
-        placeholder.remove()
-        stepList.querySelector(':scope > li[draggable]:last-of-type')?.insertAdjacentElement("afterend", placeholder)
-    }   
-}
+const stepList = document.querySelector<HTMLTableElement>('#steps')!
 
 stepList?.addEventListener('dragover', ev => {
     if (ev.dataTransfer?.types.includes('recipe-step')) {
@@ -91,8 +51,9 @@ stepList?.addEventListener('dragover', ev => {
 
         const dragged = document.getElementById('dragged-element')!
         let placed = false
-        const fixedItems = Array.from(stepList.querySelectorAll(':scope > li[draggable]:not(#dragged-element)'))
-        for (let e of fixedItems) {
+        const tbody = stepList.tBodies[0]
+        for (let e of tbody.rows) {
+            if (e.id == 'dragged-element') { continue }
             const middle = e.getBoundingClientRect().bottom - e.clientHeight / 2
             if (middle > ev.clientY) {
                 dragged.remove()
@@ -103,7 +64,7 @@ stepList?.addEventListener('dragover', ev => {
         }
         if (!placed) {
             dragged.remove()
-            fixedItems.at(-1)?.insertAdjacentElement("afterend", dragged)
+            tbody.append(dragged)
         }  
     }
 })
@@ -111,45 +72,40 @@ stepList?.addEventListener('dragover', ev => {
 stepList?.addEventListener('drop', ev => {
     ev.preventDefault()
 
-    let i = 1
-    for (let e of stepList.querySelectorAll<HTMLElement>('li[draggable]')) {
-        e.querySelector<HTMLInputElement>('input[id$="-order"]')!.value = i.toString()
-        i += 1
-    }
+    updateOrder()
 })
 
-function changeOrder(e: HTMLElement) {
-    return _ => {
-        const step = e.closest<HTMLElement>('li[draggable]')!
-
-        if (e.dataset.dir == "up") {
-            const prev = step.previousElementSibling
-            if (!prev || !prev.matches('li[draggable]')) {
-                return
-            }
-
-            step.remove()
-            prev.insertAdjacentElement("beforebegin", step)
-        }
-        else if (e.dataset.dir == "down") {
-            const next = step.nextElementSibling
-            if (!next || !next.matches('li[draggable]')) {
-                return
-            }
-
-            step.remove()
-            next.insertAdjacentElement("afterend", step)
-        }
-
-        let i = 1
-        for (let e of stepList.querySelectorAll<HTMLElement>('li[draggable]')) {
-            e.querySelector<HTMLInputElement>('input[id$="-order"]')!.value = i.toString()
-            i += 1
-        }
-    }
+function updateOrder() {
+    stepList.querySelectorAll<HTMLInputElement>('input[id$="-order"]').forEach((e, idx) => {
+        e.value = (idx + 1).toString()
+    })
 }
 
-document.querySelectorAll<HTMLButtonElement>('[data-dir]').forEach(e => {
-    e.addEventListener("click", changeOrder(e))
-})
+function registerHandlers(step: HTMLElement) {
+    step.addEventListener('dragstart', ev => {
+        ev.dataTransfer!.effectAllowed = "move"
+        ev.dataTransfer!.setData("recipe-step", "")
+        step.id = 'dragged-element'
+    })
+    step.addEventListener('dragend', _ => step.removeAttribute('id'))
+    step.querySelectorAll<HTMLButtonElement>('[data-dir]').forEach(e => {
+        e.addEventListener('click', _ => {
+            let sibling: Element | null = null
+            let insert: "beforebegin" | "afterend" = "beforebegin"
+            if (e.dataset.dir == "up") {
+                [sibling, insert] = [step.previousElementSibling, "beforebegin"]
+            }
+            else if (e.dataset.dir == "down") {
+                [sibling, insert] = [step.nextElementSibling, "afterend"]
+            }
+
+            if (sibling && sibling.matches('tr[draggable]')) {
+                step.remove()
+                sibling.insertAdjacentElement(insert, step)
+            }
+
+            updateOrder()
+        })
+    })
+}
 

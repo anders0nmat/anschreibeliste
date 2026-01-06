@@ -20,15 +20,31 @@ class NamedModel(models.Model):
 class ServingGlass(NamedModel):
     icon = models.TextField(default="", blank=True)
 
+    class Meta:
+        verbose_name = _("Serving glass")
+        verbose_name_plural = _("Serving glasses")
+
 class PrepMethod(NamedModel):
     icon = models.TextField(default="", blank=True)
+
+    class Meta:
+        verbose_name = _("Prep method")
+        verbose_name_plural = _("Prep methods")
     
 class IngredientCategory(NamedModel):
     light_color = ColorField(verbose_name=_('Light Color'), null=True, blank=True, default=None)
     dark_color = ColorField(verbose_name=_('Dark Color'), null=True, blank=True, default=None)
 
+    class Meta:
+        verbose_name = _("Ingredient category")
+        verbose_name_plural = _("Ingredient categories")
+
 class Ingredient(NamedModel):
     category = models.ForeignKey(IngredientCategory, on_delete=models.SET_NULL, null=True, blank=True, default=None)
+
+    class Meta:
+        verbose_name = _("Ingredient")
+        verbose_name_plural = _("Ingredients")
 
 class RecipeGroup(NamedModel):
     order = models.PositiveIntegerField(
@@ -40,6 +56,8 @@ class RecipeGroup(NamedModel):
     )
 
     class Meta:
+        verbose_name = _("Recipe Group")
+        verbose_name_plural = _("Recipe Groups")
         ordering = ['order']
 
 class Recipe(NamedModel):
@@ -50,11 +68,13 @@ class Recipe(NamedModel):
     serving_glass = models.ForeignKey(ServingGlass, verbose_name=_('Glass'), on_delete=models.SET_NULL, null=True, blank=True, default=None)
     method = models.ForeignKey(PrepMethod, verbose_name=_('method'), on_delete=models.SET_NULL, null=True, blank=True, default=None)
 
-    product = models.ForeignKey(Product, verbose_name=_('Product'), on_delete=models.SET_NULL, null=True, blank=True, default=None)
+    product = models.ForeignKey(Product, verbose_name=_('Product'), on_delete=models.SET_NULL, null=True, blank=True, default=None, help_text=_("Used to display pricing"))
 
     steps: models.QuerySet["RecipeStep"]
     
     class Meta:
+        verbose_name = _("Recipe")
+        verbose_name_plural = _("Recipes")
         ordering = ['group__order', 'name']
 
     def get_absolute_url(self) -> str:
@@ -75,6 +95,8 @@ class RecipeStep(models.Model):
     instruction = models.CharField(verbose_name=_('instruction'), max_length=255, blank=True)
 
     class Meta:
+        verbose_name = _("Recipe step")
+        verbose_name_plural = _("Recipe steps")
         ordering = ['recipe', 'order']
         indexes = [
             models.Index(models.F('recipe'), 'order', name="idx_recipe_order")

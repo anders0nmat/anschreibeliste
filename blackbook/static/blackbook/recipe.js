@@ -1,4 +1,4 @@
-const search_bar = document.querySelector('.toolbar input[type="search"]');
+const search_bar = document.querySelector('input[type="search"]');
 function debounce(func, wait, immediate = false) {
     var timeout;
     return function (...args) {

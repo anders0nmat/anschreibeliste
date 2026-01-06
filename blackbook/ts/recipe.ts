@@ -1,5 +1,5 @@
 
-const search_bar = document.querySelector<HTMLInputElement>('.toolbar input[type="search"]')!
+const search_bar = document.querySelector<HTMLInputElement>('input[type="search"]')!
 
 function debounce<Args extends any[], F extends (...args: Args) => any>(func: F, wait: number, immediate: boolean = false) {
     var timeout: ReturnType<typeof setTimeout> | null
