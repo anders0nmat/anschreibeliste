@@ -9,13 +9,6 @@
         &:user-invalid {
             border-color: var(--negative-color);
         }
-
-        &:focus-within {
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(from var(--focus-color) r g b / 0.3);
-
-            border: thin solid var(--focus-color);
-        }
     }
 
     & > select {
@@ -80,11 +73,11 @@
 .pretty-form .tight-form :is(input, select, textarea) {
     border: none;
     border-bottom: 2px solid var(--separator-color);
-
     padding: .25em 0;
 
     &:focus-within {
-        outline: none;
         border-color: var(--focus-color);
+        box-shadow: none;
     }
+
 }

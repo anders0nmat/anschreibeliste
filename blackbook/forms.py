@@ -44,7 +44,7 @@ class RecipeForm(NoLabelSuffixMixin, ModelForm):
         model = Recipe
         fields = '__all__'
     
-    product = GroupedModelChoiceField(Product.objects.filter(category=Product.ProductCategory.ARTICLE), group_by_field='group', group_label=lambda group: group.name, label=_('product'), required=False, help_text="Used to display pricing")
+    product = GroupedModelChoiceField(Product.objects.filter(category=Product.ProductCategory.ARTICLE), group_by_field='group', group_label=lambda group: group.name, label=_('product'), required=False, help_text=_("Used to display pricing"))
 
 RecipeForm.base_fields['name'].widget.attrs['placeholder'] = ' '
 RecipeForm.base_fields['description'].widget.attrs['placeholder'] = ' '

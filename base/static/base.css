@@ -508,6 +508,12 @@ input:not(:is([type="checkbox"], [type="radio"], [type="button"], [type="submit"
     width: 100%;
 }
 
+:is(input, select, textarea):focus-within {
+    outline: none;
+    border-color: var(--focus-color);
+    box-shadow: 0 0 0 2px rgba(from var(--focus-color) r g b / 0.3);
+}
+
 .css-hidden,
 .css-hide {
 	display: none !important;
