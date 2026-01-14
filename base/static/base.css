@@ -425,7 +425,7 @@ hr {
 
     @media (hover: hover) {
         &:not([disabled]):hover {
-            background: color-mix(in srgb, var(--bg), var(--highlight-color) 10%);
+            background: color-mix(in srgb, var(--bg), var(--highlight-color) 10%) !important;
         }
     }
 
@@ -466,6 +466,10 @@ hr {
         }
     }
 
+    &.wrap {
+        flex-wrap: wrap;
+    }
+
     &.center-along {
         justify-content: center;
     }
@@ -478,14 +482,47 @@ hr {
         justify-content: center;
         align-items: center;
     }
+
+    &.overflow-hidden {
+        overflow: hidden;
+    }
+}
+
+.vstack {
+    flex-direction: column;
 }
 
 .p-m {
     padding: .5em;
 }
 
-.vstack {
-    flex-direction: column;
+.ph-s {
+    padding-block: 0.25em;
+}
+
+.text-tiny {
+    font-size: 75%;
+}
+
+.text-small {
+    font-size: 85%;
+}
+
+.tag {
+    padding: .25em .75em;
+    border: thin solid var(--color, var(--separator-color));
+    border-radius: 100vw;
+    font-size: 85%;
+    user-select: none;
+
+    background-color: rgba(from var(--color) r g b / 0.1);
+    color: var(--color);
+    border-color: var(--color);
+
+
+    &:is(label) {
+        display: inline-block;
+    }
 }
 
 .badge {
@@ -501,7 +538,7 @@ hr {
 	flex-grow: 1;
 }
 
-input:not(:is([type="checkbox"], [type="radio"], [type="button"], [type="submit"])), select, textarea {
+input:not(:is([type="checkbox"], [type="radio"], [type="button"], [type="submit"], [type="color"])), select, textarea {
     background-color: transparent;
     border: thin solid var(--separator-color);
     color: currentColor;

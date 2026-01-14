@@ -1,3 +1,4 @@
+from typing import Any
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
@@ -16,6 +17,24 @@ class NamedModel(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+
+def random_color():
+    from colorsys import hsv_to_rgb
+    from random import random
+    
+    h = random()
+    s = 0.6 + random() * 0.4
+    v = 1.0
+
+    r, g, b = hsv_to_rgb(h, s, v)
+    r, g, b = int(r * 255), int(g * 255), int(b * 255)
+
+    return f'#{r:0>2x}{g:0>2x}{b:0>2x}'
+
+class Tag(NamedModel):
+    color = ColorField(verbose_name=_('Color'), default=random_color)
+
 
 class ServingGlass(NamedModel):
     icon = models.TextField(default="", blank=True)
@@ -70,6 +89,8 @@ class Recipe(NamedModel):
 
     product = models.ForeignKey(Product, verbose_name=_('Product'), on_delete=models.SET_NULL, null=True, blank=True, default=None, help_text=_("Used to display pricing"))
 
+    tags = models.ManyToManyField(Tag, blank=True)
+
     steps: models.QuerySet["RecipeStep"]
     
     class Meta:
@@ -79,6 +100,21 @@ class Recipe(NamedModel):
 
     def get_absolute_url(self) -> str:
         return reverse('blackbook:recipe', kwargs={'pk': self.pk})
+    
+    def search_metadata(self) -> dict[str, Any]:
+        """
+        Gives keywords for search in recipe list.
+
+        Keywords are sorted into categories (the keys of the returned dict).
+        Each category has either a keyword (string) or a list of keywords (list of strings)
+
+        A recipe is matched if it has a (partial) match with at least one keyword in its respective category for every query keyword.
+        """
+        return {
+            'name': self.name.casefold(),
+            'tag': [tag.name.casefold() for tag in self.tags.all()],
+            'has': [step.ingredient.name.casefold() for step in self.steps.all() if step.ingredient]
+        }
 
 class RecipeStep(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='steps')
@@ -110,4 +146,3 @@ class RecipeStep(models.Model):
 
         s += f" {self.instruction}"
         return s.strip()
-

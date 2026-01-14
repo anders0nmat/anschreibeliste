@@ -109,3 +109,51 @@ function registerHandlers(step: HTMLElement) {
     })
 }
 
+const add_tag_button = document.getElementById('add-tag') as HTMLButtonElement
+
+add_tag_button.addEventListener('click', _ => {
+    const template = document.getElementById('new-tag-template') as HTMLTemplateElement
+    const fragment = template.content.cloneNode(true)
+    const dummy = document.createElement('div')
+    dummy.append(fragment)
+
+    const html = dummy.innerHTML
+
+    const newTagCount = document.getElementById('id_new-tags-TOTAL_FORMS') as HTMLInputElement
+    const newTagID = newTagCount.value
+    newTagCount.value = (parseInt(newTagID) + 1).toString()
+
+    const changedHtml = html.replaceAll('__prefix__', newTagID)
+
+    dummy.innerHTML = changedHtml
+    const colorInput = dummy.querySelector<HTMLInputElement>('input[type="color"]')!
+    colorInput.addEventListener('change', changeColor)
+    const color = randomColor()
+    console.log(color)
+    colorInput.value = color
+
+    add_tag_button.insertAdjacentElement('beforebegin', dummy.firstElementChild!)
+    colorInput.dispatchEvent(new Event('change'))
+})
+
+function changeColor(ev) {
+    const target = ev.target as HTMLInputElement
+    const tag = target.closest<HTMLElement>('.tag')
+    tag?.style.setProperty('--color', target.value)
+}
+
+function hsv2rgb(h,s,v): [number, number, number] {                              
+  let f= (n,k=(n+h/60)%6) => v - v*s*Math.max( Math.min(k,4-k,1), 0);     
+  return [f(5),f(3),f(1)];       
+} 
+
+function randomColor(): string {
+    const h = Math.random() * 360
+    const s = 0.6 + Math.random() * 0.4
+    const v = 1.0
+
+    return "#" +
+        hsv2rgb(h, s, v)
+        .map(v => Math.floor(v * 255).toString(16).padStart(2, "0"))
+        .join("")
+}

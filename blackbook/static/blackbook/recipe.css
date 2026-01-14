@@ -65,6 +65,41 @@ main {
     }
 }
 
+.new-tag {
+    padding-inline: .25em !important;
+
+    & input[type="text"] {
+        padding: 0;
+        border: none;
+        max-width: 10ch;
+        min-width: 7ch;
+
+        border-radius: 0 100vw 100vw 0;
+    }
+
+    & input[type="color"] {
+        width: auto;
+        height: 1.5em;
+        aspect-ratio: 1;
+        border-radius: 100vw;
+        appearance: none;
+        border: thin solid var(--separator-color);
+        outline: none;
+        padding: 0;
+
+        &::-moz-color-swatch {
+            border: none;
+        }
+    }
+}
+
+#add-tag {
+    aspect-ratio: 1;
+    height: 1lh;
+    padding: .25em;
+    box-sizing: content-box;
+}
+
 form {
     textarea {
         resize: vertical;

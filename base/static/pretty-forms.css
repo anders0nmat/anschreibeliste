@@ -81,3 +81,17 @@
     }
 
 }
+
+.pretty-form .tag-form .tag {
+    & input[type="checkbox"] {
+        display: none;
+    }
+
+    &.inactive,
+    &:has(input[type="checkbox"]:not(:checked)) {
+        color: var(--secondary-text-color);
+        border-color: var(--separator-color);
+        background: none;
+    }
+}
+

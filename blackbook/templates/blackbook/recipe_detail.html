@@ -21,17 +21,28 @@
     <p>
         {{ recipe.description }}
     </p>
+
+    <div class="hstack gap-m wrap p-m text-small">
+        {% for tag in recipe.tags.all %}
+        <div class="tag" style="--color: {{ tag.color }}">{{ tag.name }}</div>
+        {% endfor %}
+    </div>
     
+    {% if recipe.serving_glass or recipe.method or recipe.product %}
     <div class="hstack gap-m p-m center-across">
+        {% if recipe.serving_glass %}
         <div class="vstack center-across">
             {{ recipe.serving_glass.icon|safe }}
             <div class="caption">{{ recipe.serving_glass.name }}</div>
         </div>
+        {% endif %}
         
+        {% if recipe.method %}
         <div class="vstack center-across">
             {{ recipe.method.icon|safe }}
             <div class="caption">{{ recipe.method.name }}</div>
         </div>
+        {% endif %}
         
         
         <div style="flex:1"></div>
@@ -41,6 +52,7 @@
         {{ recipe.product.member_cost|money }}
         {% endif %}
     </div>
+    {% endif %}
 
     <table>
         <colgroup>

@@ -16,14 +16,39 @@ function debounce<Args extends any[], F extends (...args: Args) => any>(func: F,
     }
 }
 
+type StringOrArray = string | string[]
+
+type StringArrayMap = {
+    [key: string]: StringOrArray
+}
+
+function splitQuoted(str: string): string[] {
+    return [...str.matchAll(/([^'"\s]+)|"(.*?)"|'(.*?)'/g)]
+        .map(match => match.slice(1).find(e => e !== undefined))
+        .filter(e => e !== undefined)
+}
+
 // An array of [name, element] pairs, for faster search
-const search_items: [string, HTMLElement][] = [...document.querySelectorAll<HTMLElement>('#recipes a.recipe')].map(e => [e.textContent ?? '', e])
+const search_items: [StringArrayMap, HTMLElement][] = [...document.querySelectorAll<HTMLElement>('#recipes a.recipe')]
+    .map(e => [JSON.parse(e.querySelector('script')?.textContent ?? '{}'), e])
 
 search_bar.addEventListener('input', debounce(_ => {
-	const searchTerms = search_bar.value.toLowerCase().split(' ')
+    const searchTerms = splitQuoted(search_bar.value.toLowerCase())
 
-	search_items.forEach(([name, element]) => {
-		const matches = searchTerms.every(term => name.toLocaleLowerCase().includes(term))
-		element.style.display = matches ? '' : 'none'
+    const matches = (metadata: StringArrayMap): boolean => {
+        return searchTerms.every(term => {
+            const [value, op] = [...term.split(':', 2).reverse(), 'name']
+
+            let metavalue = metadata[op]
+            if (!Array.isArray(metavalue)) {
+                metavalue = [metavalue]
+            }
+
+            return metavalue.some(e => e.includes(value))
+        })
+    }
+
+	search_items.forEach(([metadata, element]) => {        
+        element.style.display = matches(metadata) ? '' : 'none'
 	})
 }, 50))

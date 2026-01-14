@@ -28,6 +28,27 @@
             <div>{{ form.product.as_field_group }}</div>
         </div>
 
+        <div>
+            {{ form.tags.label_tag }}
+
+            <div class="hstack gap-m wrap tag-form">
+                {{ form.tags }}
+
+                {{ tag_formset.management_form }}
+                <template id="new-tag-template">
+                    <div class="tag hstack center-across new-tag gap-m">
+                        {{ tag_formset.empty_form.id }}
+                        {{ tag_formset.empty_form.color }}
+                        {{ tag_formset.empty_form.name }}
+                    </div>
+                </template>
+
+                <button type="button" class="icon-button tag inactive" id="add-tag">
+                    {% icon "plus" %}
+                </button>
+            </div>
+        </div>
+
         <hr>
 
         <table id="steps" class="tight-form">
@@ -75,7 +96,7 @@
 
         <button type="submit" class="button primary action-positive hstack centered gap-m">
             {% icon "save" %}
-            Save
+            {% trans "Save" %}
         </button>
 
     </form>

@@ -1,13 +1,16 @@
 
 from typing import Any, Callable, Iterator, Tuple
-from django.forms import ModelForm, ModelChoiceField, FileField, ValidationError,  TextInput, BaseInlineFormSet, inlineformset_factory, CheckboxInput
+from django.forms import ModelForm, ModelChoiceField, FileField, ValidationError,  TextInput, BaseInlineFormSet, inlineformset_factory, CheckboxInput, CheckboxSelectMultiple,modelformset_factory
+from django.forms.widgets import ColorInput
 from itertools import groupby
 from io import BytesIO
 from django.core.files.uploadedfile import UploadedFile
 
+from colorfield.forms import ColorField
+
 from django.utils.safestring import SafeText, mark_safe
 from ledger.models import Product
-from .models import Recipe, ServingGlass, PrepMethod, RecipeStep, Ingredient
+from .models import Recipe, ServingGlass, PrepMethod, RecipeStep, Ingredient, Tag
 from django.utils.translation import gettext_lazy as _
 
 import xml.etree.ElementTree as ET
@@ -39,10 +42,36 @@ class GroupedModelChoiceField(ModelChoiceField):
         else:
             self.group_label = group_label
 
+class TagSelectMultiple(CheckboxSelectMultiple):
+    use_fieldset = False
+    option_inherits_attrs = False
+    option_template_name = 'blackbook/widgets/checkbox_tag.html'
+    template_name = 'blackbook/widgets/checkbox_select.html'
+
+    def __init__(self, *args, label_attrs=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if callable(label_attrs):
+            self.label_attrs = label_attrs
+        else:
+            self.label_attrs = lambda _: label_attrs
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        option['label_attrs'] = self.label_attrs(value)
+        return option
+
+def get_tag_color(value):
+    instance = value.instance
+    color = instance.color
+    return {'style': f'--color: {color}', 'class': 'tag'}
+
 class RecipeForm(NoLabelSuffixMixin, ModelForm):
     class Meta:
         model = Recipe
         fields = '__all__'
+        widgets = {
+           'tags': TagSelectMultiple(attrs={'class': 'hstack'}, label_attrs=get_tag_color),
+        }
     
     product = GroupedModelChoiceField(Product.objects.filter(category=Product.ProductCategory.ARTICLE), group_by_field='group', group_label=lambda group: group.name, label=_('product'), required=False, help_text=_("Used to display pricing"))
 
@@ -183,9 +212,10 @@ class RecipeStepForm(ModelForm):
 class BaseRecipeStepFormset(BaseInlineFormSet):
     def remove_temporary(self):
         for form in self.forms:
-            object = form.cleaned_data.get('ingredient', None)
-            if object and getattr(object, '_created_by_form', False):
-                object.delete()
+            if form.is_valid():
+                object = form.cleaned_data.get('ingredient', None)
+                if object and getattr(object, '_created_by_form', False):
+                    object.delete()
     
     def get_deletion_widget(self):
         return CheckboxInput(attrs={'class': 'visually-hidden'})
@@ -196,4 +226,20 @@ RecipeStepFormset = inlineformset_factory(
     form=RecipeStepForm,
     formset=BaseRecipeStepFormset,
     fields='__all__')
+
+class TagForm(ModelForm):
+    class Meta:
+        model = Tag
+        fields = '__all__'
+        widgets = {
+            # Translators: Shown as placeholder in a new tag field
+            'name': TextInput(attrs={'placeholder': _('New tag')})
+        }
+    
+    color = ColorField(widget=ColorInput())
+
+TagFormset = modelformset_factory(
+    model=Tag,
+    form=TagForm,
+    extra=0)
 

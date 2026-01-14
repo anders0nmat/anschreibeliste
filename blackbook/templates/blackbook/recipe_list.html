@@ -20,17 +20,20 @@
 <ul id="recipes">
     {% for recipe in recipe_list %}
     <a class="recipe" role="item" href="{{ recipe.get_absolute_url }}">
+
+        {{ recipe.search_metadata|json_script }}
+
         {% if recipe.group is not None %}
         <span class="caption">{{ recipe.group.name }}</span>
         {% else %}
         <span class="caption empty">-</span>
         {% endif %}
         <h4>{{ recipe.name }}</h4>
-        {% if recipe.description %}
-        <p>{{ recipe.description }}</p>
-        {% else %}
-        <p class="empty">-</p>
-        {% endif %}
+        <div class="hstack gap-m ph-s text-tiny overflow-hidden">
+            {% for tag in recipe.tags.all %}
+            <div class="tag" style="--color: {{ tag.color }}">{{ tag.name }}</div>
+            {% endfor %}
+        </div>
     </a>
     {% endfor %}
 </ul>
