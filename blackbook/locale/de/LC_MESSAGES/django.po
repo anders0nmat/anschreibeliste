@@ -1,13 +1,12 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# SPDX-FileCopyrightText: 2026 YEAR 2026
 # This file is distributed under the same license as the PACKAGE package.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-06 17:20+0100\n"
-"PO-Revision-Date: 2026-01-06 19:10+0100\n"
+"POT-Creation-Date: 2026-01-14 23:48+0100\n"
+"PO-Revision-Date: 2026-01-14 23:51+0100\n"
 "Last-Translator: \n"
 "Language-Team: German <kde-i18n-de@kde.org>\n"
 "Language: de_DE\n"
@@ -17,127 +16,135 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Lokalize 25.12.0\n"
 
-#: forms.py:47
-#| msgid "Product"
+#: forms.py:76
 msgid "product"
 msgstr "Produkt"
 
-#: models.py:12
-msgid "name"
-msgstr "Name"
-
-#: models.py:24
-msgid "Serving glass"
-msgstr "Servier-Glas"
-
-#: models.py:25
-msgid "Serving glasses"
-msgstr "Servier-Gläser"
-
-#: models.py:31
-#| msgid "method"
-msgid "Prep method"
-msgstr "Methode"
-
-#: models.py:32
-#| msgid "method"
-msgid "Prep methods"
-msgstr "Methoden"
-
-#: models.py:35
-msgid "Light Color"
-msgstr "Farbe (Heller Modus)"
-
-#: models.py:36
-msgid "Dark Color"
-msgstr "Farbe (Dunkler Modus)"
-
-#: models.py:39
-#| msgid "Ingredient"
-msgid "Ingredient category"
-msgstr "Zutatengruppe"
-
-#: models.py:40
-#| msgid "Ingredient"
-msgid "Ingredient categories"
-msgstr "Zutatengruppen"
-
-#: models.py:46 templates/blackbook/recipe_form.html:57
-msgid "Ingredient"
-msgstr "Zutat"
-
-#: models.py:47
-#| msgid "Ingredient"
-msgid "Ingredients"
-msgstr "Zutaten"
-
-#: models.py:51 models.py:86
-msgid "order"
-msgstr "Reihenfolge"
-
-#: models.py:59
-msgid "Recipe Group"
-msgstr "Rezeptgruppe"
-
-#: models.py:60
-msgid "Recipe Groups"
-msgstr "Rezeptgruppen"
-
-#: models.py:64
-msgid "description"
-msgstr "Beschreibung"
-
-#: models.py:66
-msgid "group"
-msgstr "Gruppe"
-
-#: models.py:68
-msgid "Glass"
-msgstr "Glas"
-
-#: models.py:69
-msgid "method"
-msgstr "Methode"
-
-#: models.py:71
-msgid "Product"
-msgstr "Produkt"
-
-#: models.py:71
+#: forms.py:76 models.py:90
 msgid "Used to display pricing"
 msgstr "Bestimmt den Preis"
 
-#: models.py:76
+#. Translators: Shown as placeholder in a new tag field
+#: forms.py:236
+msgid "New tag"
+msgstr "Neuer Tag"
+
+#: models.py:13
+msgid "name"
+msgstr "Name"
+
+#: models.py:36
+#| msgid "Dark Color"
+msgid "Color"
+msgstr "Farbe (Dunkler Modus)"
+
+#: models.py:43
+msgid "Serving glass"
+msgstr "Servier-Glas"
+
+#: models.py:44
+msgid "Serving glasses"
+msgstr "Servier-Gläser"
+
+#: models.py:50
+msgid "Prep method"
+msgstr "Methode"
+
+#: models.py:51
+msgid "Prep methods"
+msgstr "Methoden"
+
+#: models.py:54
+msgid "Light Color"
+msgstr "Farbe (Heller Modus)"
+
+#: models.py:55
+msgid "Dark Color"
+msgstr "Farbe (Dunkler Modus)"
+
+#: models.py:58
+msgid "Ingredient category"
+msgstr "Zutatengruppe"
+
+#: models.py:59
+msgid "Ingredient categories"
+msgstr "Zutatengruppen"
+
+#: models.py:65 templates/blackbook/recipe_form.html:76
+msgid "Ingredient"
+msgstr "Zutat"
+
+#: models.py:66
+msgid "Ingredients"
+msgstr "Zutaten"
+
+#: models.py:70 models.py:122
+msgid "order"
+msgstr "Reihenfolge"
+
+#: models.py:78
+msgid "Recipe Group"
+msgstr "Rezeptgruppe"
+
+#: models.py:79
+msgid "Recipe Groups"
+msgstr "Rezeptgruppen"
+
+#: models.py:83
+msgid "description"
+msgstr "Beschreibung"
+
+#: models.py:85
+msgid "group"
+msgstr "Gruppe"
+
+#: models.py:87
+msgid "Glass"
+msgstr "Glas"
+
+#: models.py:88
+msgid "method"
+msgstr "Methode"
+
+#: models.py:90
+msgid "Product"
+msgstr "Produkt"
+
+#: models.py:97
 msgid "Recipe"
 msgstr "Rezept"
 
-#: models.py:77
+#: models.py:98
 msgid "Recipes"
 msgstr "Rezepte"
 
-#: models.py:93
+#: models.py:129
 msgid "amount"
 msgstr "Menge"
 
-#: models.py:95
+#: models.py:131
 msgid "instruction"
 msgstr "Anweisung"
 
-#: models.py:98
+#: models.py:134
 msgid "Recipe step"
 msgstr "Schritt"
 
-#: models.py:99
+#: models.py:135
 msgid "Recipe steps"
 msgstr "Schritte"
 
-#: templates/blackbook/recipe_form.html:56
+#: templates/blackbook/recipe_form.html:75
 msgid "Amount"
 msgstr "Menge"
 
-#: templates/blackbook/recipe_form.html:58
+#: templates/blackbook/recipe_form.html:77
 msgid "Instruction"
 msgstr "Anweisung"
+
+#: templates/blackbook/recipe_form.html:99
+msgid "Save"
+msgstr "Speichern"
 
 #: templates/blackbook/recipe_list.html:16
 msgid "Search"
