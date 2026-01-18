@@ -2,7 +2,7 @@
 <html lang="{{ request.LANGUAGE_CODE|default:'en' }}">
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0 maximum-scale=1.0">
 	<title>{% block title %}{% endblock title %}</title>
 
 	{% load static %}
@@ -22,18 +22,15 @@
 		name="theme-color"
 		content="rgb(30, 30, 30)"
 		media="(prefers-color-scheme: dark)" />
-    <meta
-        name="color-scheme"
-        content="light dark">
+    <meta name="color-scheme" content="light dark">
 
 	{% if js_config %}
 	{{ js_config|json_script:"js-config" }}
 	{% endif %}
 	{% block import %}{% endblock import %}
-
 </head>
 <body>
-    <div style="width:0;height:0;position:absolute;overflow:hidden">
+    <div class="visually-hidden">
         {% icon_masks %}
     </div>
 	{% block body %}{% endblock body %}

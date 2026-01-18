@@ -134,7 +134,7 @@ class Account(models.Model):
     @transaction.atomic
     def close_balance(self):
         if self.transactions.filter(closing_balance=None).exists():
-            closing_balance = AccountBalance.objects.create(account=self, closing_balance=self.current_balance)
+            closing_balance = AccountBalance.objects.create(account=self, closing_balance=self.current_balance, previous_balance=self.last_balance)
             self.transactions.filter(closing_balance=None).update(closing_balance=closing_balance)
 
 class AccountBalance(models.Model):
@@ -277,8 +277,8 @@ class Product(models.Model):
 
     objects = ProductManager()
 
-    full_name = models.CharField(verbose_name=_('name'), max_length=255)
-    display_name = models.CharField(verbose_name=_('display name'), max_length=255, blank=True)
+    full_name = models.CharField(verbose_name=_('name'), max_length=255, help_text=_("Used in transactions"))
+    display_name = models.CharField(verbose_name=_('display name'), max_length=255, blank=True, help_text=_('Used for display'))
     cost = PositiveFixedPrecisionField(verbose_name=_('cost'), decimal_places=fpint.__precision__)
     member_cost = PositiveFixedPrecisionField(verbose_name=_('member cost'), decimal_places=fpint.__precision__, blank=True)
     visible = models.BooleanField(verbose_name=_('visible'), default=True)

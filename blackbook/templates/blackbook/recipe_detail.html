@@ -1,0 +1,87 @@
+{% extends 'index.html' %}
+
+{% load static %}
+{% load ledger %}
+
+{% block import %}
+    {{ block.super }}
+
+    <link rel="stylesheet" href="{% static 'blackbook/recipe.css' %}">
+{% endblock import %}
+
+{% block content %}
+
+<article>
+    <div class="caption">{{ recipe.group.name }}</div>
+    <div class="hstack">
+        <h2>{{ recipe.name }} </h2>
+        <hr class="spacer">
+        <a class="icon-button" href="{% url 'blackbook:recipe_edit' recipe.pk %}">{% icon "pencil" %}</a>
+    </div>
+    <p>
+        {{ recipe.description }}
+    </p>
+
+    <div class="hstack gap-m wrap p-m text-small">
+        {% for tag in recipe.tags.all %}
+        <div class="tag" style="--color: {{ tag.color }}">{{ tag.name }}</div>
+        {% endfor %}
+    </div>
+    
+    {% if recipe.serving_glass or recipe.method or recipe.product %}
+    <div class="hstack gap-m p-m center-across">
+        {% if recipe.serving_glass %}
+        <div class="vstack center-across">
+            {{ recipe.serving_glass.icon|safe }}
+            <div class="caption">{{ recipe.serving_glass.name }}</div>
+        </div>
+        {% endif %}
+        
+        {% if recipe.method %}
+        <div class="vstack center-across">
+            {{ recipe.method.icon|safe }}
+            <div class="caption">{{ recipe.method.name }}</div>
+        </div>
+        {% endif %}
+        
+        
+        <div style="flex:1"></div>
+        
+        {% if recipe.product is not None %}
+        {{ recipe.product.cost|money }}
+        {{ recipe.product.member_cost|money }}
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <table>
+        <colgroup>
+            <col style="width: 20%">
+            <col style="width: 40%">
+            <col style="width: 40%">
+        </colgroup>
+        {% for step in recipe.steps.all %}
+        <tr>
+            <td class="amount">{{ step.amount }}</td>
+            {% if step.ingredient is not None %}
+                {% with step.ingredient.category as category %}
+                    <td 
+                        class="ingredient"
+                        
+                        {% if category.light_color is not None %}
+                        style="--light-color: {{ category.light_color }}; --dark-color: {{ category.dark_color|default_if_none:category.light_color }}"
+                        {% endif %}
+                    >
+                        {{ step.ingredient.name }}
+                    </td>
+                {% endwith %}
+            <td class="instruction">{{ step.instruction }}</td>
+            {% else %}
+            <td class="instruction" colspan="2">{{ step.instruction }}</td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </table>
+</article>
+
+{% endblock content %}

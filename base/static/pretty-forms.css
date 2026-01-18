@@ -1,0 +1,97 @@
+.pretty-form div:has(> :is(input, select, textarea)) {
+    position: relative;
+    appearance: none;
+
+    & > :is(input, select, textarea) {
+        padding: 1.25em .75em .25em;
+
+        &[aria-invalid="true"],
+        &:user-invalid {
+            border-color: var(--negative-color);
+        }
+    }
+
+    & > select {
+        appearance: none;
+        background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0ibTYgOSA2IDYgNi02Ii8+PC9zdmc+);
+        background-repeat: no-repeat;
+        background-position: right .75em center;
+        background-size: 1.25em 1.25em;
+
+        padding-right: 2.75em;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        & > select {
+            background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYmViZWJlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0ibTYgOSA2IDYgNi02Ii8+PC9zdmc+);    
+        }
+    }
+
+    & > label {
+        position: absolute;
+        padding: .75em .75em;
+        transform-origin: 0 0;
+        translate: .25em -.25em;
+        scale: 0.75;
+
+        transition:
+            translate 100ms ease-in-out,
+            scale 100ms ease-in-out;
+
+        color: var(--secondary-text-color);
+    }
+
+    &:has(> :placeholder-shown:not(:focus-within)) > label {
+        translate: 0;
+        scale: 1;
+    }
+
+    & .helptext {
+        color: var(--secondary-text-color);
+    }
+
+    & .errorlist {
+        color: var(--negative-color);
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    & .helptext,
+    & .errorlist {
+        font-size: 75%;
+        margin-top: 0.25em;
+        padding-inline: 0.25em;
+    }
+
+    &:has(.errorlist) .helptext {
+        display: none;
+    }
+}
+
+.pretty-form.tight-form :is(input, select, textarea),
+.pretty-form .tight-form :is(input, select, textarea) {
+    border: none;
+    border-bottom: 2px solid var(--separator-color);
+    padding: .25em 0;
+
+    &:focus-within {
+        border-color: var(--focus-color);
+        box-shadow: none;
+    }
+
+}
+
+.pretty-form .tag-form .tag {
+    & input[type="checkbox"] {
+        display: none;
+    }
+
+    &.inactive,
+    &:has(input[type="checkbox"]:not(:checked)) {
+        color: var(--secondary-text-color);
+        border-color: var(--separator-color);
+        background: none;
+    }
+}
+

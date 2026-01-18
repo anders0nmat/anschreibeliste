@@ -16,7 +16,7 @@
 	gap: .5em;
 }
 
-.pretty-form div:has(> :is(input, select)) {
+.pretty-form div:has(> :is(input, select, textarea)) {
 	isolation: isolate;
 	position: relative;
 	display: flex;
@@ -63,7 +63,7 @@
 	}
 }
 
-.pretty-form div:has(> :is(
+.pretty-form div:has(> label + :is(
 	input[type="text"],
 	input[type="number"],
 	input[type="email"],
@@ -71,9 +71,10 @@
 	input[type="search"],
 	input[type="text"],
 	input[type="url"],
-	select
+	select,
+    textarea
 )) {
-	margin-top: 0.75em;
+	margin-top: calc(0.8 * 0.6 * 1ch);
 }
 
 .pretty-form div > :is(
@@ -84,9 +85,10 @@
 	input[type="search"],
 	input[type="text"],
 	input[type="url"],
-	select
+	select,
+    textarea
 ) {
-	padding: 0.5em 0.75em;
+	padding: calc(min(0.25em, 0.25rem)) calc(min(0.75em, 0.75rem));
 	background: none;
 	border: thin solid var(--input-border);
 	font-size: 1em;
@@ -121,9 +123,10 @@
 		left: 0;
 		margin: 0.5em 0.75em;
 		padding-inline: 0.25ch;
-		translate: -0.25ch -85%;
+		translate: -0.25ch -105%;
 		scale: 0.80;
 		transform-origin: 0 50%;
+        line-height: 1;
 		
 		pointer-events: none;
 		
@@ -132,11 +135,14 @@
 		
 		color: var(--input-label);
 		font-variant: small-caps;
+        font-weight: normal;
+        font-style: normal;
 		transition:
 			translate 200ms,
 			scale 200ms;
 
-		&:has(+ input:placeholder-shown:not(:focus)) {
+		&:has(+ input:placeholder-shown:not(:focus)),
+        &:has(+ textarea:placeholder-shown:not(:focus)) {
 			translate: 0;
 			scale: 1;
 			color: currentColor;

@@ -39,9 +39,11 @@ ALLOWED_HOSTS = [
 
 INSTALLED_APPS = [
     'daphne',
+    'colorfield',
     'base.apps.BaseConfig',
     'ledger.apps.LedgerConfig',
     'wiki.apps.WikiConfig',
+    'blackbook.apps.BlackbookConfig',
     'autologin.apps.AutologinConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -49,6 +51,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.forms',
     'adminsortable2',
 ]
 
@@ -88,6 +91,13 @@ TEMPLATES = [
         },
     },
 ]
+
+from django.forms.renderers import TemplatesSetting
+
+class CustomFormRenderer(TemplatesSetting):
+    field_template_name = "forms/field.html"
+
+FORM_RENDERER = "anschreibeliste.settings.CustomFormRenderer"
 
 WSGI_APPLICATION = 'anschreibeliste.wsgi.application'
 ASGI_APPLICATION = 'anschreibeliste.asgi.application'

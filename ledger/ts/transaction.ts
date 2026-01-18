@@ -175,7 +175,7 @@ export class Transaction extends HTMLWrapper {
 			}
 		})
 	}
-	static async listen(ontransaction?: (event: ServerEvent) => void, reconnect: boolean = false) {
+	static async listen(ontransaction?: (event: ServerEvent) => void, reconnect: boolean = false, account?: number) {
 		const url = new URL(this.api.events, document.location.origin)
 
 		this.eventsource_handlers.ontransaction = ontransaction
@@ -204,6 +204,10 @@ export class Transaction extends HTMLWrapper {
 				confirmed_transaction.applyServerEvent(data)
 			}
 			else {
+                if (account !== undefined && data.account != account) {
+                    // Ignore transactions by other accounts than the one specified
+                    return
+                }
 				const new_transaction = Transaction.create()
 				new_transaction.applyServerEvent(data)
 				new_transaction.status?.element.remove()

@@ -24,6 +24,8 @@ class NavItem:
             paths = [paths]
         if isinstance(path_prefixes, str):
             path_prefixes = [path_prefixes]
+        if isinstance(permissions, str):
+            permissions = [permissions]
 
         if not paths:
             raise ValueError("No path defined but required for default target")
@@ -41,8 +43,7 @@ class NavItem:
         view_name = request.resolver_match.view_name
         is_active = \
             view_name in self.paths or\
-            any(view_name.startswith(prefix) for prefix in self.path_prefixes)
-        
+            any(view_name.startswith(prefix) for prefix in self.path_prefixes)        
 
         return RequestedNavItem(
             title=self.title,

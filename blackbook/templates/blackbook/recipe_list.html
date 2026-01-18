@@ -1,0 +1,41 @@
+{% extends 'index.html' %}
+
+{% load static %}
+{% load ledger %}
+{% load i18n %}
+
+{% block import %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'blackbook/recipe.css' %}">
+    <script type="module" src="{% static 'blackbook/recipe.js' %}"></script>
+{% endblock import %}
+
+{% block content %}
+
+<div class="hstack center-along p-m gap-m">
+    <input type="search" id="recipe-search" placeholder="{% trans "Search" %}">
+    <a href="{% url 'blackbook:recipe_new' %}" class="icon-button">{% icon "plus" %}</a>
+</div>
+
+<ul id="recipes">
+    {% for recipe in recipe_list %}
+    <a class="recipe" role="item" href="{{ recipe.get_absolute_url }}">
+
+        {{ recipe.search_metadata|json_script }}
+
+        {% if recipe.group is not None %}
+        <span class="caption">{{ recipe.group.name }}</span>
+        {% else %}
+        <span class="caption empty">-</span>
+        {% endif %}
+        <h4>{{ recipe.name }}</h4>
+        <div class="hstack gap-m ph-s text-tiny overflow-hidden">
+            {% for tag in recipe.tags.all %}
+            <div class="tag" style="--color: {{ tag.color }}">{{ tag.name }}</div>
+            {% endfor %}
+        </div>
+    </a>
+    {% endfor %}
+</ul>
+
+{% endblock content %}

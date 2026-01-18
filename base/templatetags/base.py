@@ -18,7 +18,10 @@ def link_tree(context):
 def link_title(context):
     request: HttpRequest = context["request"]
     links = (item.for_request(request) for item in navbar)
+    links = (item for item in links if item)
+
     for item in links:
         if item.active:
             return item.title
+
     return ''

@@ -1,0 +1,105 @@
+{% extends 'index.html' %}
+
+{% load static %}
+{% load ledger %}
+{% load i18n %}
+
+{% block import %}
+    {{ block.super }}
+
+    <link rel="stylesheet" href="{% static 'blackbook/recipe.css' %}">
+    <link rel="stylesheet" href="{% static 'pretty-forms.css' %}">
+    <script type="module" src="{% static 'blackbook/edit.js' %}"></script>
+{% endblock import %}
+
+{% block content %}
+
+<article>
+    {% load_icons 'grip-vertical' 'trash-2' 'chevron-up' 'chevron-down' class="visually-hidden" %}
+    <form method="POST" class="vstack gap-m pretty-form">
+        {% csrf_token %}
+
+        <div class="text-lg">{{ form.name.as_field_group }}</div>
+        <div>{{ form.description.as_field_group }}</div>
+        <div>{{ form.group.as_field_group }}</div>
+        <div class="hstack gap-m stretch-children">
+            <div>{{ form.serving_glass.as_field_group }}</div>
+            <div>{{ form.method.as_field_group }}</div>
+            <div>{{ form.product.as_field_group }}</div>
+        </div>
+
+        <div>
+            {{ form.tags.label_tag }}
+
+            <div class="hstack gap-m wrap tag-form">
+                {{ form.tags }}
+
+                {{ tag_formset.management_form }}
+                <template id="new-tag-template">
+                    <div class="tag hstack center-across new-tag gap-m">
+                        {{ tag_formset.empty_form.id }}
+                        {{ tag_formset.empty_form.color }}
+                        {{ tag_formset.empty_form.name }}
+                    </div>
+                </template>
+
+                <button type="button" class="icon-button tag inactive" id="add-tag">
+                    {% icon "plus" %}
+                </button>
+            </div>
+        </div>
+
+        <hr>
+
+        <table id="steps" class="tight-form">
+            <template id="step-template">
+                {% include 'blackbook/snippets/recipe_step.html' with subform=formset.empty_form %}
+            </template>
+            {{ formset.empty_form.ingredient.field.widget.datalist }}
+            {{ formset.management_form }}
+            <colgroup>
+                <col style="width: 1em">
+                <col style="width: 8ch">
+                <col style="width: 50%">
+                <col style="width: 50%">
+                <col style="width: 2em">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>
+                        <label class="icon-button icon-checkbox">
+                            <input type="checkbox" id="order-arrows">
+                            {% icon "arrow-up-down" %}
+                        </label>    
+                    </th>
+                    <th>{% trans "Amount" %}</th>
+                    <th>{% trans "Ingredient" %}</th>
+                    <th>{% trans "Instruction" %}</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subform in formset %}
+                {% include 'blackbook/snippets/recipe_step.html' %}
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="5">
+                        <button type="button" id="add-step" class="icon-button">
+                            {% icon "plus" %}
+                        </button>   
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <button type="submit" class="button primary action-positive hstack centered gap-m">
+            {% icon "save" %}
+            {% trans "Save" %}
+        </button>
+
+    </form>
+</article>
+
+{% endblock content %}
