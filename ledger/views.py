@@ -266,8 +266,8 @@ class IndexView(TemplateView):
         Return all transactions newer than `old_threshold`.
         If there are fewer than `min_results`, fill with transactions older than that
         """
-        min_results = 30
-        old_threshold = now() - timedelta(weeks=4)
+        min_results = settings.TRANSACTION_HISTORY_MIN_ENTRIES
+        old_threshold = now() - settings.TRANSACTION_HISTORY_OLD_THRESHOLD
         queryset = Transaction.objects\
             .filter(closing_balance=None)\
             .order_by('-timestamp')\

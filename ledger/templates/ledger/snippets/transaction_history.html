@@ -13,10 +13,9 @@
 		transaction.js
 		transaction_history.css
 {% endcomment %}
-{% load ledger %}
-{% load static %}
 {% load i18n %}
 
+{% load_icons 'undo-2' class="visually-hidden" %}
 
 <template id="transaction-template">
 	{% include 'ledger/snippets/transaction.html' with transaction=None %}

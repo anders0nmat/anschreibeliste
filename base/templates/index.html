@@ -15,7 +15,7 @@
 		</ul>
 	</nav>
 	<div id="user-info">
-		<label class="slim transparent vcenter button" id="user-menu-toggle">
+		<label class="icon-button" id="user-menu-toggle">
 			<input type="checkbox" hidden class="css-hide" autocomplete="off">
 			{% icon "circle-user" %}
 			<span id="user-name">{{ user.username }}</span>
@@ -24,24 +24,17 @@
 		<ul id="user-menu">
 			{% if user.is_staff %}
 			<li>
-				<a href="{% url 'admin:index' %}" class="thin transparent vcenter button">
+				<a href="{% url 'admin:index' %}" class="icon-button left-aligned ph-m">
 					{% icon "settings" %}
 					<span>{% trans "Admin-Panel" %}</span>
 				</a>
 			</li>
-			{% endif %}
-			<li>
-				<button type="button" id="fullscreen-toggle" class="thin transparent vcenter button">
-                    {% icon "maximize" %}
-                    {% icon "minimize" %}
-					<span>{% trans "Fullscreen" %}</span>
-				</button>
-			</li>
 			<span class="separator"></span>
+			{% endif %}
 			<li>
 				<form action="{% url 'logout' %}" method="POST">
 					{% csrf_token %}
-					<button type="submit" class="thin transparent vcenter button">
+					<button type="submit" class="icon-button left-aligned ph-m">
                         {% icon "log-out" %}
 						<span>{% trans "Logout" %}</span>
 					</button>
@@ -50,33 +43,7 @@
             <li id="session-id">{{ request.session.session_key|slice:":5" }}</li>
 		</ul>
 
-		
-
-		<style>
-			#fullscreen-toggle {
-				&[active] svg:nth-of-type(1),
-				&:not([active]) svg:nth-of-type(2) {
-					display: none !important;
-				}
-			}
-		</style>
 		<script>
-			const fullscreen_toggle = document.getElementById('fullscreen-toggle')
-			fullscreen_toggle.addEventListener('click', ev => {
-				if (fullscreen_toggle.toggleAttribute('active')) {
-					document.body.requestFullscreen({
-						navigationUI: 'hide',
-					})
-				}
-				else {
-					document.exitFullscreen()
-				}
-			})
-			document.body.addEventListener('fullscreenchange', ev => {
-				fullscreen_toggle.toggleAttribute('active', document.fullscreenElement !== null)
-			})
-
-
 			const usermenu_toggle = document.querySelector('#user-menu-toggle input')
 			const userinfo = document.getElementById('user-info')
 			function usermenu_click(event) {
@@ -94,13 +61,12 @@
 					document.body.removeEventListener('click', usermenu_click)
 				}
 			})
-
 		</script>
 	</div>
 
 	<script>
 		// Make title of page visible
-		document.querySelector('#links h1').scrollIntoView()
+		document.querySelector('#links h1')?.scrollIntoView()
 	</script>
 </header>
 {% endblock header %}

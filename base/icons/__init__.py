@@ -28,11 +28,13 @@ def get_icon(name: str) -> ET.Element:
             return root
 
     with ZipFile(module_dir / "icons.zip") as archive:
+        keep_attrs = ['viewBox']
         try:
             with archive.open(f"{name}.svg") as file:
                 root = ET.parse(file).getroot()
                 for node in root.iter():
                     node.tag = node.tag.removeprefix('{http://www.w3.org/2000/svg}')
+                root.attrib = {key: value for key, value in root.attrib.items() if key in keep_attrs}
                 return root
         except KeyError:
             raise ValueError(f"Icon '{name}' not found")
@@ -76,8 +78,8 @@ def load_icons(context, *args, **kwargs):
         symbol = deepcopy(get_icon(name=icon))
         symbol.tag = 'symbol'
         symbol.attrib['id'] = f'icon-{icon}'
-        del symbol.attrib['width']
-        del symbol.attrib['height']
+        symbol.attrib.pop('width', None)
+        symbol.attrib.pop('height', None)
         root.append(symbol)
     if '__loaded_icons' not in context:
         context['__loaded_icons'] = set()

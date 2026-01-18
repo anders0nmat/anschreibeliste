@@ -164,7 +164,7 @@ div:has(#transactions) {
 }
 
 #transaction-revert {
-	display: none;
+	display: contents;
 }
 
 @keyframes progress-background {

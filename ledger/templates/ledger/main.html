@@ -87,11 +87,11 @@
 		<span class="empty">{% translate "Select product" %}</span>
 	</span>
 
-	<button type="reset" class="undo transparent slim center button">
+	<button type="reset" class="undo icon-button">
         {% icon "trash-2" %}
 	</button>
 
-	<label class="transparent slim center button" id="expand">
+	<label class="icon-button" id="expand">
 		<input type="checkbox">
         {% icon "chevron-up" %}
 	</label>
@@ -102,12 +102,12 @@
 </form>
 <div>
 	<h2 class="visually-hidden">{% translate "Transactions" %}</h2>
-	<ul id="transactions">
-		{% include 'ledger/snippets/transaction_history.html' with transactions=transaction_list revert_form="transaction-revert" only %}
-	</ul>
 	<form id="transaction-revert" action="{% url 'ledger:transaction_revert' %}" method="POST" >
 		{% csrf_token %}
 		{% idempotency_key %}
+	<ul id="transactions">
+		{% include 'ledger/snippets/transaction_history.html' with transactions=transaction_list revert_form="transaction-revert" only %}
+	</ul>
 	</form>
 </div>
 

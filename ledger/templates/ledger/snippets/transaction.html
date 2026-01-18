@@ -13,10 +13,8 @@
 
 	{% if revert_form %}
 	<button
-	type="submit"
-	form="{{ revert_form }}"
 	name="transaction" value="{{ transaction.pk }}"
-	class="undo transparent slim center button"
+	class="undo icon-button"
 	{% if transaction.allow_revert == False %}disabled{% endif %}>
         {% icon "undo-2" %}
 	</button>
@@ -35,6 +33,7 @@
 			<polyline points="3 3 9 9"/>
 		</svg>
 	</div>
+
 	{% endif %}
 </li>
 
