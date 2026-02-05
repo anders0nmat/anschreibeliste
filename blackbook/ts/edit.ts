@@ -37,6 +37,8 @@ function addStep() {
     rows.append(newElement)
     incForms()
     updateOrder()
+
+    newElement.querySelector<HTMLInputElement>('input[type="text"]')?.focus()
 }
 
 add_button.addEventListener('click', addStep)

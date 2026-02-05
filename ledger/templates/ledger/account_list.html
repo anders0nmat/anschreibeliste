@@ -13,8 +13,10 @@
 {% endblock import %}
 
 {% block content %}
+{% load_icons "badge" "undo-2" class="visually-hidden" %}
+
 <div class="group-list" id="accounts">
-	{% include 'ledger/snippets/accounts.html' with items=account_list selected=account url='ledger:account_detail' show_credit=True create_account=True require_empty_group=True only %}
+	{% include 'ledger/snippets/accounts.html' with items=account_list selected=account url='ledger:account_detail' show_credit=True create_account=True require_empty_group=True %}
 </div>
 {% block editor %}
 <div id="editor-placeholder">

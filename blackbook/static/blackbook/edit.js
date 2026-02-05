@@ -28,6 +28,7 @@ function addStep() {
     rows.append(newElement);
     incForms();
     updateOrder();
+    newElement.querySelector('input[type="text"]')?.focus();
 }
 add_button.addEventListener('click', addStep);
 document.querySelectorAll('tr[draggable]').forEach(registerHandlers);

@@ -18,6 +18,9 @@
 {% endblock import %}
 
 {% block content %}
+
+{% load_icons "badge" "undo-2" class="visually-hidden" %}
+
 <div id="tabs" data-active-slide="products">
 	<style>
 		[data-active-slide="products"] .slide-indicator[data-slide="products"],
@@ -65,12 +68,12 @@
 	<div class="slideshow">
 		<div class="slide group-list" id="products" data-slide="products">
 			<h2 class="visually-hidden">{{ the_product }}</h2>
-			{% include 'ledger/snippets/products.html' with items=product_list target_form="new-transaction" only %}
+			{% include 'ledger/snippets/products.html' with items=product_list target_form="new-transaction" %}
 		</div>
 		
 		<div class="slide group-list" id="accounts" data-slide="accounts">
 			<h2 class="visually-hidden">{{ the_account }}</h2>
-			{% include 'ledger/snippets/accounts.html' with items=account_list target_form="new-transaction" only %}
+			{% include 'ledger/snippets/accounts.html' with items=account_list target_form="new-transaction" %}
 		</div>
 	</div>
 </div>
@@ -106,7 +109,7 @@
 		{% csrf_token %}
 		{% idempotency_key %}
 	<ul id="transactions">
-		{% include 'ledger/snippets/transaction_history.html' with transactions=transaction_list revert_form="transaction-revert" only %}
+		{% include 'ledger/snippets/transaction_history.html' with transactions=transaction_list revert_form="transaction-revert" %}
 	</ul>
 	</form>
 </div>

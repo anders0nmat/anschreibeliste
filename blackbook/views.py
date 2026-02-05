@@ -1,10 +1,23 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpRequest, HttpResponseRedirect
+from django.views.generic import ListView, DetailView
 
 from .models import Recipe, Tag
 from .forms import RecipeForm, RecipeStepFormset, TagFormset
 
 # Create your views here.
+
+class RecipeList(ListView):
+    queryset = Recipe.objects\
+        .only('name', 'group')\
+        .order_by('name')\
+        .select_related('group')\
+        .prefetch_related('tags', 'steps__ingredient')
+
+class RecipeDetail(DetailView):
+    queryset = Recipe.objects\
+        .select_related('group', 'serving_glass', 'method', 'product')\
+        .prefetch_related('steps__ingredient', 'tags')
 
 def recipe_edit(request: HttpRequest, pk):
     recipe = None

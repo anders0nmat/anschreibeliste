@@ -7,7 +7,7 @@ constantly==23.10.4
 cryptography==44.0.0
 daphne==4.1.2
 Django==6.0.1
-django-admin-sortable2==2.2.4
+django-admin-sortable2==2.3.1
 django-colorfield==0.14.0
 et_xmlfile==2.0.0
 hyperlink==21.0.0
@@ -16,8 +16,8 @@ incremental==24.7.2
 Markdown==3.8.2
 openpyxl==3.1.5
 pillow==11.1.0
-psycopg==3.2.5
-psycopg-binary==3.2.5
+psycopg==3.2.10
+psycopg-binary==3.2.10
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
 pycparser==2.22

@@ -125,7 +125,7 @@
 			{% icon "chevron-right" %}
 		</summary>
 		<ul id="transactions">
-			{% include "ledger/snippets/transaction_history.html" with transactions=transactions revert_form="transaction-revert" only %}
+			{% include "ledger/snippets/transaction_history.html" with transactions=transactions revert_form="transaction-revert" %}
 		</ul>
 		<form id="transaction-revert" action="{% url 'ledger:account_revert' account.pk %}" method="POST" >
 			{% csrf_token %}

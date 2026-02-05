@@ -149,9 +149,10 @@ class AccountCreate(PermissionRequiredMixin, CreateView):
                 issuer=self.request.user)
         return response
 
-class TransactionList(ListView):
+class TransactionList(PermissionRequiredMixin, ListView):
     queryset = Transaction.objects.filter(closing_balance=None)
     output_format = 'html'
+    permission_required = "ledger.view_transaction"
 
     def get_queryset(self) -> QuerySet[Any]:
         queryset = super().get_queryset().order_by('-timestamp')
@@ -276,7 +277,7 @@ class IndexView(TemplateView):
             .select_related('account')
 
         transactions = []
-        for t in queryset:
+        for t in queryset[:100]:
             t: Transaction
             if len(transactions) < min_results:
                 transactions.append(t)

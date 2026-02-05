@@ -73,7 +73,7 @@ class RecipeForm(NoLabelSuffixMixin, ModelForm):
            'tags': TagSelectMultiple(attrs={'class': 'hstack'}, label_attrs=get_tag_color),
         }
     
-    product = GroupedModelChoiceField(Product.objects.filter(category=Product.ProductCategory.ARTICLE), group_by_field='group', group_label=lambda group: group.name, label=_('product'), required=False, help_text=_("Used to display pricing"))
+    product = GroupedModelChoiceField(Product.objects.filter(category=Product.ProductCategory.ARTICLE).prefetch_related('group'), group_by_field='group', group_label=lambda group: group.name, label=_('product'), required=False, help_text=_("Used to display pricing"))
 
 RecipeForm.base_fields['name'].widget.attrs['placeholder'] = ' '
 RecipeForm.base_fields['description'].widget.attrs['placeholder'] = ' '
@@ -126,21 +126,14 @@ class PrepMethodForm(ModelForm):
         return clean_svg(self.cleaned_data['icon'], self.files.get('icon_file'))
 
 class TextChoiceWidget(TextInput):
-    def __init__(self, choices=(), datalist_id=None, *args, **kwargs) -> None:
+    def __init__(self, choices=(), datalist_id=None, value_name_lookup=None, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.choices = choices
         self.datalist_id = datalist_id
+        self.value_name_lookup = value_name_lookup or {}
 
     def get_value_name(self, value):
-        for option_value, option_label in self.choices:
-            if isinstance(option_label, (list, tuple)):
-                for subvalue, sublabel in option_label:
-                    if subvalue.instance.pk == value:
-                        return sublabel
-            else:
-                if option_value.instance.pk == value:
-                    return option_label
-        return value
+        return self.value_name_lookup.get(value, value)
     
     def render(self, name, value, attrs=None, renderer=None) -> SafeText:
         list_id = self.datalist_id or f"{name}-list"
@@ -206,10 +199,25 @@ class RecipeStepForm(ModelForm):
     class Meta:
         model = RecipeStep
         fields = '__all__'
+
+    def __init__(self, *args, value_name_lookup=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if value_name_lookup:
+            self.fields['ingredient'].widget.value_name_lookup = value_name_lookup
     
-    ingredient = AutoCreateModelField(Ingredient.objects.all(), to_field_name='name', widget=TextChoiceWidget(datalist_id='ingredient-list'), empty_label=None, required=False)
+    ingredient = AutoCreateModelField(Ingredient.objects.select_related('category'), to_field_name='name', widget=TextChoiceWidget(datalist_id='ingredient-list'), empty_label=None, required=False)
 
 class BaseRecipeStepFormset(BaseInlineFormSet):
+    def __init__(self, *args, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.ingredient_names = dict(Ingredient.objects.values_list('id', 'name'))
+
+    def get_form_kwargs(self, index: Any) -> Any:
+        return super().get_form_kwargs(index) | {
+            'value_name_lookup': self.ingredient_names,
+        }
+
     def remove_temporary(self):
         for form in self.forms:
             if form.is_valid():

@@ -12,7 +12,9 @@ register = template.Library()
 
 default_class = "lucide"
 
-@lru_cache(maxsize=0 if settings.DEBUG else 128)
+USE_ICON_CACHE = getattr(settings, 'ICON_USE_CACHE', not settings.DEBUG)
+
+@lru_cache(maxsize=128 if USE_ICON_CACHE else 0)
 def get_icon(name: str) -> ET.Element:
     module_dir = Path(__file__).parent
 
