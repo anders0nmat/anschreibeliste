@@ -20,6 +20,7 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 urlpatterns = [
+	path('admin/action-forms/', include('django_admin_action_forms.urls')),
     path('admin/', admin.site.urls),
     path("", include("ledger.urls")),
     path("wiki/", include("wiki.urls")),

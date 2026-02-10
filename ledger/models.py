@@ -132,14 +132,17 @@ class Account(models.Model):
         return self.current_budget > 0
     
     @transaction.atomic
-    def close_balance(self):
-        if self.transactions.filter(closing_balance=None).exists():
-            closing_balance = AccountBalance.objects.create(account=self, closing_balance=self.current_balance, previous_balance=self.last_balance)
-            self.transactions.filter(closing_balance=None).update(closing_balance=closing_balance)
+    def close_balance(self, cutoff_date=None):
+        if cutoff_date is None:
+            cutoff_date = now()
+        pending_transactions = self.transactions.filter(closing_balance=None, timestamp__date__lt=cutoff_date)
+        if pending_transactions.exists():
+            closing_balance = AccountBalance.objects.create(account=self, timestamp=cutoff_date, closing_balance=self.current_balance, previous_balance=self.last_balance)
+            pending_transactions.update(closing_balance=closing_balance)
 
 class AccountBalance(models.Model):
     account = models.ForeignKey(Account, verbose_name=_('account'), on_delete=models.CASCADE, related_name='balances')
-    timestamp = models.DateTimeField(verbose_name=_('timestamp'), auto_now_add=True)
+    timestamp = models.DateTimeField(verbose_name=_('timestamp'))
     closing_balance = FixedPrecisionField(verbose_name=_('closing balance'), decimal_places=fpint.__precision__)
     previous_balance = models.OneToOneField("self", verbose_name=_('previous balance'), on_delete=models.CASCADE, null=True)
 
@@ -149,7 +152,7 @@ class AccountBalance(models.Model):
         verbose_name_plural = _('account balances')
 
     def __str__(self) -> str:
-        return gettext("{account}: {closing_balance} at {timestamp}").format(account=self.account, closing_balance=self.closing_balance, timestamp=self.timestamp)
+        return gettext("{account}: {closing_balance} at {timestamp}").format(account=self.account, closing_balance=fpint(self.closing_balance), timestamp=self.timestamp.replace(microsecond=0))
 
 class Transaction(models.Model):
     class AlreadyReverted(Exception): pass
@@ -168,7 +171,7 @@ class Transaction(models.Model):
     timejump_threshold = settings.TIMEJUMP_THRESHOLD
     objects: TransactionManager = TransactionQuerySet.as_manager()
 
-    closing_balance = models.ForeignKey(AccountBalance, verbose_name=_('closing balance'), on_delete=models.CASCADE, related_name='transactions', null=True, default=None, blank=True)
+    closing_balance = models.ForeignKey(AccountBalance, verbose_name=_('closing balance'), on_delete=models.SET_NULL, related_name='transactions', null=True, default=None, blank=True)
     account = models.ForeignKey(Account, verbose_name=_('account'), on_delete=models.CASCADE, related_name='transactions')
     amount = PositiveFixedPrecisionField(verbose_name=pgettext_lazy('money-related', 'amount'), decimal_places=fpint.__precision__)
     timestamp = models.DateTimeField(verbose_name=_('timestamp'), auto_now_add=True)

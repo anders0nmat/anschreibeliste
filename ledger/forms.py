@@ -63,3 +63,4 @@ class TransactionListFilter(Form):
     type = MultipleChoiceField(choices=Transaction.TransactionType.choices, label=pgettext_lazy('transaction', 'Type'), required=False, widget=CheckboxSelectMultiple)
     start = DateField(required=False, widget=NativeDateInput, label=_('Start'))
     end = DateField(required=False, widget=NativeDateInput, label=_('End'))
+    hide_reverted = BooleanField(label=_('Hide reverted transactions'), required=False)

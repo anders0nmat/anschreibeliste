@@ -54,6 +54,7 @@ main {
         position: sticky;
         top: 0;
         background-color: var(--primary-bg-color);
+        z-index: 10;
     }
 
     & #header:has(#show-filters:checked) {

@@ -279,7 +279,7 @@ header {
 		position: absolute;
 		right: 0;
 		top: calc(100% + 1em);
-		z-index: 5;
+		z-index: 5000;
 		width: max-content;
 		padding: 0.5em;
 		margin: 0;

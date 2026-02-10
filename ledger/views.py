@@ -155,7 +155,7 @@ class TransactionList(PermissionRequiredMixin, ListView):
     permission_required = "ledger.view_transaction"
 
     def get_queryset(self) -> QuerySet[Any]:
-        queryset = super().get_queryset().order_by('-timestamp')
+        queryset = super().get_queryset().order_by('-timestamp').select_related('account')
 
         # Filter Queryset according to GET params
         account_filter = self.get_filter('account', convert=int)
@@ -174,11 +174,14 @@ class TransactionList(PermissionRequiredMixin, ListView):
         if end_date_filter:
             queryset = queryset.filter(timestamp__date__lte=end_date_filter)
 
+        if self.request.GET.get('hide_reverted', '').casefold() in ('on', 'true', 'yes', '1'):
+            queryset = queryset.filter(related_transaction=None)
+
         return queryset
     
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         return super().get_context_data(**kwargs) | {
-            'filters': TransactionListFilter(self.request.GET, label_suffix=''),
+            'filters': TransactionListFilter(self.request.GET if self.request.GET else None, label_suffix=''),
         }
     
     T = TypeVar('T')

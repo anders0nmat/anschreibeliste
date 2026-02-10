@@ -24,7 +24,7 @@
         <span><span id="result-count">{{ transaction_list|length }}</span> {% trans "Entries" context "number of items" %}</span>
     </div>
     <section>
-        <details open>
+        <details>
             <summary>
                 {{ filters.account.label }}
                 {% icon "chevron-right" %}
@@ -45,7 +45,7 @@
             </div>
             {{ filters.account }}
         </details>
-        <details open>
+        <details>
             <summary>
                 {{ filters.type.label }}
                 {% icon "chevron-right" %}
@@ -84,6 +84,10 @@
                 </button>
             </div>
         </div>
+        <span>
+            {{ filters.hide_reverted }}
+            {{ filters.hide_reverted.label_tag }}
+        </span>
         <button type="submit" class="js-hide button">{% trans "Apply Filters" %}</button>
         <div>
             <button type="submit" formaction="./csv/" class="button">{% trans "Export CSV" %}</button>

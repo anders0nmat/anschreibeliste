@@ -77,6 +77,7 @@ const formInputs = getElements(filterForm, [
     "account",
     "type",
     "start",
-    "end"
+    "end",
+    "hide_reverted",
 ]);
 formInputs.forEach(element => element.addEventListener('input', _ => updateTable()));

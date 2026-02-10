@@ -89,11 +89,13 @@ def clean_svg(svg: str, file: UploadedFile | None=None) -> str:
             element = ET.parse(new_data).getroot()
         else:
             raise ValidationError('Unknown mime type', 'invalid_mime_type')
-    else:
+    elif svg:
         try:
             element = ET.fromstring(svg)
         except:
             raise ValidationError('Invalid SVG code', 'invalid_svg')
+    else:
+        return ''
     
     # Remove all <script> tags
     for script_tag in element.iter('script'):
