@@ -33,10 +33,16 @@ const search_items: [StringArrayMap, HTMLElement][] = [...document.querySelector
     .map(e => [JSON.parse(e.querySelector('script')?.textContent ?? '{}'), e])
 
 search_bar.addEventListener('input', debounce(_ => {
+    search_items.forEach(([_, e]) => delete e.dataset.selected)
+
     const searchTerms = splitQuoted(search_bar.value.toLowerCase())
 
     const matches = (metadata: StringArrayMap): boolean => {
         return searchTerms.every(term => {
+            const invert = term.startsWith('-')
+            if (invert) {
+                term = term.slice(1)
+            }
             const [value, op] = [...term.split(':', 2).reverse(), 'name']
 
             let metavalue = metadata[op]
@@ -44,7 +50,7 @@ search_bar.addEventListener('input', debounce(_ => {
                 metavalue = [metavalue]
             }
 
-            return metavalue.some(e => e.includes(value))
+            return invert != metavalue.some(e => e.includes(value))
         })
     }
 
@@ -52,3 +58,55 @@ search_bar.addEventListener('input', debounce(_ => {
         element.style.display = matches(metadata) ? '' : 'none'
 	})
 }, 50))
+
+async function selectWithAnimation(list: HTMLElement[], index: number): Promise<void> {
+    return new Promise<void>(resolve => {
+        const DURATION = 2500
+        const MIN_ELEMENTS = 50
+        let start: number
+        list.forEach(e => delete e.dataset.selected)
+        function animate(timestamp: number) {
+            if (start === undefined) {
+                start = timestamp
+            }
+
+            const ease = x => 1 - (1 - x) * (1 - x)
+
+            const progress = (timestamp - start) / DURATION
+            const progressInt = index + list.length * Math.ceil(MIN_ELEMENTS / list.length)
+            if (progress < 1) {
+                const elementIndex = Math.floor(ease(progress) * progressInt) % list.length
+
+                list.forEach(e => delete e.dataset.highlight)
+                list[elementIndex].dataset.highlight = ""
+                list[elementIndex].scrollIntoView({
+                    block: "center"
+                })
+                requestAnimationFrame(animate)
+            }
+            else {
+                list.forEach(e => delete e.dataset.highlight)
+                list[index].dataset.selected = ""
+                list[index].scrollIntoView({
+                    block: "center"
+                })
+                resolve()
+            }
+        }
+
+        requestAnimationFrame(animate)
+    })
+}
+
+
+const random_button = document.querySelector<HTMLButtonElement>('#random')!
+random_button.addEventListener("click", _ => {
+    document.querySelectorAll<HTMLElement>('.recipe[data-selected]').forEach(e => delete e.dataset.selected)
+    const visible_recipes = search_items.map(e => e[1]).filter(e => e.style.display !== "none")
+
+    const selected_index = Math.floor(Math.random() * visible_recipes.length)
+    
+    random_button.disabled = true
+    selectWithAnimation(visible_recipes, selected_index)
+        .then(_ => random_button.disabled = false)
+})

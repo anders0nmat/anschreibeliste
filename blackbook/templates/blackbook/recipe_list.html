@@ -14,7 +14,8 @@
 
 <div class="hstack center-along p-m gap-m">
     <input type="search" id="recipe-search" placeholder="{% trans "Search" %}">
-    <a href="{% url 'blackbook:recipe_new' %}" class="icon-button">{% icon "plus" %}</a>
+    <a href="{% url 'blackbook:recipe_new' %}" class="icon-button p-m">{% icon "plus" %}</a>
+    <button type="button" class="icon-button p-m" id="random">{% icon "dices" %}</button>
 </div>
 
 <ul id="recipes">
