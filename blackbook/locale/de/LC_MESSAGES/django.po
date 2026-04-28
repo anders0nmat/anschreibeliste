@@ -55,7 +55,7 @@ msgstr "Name"
 
 #: models.py:36
 msgid "Color"
-msgstr "Farbe (Dunkler Modus)"
+msgstr "Farbe"
 
 #: models.py:43
 msgid "Serving glass"

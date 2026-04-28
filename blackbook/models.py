@@ -99,7 +99,7 @@ class Recipe(NamedModel):
         ordering = ['group__order', 'name']
 
     def get_absolute_url(self) -> str:
-        return reverse('blackbook:recipe', kwargs={'pk': self.pk})
+        return reverse('blackbook:recipe_detail', kwargs={'pk': self.pk})
     
     def search_metadata(self) -> dict[str, Any]:
         """

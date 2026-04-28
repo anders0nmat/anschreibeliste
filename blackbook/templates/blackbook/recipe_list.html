@@ -24,15 +24,12 @@
 
         {{ recipe.search_metadata|json_script }}
 
-        {% if recipe.group is not None %}
-        <span class="caption">{{ recipe.group.name }}</span>
-        {% else %}
-        <span class="caption empty">-</span>
-        {% endif %}
         <h4>{{ recipe.name }}</h4>
         <div class="hstack gap-m ph-s text-tiny overflow-hidden">
             {% for tag in recipe.tags.all %}
             <div class="tag" style="--color: {{ tag.color }}">{{ tag.name }}</div>
+            {% empty %}
+            <div class="tag empty">-</div>
             {% endfor %}
         </div>
     </a>

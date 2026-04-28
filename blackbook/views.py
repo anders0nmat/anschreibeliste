@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpRequest, HttpResponseRedirect
 from django.views.generic import ListView, DetailView
 
-from .models import Recipe, Tag, RecipeStep
+from .models import Recipe, Tag
 from .forms import RecipeForm, RecipeStepFormset, TagFormset
 
 # Create your views here.
@@ -18,6 +18,21 @@ class RecipeDetail(DetailView):
     queryset = Recipe.objects\
         .select_related('group', 'serving_glass', 'method', 'product')\
         .prefetch_related('steps__ingredient', 'tags')
+
+def get_unique_recipe_name(recipe_name: str) -> str:
+    """
+    Appends/increases the number at the end of `recipe_name`
+    until no recipe with this name exists.
+    """
+    import re
+    regex = re.compile(r"^(.*?)(?:\s+(\d+))?$")
+    clone_name, _ = regex.findall(recipe_name)[0]
+
+    similar_names: list[str] = Recipe.objects.filter(name__startswith=clone_name).values_list('name', flat=True)
+
+    highest_number = max((int(regex.findall(name)[0][1] or '1') for name in similar_names), default=1)
+
+    return clone_name + ' ' + str(highest_number + 1)
 
 def recipe_edit(request: HttpRequest, pk):
     recipe = None
@@ -44,20 +59,13 @@ def recipe_edit(request: HttpRequest, pk):
         formset.remove_temporary()
     else:
         from django.forms.models import model_to_dict
-        import re
         form_initial = formset_initial = None
 
         clone = request.GET.get('clone')
         if clone:
             clone = get_object_or_404(Recipe, pk=clone)
-            regex = re.compile(r"^(.*?)(?:\s+(\d+))?$")
-            clone_name, _ = regex.findall(clone.name)[0]
 
-            similar_names: list[str] = Recipe.objects.filter(name__startswith=clone_name).values_list('name', flat=True)
-
-            highest_number = max((int(regex.findall(name)[0][1] or '1') for name in similar_names), default=1)
-
-            clone.name = clone_name + ' ' + str(highest_number + 1)
+            clone.name = get_unique_recipe_name(clone.name)
 
             form_initial = model_to_dict(clone)
             formset_initial = [model_to_dict(step, exclude=['id', 'recipe']) for step in clone.steps.all()]

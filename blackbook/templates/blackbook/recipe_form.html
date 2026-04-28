@@ -23,7 +23,7 @@
             <div class="text-lg spacer">{{ form.name.as_field_group }}</div>
             <button type="submit" class="icon-button">{% icon "save" %}</button>
             {% with request.resolver_match.kwargs.pk as pk %}
-            <a href="{% if pk is not None %}{% url 'blackbook:recipe' pk=pk %}{% else %}{% url 'blackbook:recipes' %}{% endif %}" class="icon-button">{% icon "x" %}</a>
+            <a href="{% if pk is not None %}{% url 'blackbook:recipe_detail' pk=pk %}{% else %}{% url 'blackbook:recipe_list' %}{% endif %}" class="icon-button">{% icon "x" %}</a>
             {% endwith %}
         </div>
 
