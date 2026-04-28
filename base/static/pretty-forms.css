@@ -84,7 +84,10 @@
 
 .pretty-form .tag-form .tag {
     & input[type="checkbox"] {
-        display: none;
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
     }
 
     &.inactive,
@@ -92,6 +95,11 @@
         color: var(--secondary-text-color);
         border-color: var(--separator-color);
         background: none;
+    }
+
+    &:has(input[type="checkbox"]:focus) {
+        box-shadow: 0 0 0 2px rgba(from var(--focus-color) r g b / 0.3);
+        border-color: var(--focus-color);
     }
 }
 

@@ -12,11 +12,12 @@
 {% block content %}
 
 <article>
-    <div class="caption">{{ recipe.group.name }}</div>
-    <div class="hstack">
-        <h2>{{ recipe.name }} </h2>
+    <div class="hstack gap-m center-across">
+        <h2>{{ recipe.name }}</h2>
         <hr class="spacer">
+        <a class="icon-button" href="{% url 'blackbook:recipe_new' %}?clone={{ recipe.pk|urlencode }}">{% icon "copy" %}</a>
         <a class="icon-button" href="{% url 'blackbook:recipe_edit' recipe.pk %}">{% icon "pencil" %}</a>
+        <a class="icon-button" href="{% url 'blackbook:recipes' %}">{% icon "x" %}</a>
     </div>
     <p>
         {{ recipe.description }}

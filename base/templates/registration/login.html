@@ -1,16 +1,20 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load static %}
 
 {% block tab_title %}{% translate "Login" %}{% endblock tab_title %}
 
 {% block import %}
-<style>
-	body {
-		display: grid;
-		justify-content: center;
-		align-content: center;
-	}
+<link rel="stylesheet" href="{% static 'base.css' %}">
+<link rel="stylesheet" href="{% static 'pretty-forms.css' %}">
 
+<style>
+    body {
+        display: grid;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+    }
 	main {
 		display: flex;
 		flex-flow: column nowrap;
@@ -27,24 +31,10 @@
 		color: color-mix(in srgb, var(--secondary-text-color), red 60%);
 		text-align: center;
 	}
-	form {
-		display: flex;
-		flex-flow: column nowrap;
 
-		& label {
-			font-weight: 600;
-			font-size: 85%;
-		}
 
-		& input {
-			border-radius: 0;
-			border: thin solid var(--secondary-text-color);
-			padding: 0.25em 0.5em;
-
-			margin-bottom: 1.25em;
-		}
-	}
 </style>
+
 {% endblock import %}
 
 {% block body %}
@@ -70,21 +60,15 @@
 		{% endif %}
 	{% endif %}
 
-	<form method="post" action="{% url 'login' %}">
+	<form method="post" action="{% url 'login' %}" class="pretty-form vstack gap-l">
 		{% csrf_token %}
 
-		{{ form.username.label_tag }}
-		{{ form.username }}
-		{{ form.password.label_tag }}
-		{{ form.password }}
+        <div>{{ form.username.as_field_group }}</div>
+        <div>{{ form.password.as_field_group }}</div>
 
-		<button type="submit" class="primary button">{% translate "Login" %}</button>
+		<button type="submit" class="primary button p-m">{% translate "Login" %}</button>
 		<input type="hidden" name="next" value="{{ next }}">
-	</form>
-
-	{# Assumes you set up the password_reset view in your URLconf #}
-	<p><a href="{% url 'password_reset' %}">{% translate "Lost password?" %}</a></p>
-		
+	</form>	
 </main>
 {% endblock body %}
 

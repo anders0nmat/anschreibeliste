@@ -62,7 +62,6 @@ async function selectWithAnimation(list, index) {
                 list.forEach(e => delete e.dataset.highlight);
                 list[elementIndex].dataset.highlight = "";
                 list[elementIndex].scrollIntoView({
-                    //behavior: "smooth",
                     block: "center"
                 });
                 requestAnimationFrame(animate);
@@ -71,7 +70,6 @@ async function selectWithAnimation(list, index) {
                 list.forEach(e => delete e.dataset.highlight);
                 list[index].dataset.selected = "";
                 list[index].scrollIntoView({
-                    //behavior: "smooth",
                     block: "center"
                 });
                 resolve();

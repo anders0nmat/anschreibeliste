@@ -5,16 +5,36 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-14 23:48+0100\n"
-"PO-Revision-Date: 2026-01-14 23:51+0100\n"
-"Last-Translator: \n"
+"POT-Creation-Date: 2026-04-28 12:38+0200\n"
+"PO-Revision-Date: 2026-04-28 12:38+0200\n"
+"Last-Translator: Arian\n"
 "Language-Team: German <kde-i18n-de@kde.org>\n"
 "Language: de_DE\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Lokalize 25.12.0\n"
+"X-Generator: Lokalize 25.12.3\n"
+
+#: admin.py:45
+msgid "Add tags"
+msgstr ""
+
+#: admin.py:46
+msgid "Remove tags"
+msgstr ""
+
+#: admin.py:57
+msgid "Tags"
+msgstr ""
+
+#: admin.py:64
+msgid "Assign recipe group to selected recipes"
+msgstr ""
+
+#: admin.py:72
+msgid "Manage tags of selected recipes"
+msgstr ""
 
 #: forms.py:76
 msgid "product"
@@ -25,7 +45,7 @@ msgid "Used to display pricing"
 msgstr "Bestimmt den Preis"
 
 #. Translators: Shown as placeholder in a new tag field
-#: forms.py:236
+#: forms.py:246
 msgid "New tag"
 msgstr "Neuer Tag"
 
@@ -34,7 +54,6 @@ msgid "name"
 msgstr "Name"
 
 #: models.py:36
-#| msgid "Dark Color"
 msgid "Color"
 msgstr "Farbe (Dunkler Modus)"
 
@@ -70,7 +89,7 @@ msgstr "Zutatengruppe"
 msgid "Ingredient categories"
 msgstr "Zutatengruppen"
 
-#: models.py:65 templates/blackbook/recipe_form.html:76
+#: models.py:65 templates/blackbook/recipe_form.html:81
 msgid "Ingredient"
 msgstr "Zutat"
 
@@ -99,8 +118,9 @@ msgid "group"
 msgstr "Gruppe"
 
 #: models.py:87
-msgid "Glass"
-msgstr "Glas"
+#| msgid "Serving glass"
+msgid "Serving Glass"
+msgstr "Servier-Glas"
 
 #: models.py:88
 msgid "method"
@@ -134,18 +154,21 @@ msgstr "Schritt"
 msgid "Recipe steps"
 msgstr "Schritte"
 
-#: templates/blackbook/recipe_form.html:75
+#: templates/blackbook/recipe_form.html:80
 msgid "Amount"
 msgstr "Menge"
 
-#: templates/blackbook/recipe_form.html:77
+#: templates/blackbook/recipe_form.html:82
 msgid "Instruction"
 msgstr "Anweisung"
 
-#: templates/blackbook/recipe_form.html:99
+#: templates/blackbook/recipe_form.html:104
 msgid "Save"
 msgstr "Speichern"
 
 #: templates/blackbook/recipe_list.html:16
 msgid "Search"
 msgstr "Suchen"
+
+#~ msgid "Glass"
+#~ msgstr "Glas"

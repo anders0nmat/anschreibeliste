@@ -84,7 +84,7 @@ class Recipe(NamedModel):
 
     group = models.ForeignKey(RecipeGroup, verbose_name=_('group'), on_delete=models.SET_NULL, null=True, blank=True, default=None)
 
-    serving_glass = models.ForeignKey(ServingGlass, verbose_name=_('Glass'), on_delete=models.SET_NULL, null=True, blank=True, default=None)
+    serving_glass = models.ForeignKey(ServingGlass, verbose_name=_('Serving Glass'), on_delete=models.SET_NULL, null=True, blank=True, default=None)
     method = models.ForeignKey(PrepMethod, verbose_name=_('method'), on_delete=models.SET_NULL, null=True, blank=True, default=None)
 
     product = models.ForeignKey(Product, verbose_name=_('Product'), on_delete=models.SET_NULL, null=True, blank=True, default=None, help_text=_("Used to display pricing"))

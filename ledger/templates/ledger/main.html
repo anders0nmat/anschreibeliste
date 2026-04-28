@@ -15,6 +15,8 @@
 	<script type="module" src="{% static 'ledger/transaction.js' %}"></script>
 
 	{{ api|json_script:"api" }}
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
 {% endblock import %}
 
 {% block content %}
@@ -66,18 +68,18 @@
 	</div>
 
 	<div class="slideshow">
-		<div class="slide group-list" id="products" data-slide="products">
+		<div class="slide group-list p-m" id="products" data-slide="products">
 			<h2 class="visually-hidden">{{ the_product }}</h2>
 			{% include 'ledger/snippets/products.html' with items=product_list target_form="new-transaction" %}
 		</div>
 		
-		<div class="slide group-list" id="accounts" data-slide="accounts">
+		<div class="slide group-list p-m" id="accounts" data-slide="accounts">
 			<h2 class="visually-hidden">{{ the_account }}</h2>
 			{% include 'ledger/snippets/accounts.html' with items=account_list target_form="new-transaction" %}
 		</div>
 	</div>
 </div>
-<form action="/transaction/order/" id="new-transaction" class="transaction" method="POST">
+<form action="/transaction/order/" id="new-transaction" class="transaction m-m" method="POST">
 	{% csrf_token %}
 	<input type="hidden" name="idempotency-key" value="{{ idempotency_key }}">
 

@@ -32,7 +32,6 @@ html:focus-within {
 
 /* Set core body defaults */
 body {
-  min-height: 100vh;
   text-rendering: optimizeSpeed;
   line-height: 1.5;
 }
@@ -114,6 +113,8 @@ select {
     --md-mark: light-dark(rgba(228, 206, 109, 0.5), rgba(109, 103, 50, 0.5));
     --md-footnote-highlight: var(--md-mark);
 
+    --header-height: calc(1em + 1.25 * 1.25rem + 8px);
+
 
 	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 	font-size: 0.9rem;
@@ -124,11 +125,6 @@ select {
 			font-size: 1rem;
 		}
 	}
-}
-
-html,
-body {
-	overflow: hidden;
 }
 
 body {
@@ -142,7 +138,6 @@ body {
 	display: flex;
 	flex-flow: column;
 	justify-content: stretch;
-	height: 100vh;
 }
 
 main {
@@ -151,6 +146,10 @@ main {
 }
 
 header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
 	background-color: var(--secondary-bg-color);
 	display: grid;
 	grid-template: 
@@ -407,11 +406,21 @@ hr {
 	}
 }
 
-.icon-checkbox > input[type="checkbox"] {
-    display: none;
+.icon-checkbox {
+    input[type="checkbox"] {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+    }
     
-    :has(> &:checked) {
+    &:has(input[type="checkbox"]:checked) {
         color: var(--selected-color);
+    }
+
+    &:has(input[type="checkbox"]:focus-visible) {
+        box-shadow: 0 0 0 2px rgba(from var(--focus-color) r g b / 0.3);
+        outline: thin solid var(--focus-color);
     }
 }
 
@@ -429,11 +438,17 @@ hr {
     --bg: transparent;
     background: var(--bg);
     color: currentColor;
+    appearance: none;
 
     @media (hover: hover) {
         &:not([disabled]):hover {
             background: color-mix(in srgb, var(--bg), var(--highlight-color) 10%) !important;
         }
+    }
+
+    &:focus-visible {
+        box-shadow: 0 0 0 2px rgba(from var(--focus-color) r g b / 0.3);
+        outline: thin solid var(--focus-color);
     }
 
     & > svg {
@@ -447,6 +462,10 @@ hr {
     &[disabled] {
 		opacity: 30%;
 	}
+
+    &.primary {
+        --bg: var(--selected-color);
+    }
 }
 
 .negative {
@@ -460,14 +479,6 @@ hr {
     & > hr.spacer {
         width: 0;
         border: none;
-    }
-    
-    &.gap-m {
-        gap: 0.5em;
-    }
-
-    &.gap-l {
-        gap: 1em;
     }
 
     &.stretch {
@@ -507,12 +518,24 @@ hr {
     flex-direction: column;
 }
 
+.gap-m {
+    gap: 0.5em;
+}
+
+.gap-l {
+    gap: 1em;
+}
+
 .p-s {
     padding: 0.25em;
 }
 
 .p-m {
     padding: .5em;
+}
+
+.m-m {
+    margin: .5em;
 }
 
 .ph-s {
@@ -533,14 +556,17 @@ hr {
 
 .tag {
     padding: .25em .75em;
-    border: thin solid var(--color, var(--separator-color));
+    --lightdark-color: light-dark(
+        hsl(from var(--color) h s min(40, l)),
+        hsl(from var(--color) h s max(60, l)));
+    border: thin solid var(--lightdark-color, var(--separator-color));
     border-radius: 100vw;
     font-size: 85%;
     user-select: none;
 
-    background-color: rgba(from var(--color) r g b / 0.1);
-    color: var(--color);
-    border-color: var(--color);
+    background-color: rgba(from var(--lightdark-color) r g b / 0.1);
+    color: var(--lightdark-color);
+    border-color: var(--lightdark-color);
 
 
     &:is(label) {
@@ -602,3 +628,7 @@ input:not(:is([type="checkbox"], [type="radio"], [type="button"], [type="submit"
 	position: absolute;
 }
 
+*:focus-visible {
+    box-shadow: 0 0 0 2px rgba(from var(--focus-color) r g b / 0.3);
+    border-color: var(--focus-color) !important;
+}

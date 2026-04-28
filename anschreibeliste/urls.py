@@ -18,13 +18,27 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
+from django.contrib.auth.views import LoginView, LogoutView
+
+class CustomLoginView(LoginView):
+    def get_form_kwargs(self):
+        return super().get_form_kwargs() | {
+            'label_suffix': '',
+        }
+    
+    def get_form(self, form_class = None):
+        form = super().get_form(form_class)
+        form.fields['username'].widget.attrs['placeholder'] = ' '
+        form.fields['password'].widget.attrs['placeholder'] = ' '
+        return form
 
 urlpatterns = [
 	path('admin/action-forms/', include('django_admin_action_forms.urls')),
     path('admin/', admin.site.urls),
     path("", include("ledger.urls")),
     path("wiki/", include("wiki.urls")),
-    path("users/", include("django.contrib.auth.urls")),
+    path("login/", CustomLoginView.as_view(), name='login'),
+    path("logout/", LogoutView.as_view(), name="logout"),
     path("recipes/", include("blackbook.urls")),
 ]
 

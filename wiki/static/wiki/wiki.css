@@ -6,6 +6,7 @@ main {
     padding-inline: 0.5em;
     padding-bottom: 0.5em;
     position: relative;
+    align-items: start;
 
     width: 100%;
     --max-article-width: 80ch;
@@ -14,8 +15,8 @@ main {
 
     @media screen and (min-width: 900px) {
         & {
-            padding-top: 0.5em;
-            grid-template-rows: auto;grid-template-columns: 30ch 1fr;
+            grid-template-rows: auto;
+            grid-template-columns: 30ch 1fr;
         }
 
         &:has(input[data-preview="horizontal"]:checked) {
@@ -29,8 +30,9 @@ aside {
     border-bottom: thin solid var(--separator-color);
     padding-block: 0.5em;
     position: sticky;
-    top: 0;
+    top: var(--header-height);
     background-color: var(--primary-bg-color);
+    z-index: 10;
     display: flex;
     flex-flow: row wrap;
     justify-content: stretch;
@@ -41,10 +43,9 @@ aside {
         & {
             flex-flow: column;
             justify-content: start;
-            padding-block: 0;
+            padding-block: 0.5em 0.5em;
             padding-inline: 0.5em;
             border-bottom: none;
-            border-right: thin solid var(--separator-color);
         }
 
         & label:has(#article-list) {
@@ -359,6 +360,12 @@ aside:has(input[data-tab="article"]:not(:checked)) #attachment-list {
     justify-content: stretch;
 
     position: relative;
+
+    @media screen and (min-width: 900px) {
+        & {
+            padding-top: 0.5em;
+        }
+    }
 }
 
 .drop-zone {

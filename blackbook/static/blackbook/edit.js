@@ -13,7 +13,7 @@ function decForms() {
 }
 /* Remove extra initial attachments */
 /* These are no longer required as we can dynamically attach new ones */
-document.querySelectorAll('tr:has([id^="id_steps-"][id$="-id"]:not([value]))').forEach(e => {
+document.querySelectorAll('tr:has(input[id$="-id"]):not([data-prefilled])').forEach(e => {
     e.remove();
     decForms();
 });

@@ -19,14 +19,19 @@
     <form method="POST" class="vstack gap-m pretty-form">
         {% csrf_token %}
 
-        <div class="text-lg">{{ form.name.as_field_group }}</div>
+        <div class="hstack gap-m stretch center-across">
+            <div class="text-lg spacer">{{ form.name.as_field_group }}</div>
+            <button type="submit" class="icon-button">{% icon "save" %}</button>
+            {% with request.resolver_match.kwargs.pk as pk %}
+            <a href="{% if pk is not None %}{% url 'blackbook:recipe' pk=pk %}{% else %}{% url 'blackbook:recipes' %}{% endif %}" class="icon-button">{% icon "x" %}</a>
+            {% endwith %}
+        </div>
+
         <div>{{ form.description.as_field_group }}</div>
         <div>{{ form.group.as_field_group }}</div>
-        <div class="hstack gap-m stretch-children">
-            <div>{{ form.serving_glass.as_field_group }}</div>
-            <div>{{ form.method.as_field_group }}</div>
-            <div>{{ form.product.as_field_group }}</div>
-        </div>
+        <div>{{ form.serving_glass.as_field_group }}</div>
+        <div>{{ form.method.as_field_group }}</div>
+        <div>{{ form.product.as_field_group }}</div>
 
         <div>
             {{ form.tags.label_tag }}
@@ -94,7 +99,7 @@
             </tfoot>
         </table>
 
-        <button type="submit" class="button primary action-positive hstack centered gap-m">
+        <button type="submit" class="icon-button primary gap-m p-m">
             {% icon "save" %}
             {% trans "Save" %}
         </button>

@@ -31,8 +31,19 @@ main {
 	}
 }
 
+body {
+    height: unset;
+    overflow-y: auto;
+}
+
 header {
 	grid-area: head;
+}
+
+@media screen and (min-width: 900px) {
+    body {
+        max-height: 100vh;
+    }
 }
 
 a.item {

@@ -4,8 +4,6 @@ main {
 	grid-template-areas: 
 		"content"
 		"new-transaction";
-	gap: 0.5em;
-	padding: 0.5em;
 
 
 	@media screen and (max-width: 899px) {
@@ -46,6 +44,13 @@ main {
 	grid-area: content;
 	grid-template-rows: subgrid;
 	overflow: hidden;
+
+    overscroll-behavior: contain;
+}
+
+body {
+    overflow: hidden;
+    height: 100dvh;
 }
 
 div:has(#transactions) {
@@ -67,8 +72,7 @@ div:has(#transactions) {
 	background: linear-gradient(to right, var(--bg) 50%, transparent 0) left;
 	background-size: 200% 100%;
 	background-position-x: left;
-	/* margin: 0 0.25em 0.25em; */
-	position: relative;
+    bottom: 0.5em;
 	grid-area: new-transaction;
 	border: thin solid var(--selected-color);
 	grid-template-columns: auto auto max-content;
@@ -177,6 +181,13 @@ div:has(#transactions) {
 	div:has(> #transaction-multiplier) {
 		display: none;
 	}
+}
+
+@media screen and (min-width: 900px) {
+    body {
+        height: 100vh;
+        overflow: hidden;
+    }
 }
 
 #transaction-multiplier {
