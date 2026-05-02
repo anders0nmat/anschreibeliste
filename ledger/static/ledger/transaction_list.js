@@ -56,7 +56,9 @@ const updateTable = debounce(async () => {
     const formData = new FormData(filterForm);
     const searchParams = new URLSearchParams();
     formData.forEach((value, key) => {
-        searchParams.append(key, value.toString());
+        if (value !== '') {
+            searchParams.append(key, value.toString());
+        }
     });
     const response = await fetch('./results/?' + searchParams.toString());
     if (!response.ok) {
@@ -66,12 +68,18 @@ const updateTable = debounce(async () => {
     if (updateCount != thisUpdateCount) {
         return;
     }
-    tableBody.innerHTML = response_html;
-    resultCount.textContent = tableBody.childElementCount.toString();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString('<table>' + response_html + "</table>", "text/html");
+    const newTable = doc.querySelector("tbody");
+    tableBody.innerHTML = newTable.innerHTML;
+    const newResult = doc.querySelector("#result-count");
+    resultCount.innerHTML = newResult.innerHTML;
+    const pagination = doc.querySelector(".pagination");
+    document.querySelectorAll(".pagination").forEach(e => e.innerHTML = pagination.innerHTML);
     window.history.replaceState(null, "", window.location.origin + window.location.pathname + '?' + searchParams.toString());
 }, 250);
 const filterForm = document.getElementById('filters');
-const tableBody = document.getElementById('table-body');
+const tableBody = document.querySelector('tbody');
 const resultCount = document.getElementById('result-count');
 const formInputs = getElements(filterForm, [
     "account",

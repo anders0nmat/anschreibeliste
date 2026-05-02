@@ -21,7 +21,8 @@
             {% icon "funnel" %}
         </label>
         <div style="flex: 1"></div>
-        <span><span id="result-count">{{ transaction_list|length }}</span> {% trans "Entries" context "number of items" %}</span>
+        <span><span id="result-count">{{ paginator.count }}</span> {% trans "Entries" context "number of items" %}</span>
+        
     </div>
     <section>
         <details>
@@ -97,21 +98,44 @@
 </form>
 <div>
     <h2 class="css-hide">{% trans "Results" %}</h2>
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 20ch">{% trans "Account" %}</th>
-                <th style="width: 40ch">{% trans "Reason" %}</th>
-                <th style="width: 10ch">{% trans "Date" %}</th>
-                <th style="width: 5ch">{% trans "Time" %}</th>
-                <th style="width: 4ch">{% trans "Type" context "transaction" %}</th>
-                <th style="width: 5ch">{% trans "Amount" context "money-related" %}</th>
-            </tr>
-        </thead>
-        <tbody id="table-body">
-            {% include 'ledger/transaction_list_results.html' %}
-        </tbody>
-    </table>
+    {% partialdef paginator inline %}
+    <div class="pagination gap-s">
+        {% if page_obj.has_previous %}
+        <a class="icon-button" href="{% querystring page=page_obj.previous_page_number %}">
+            {% icon "chevron-left" %}
+        </a>
+        {% endif %}
+        {% for number in page_obj.adjusted_range %}
+            {% if number == paginator.ELLIPSIS %}
+                <span>{{ number }}</span>
+            {% else %}
+                <a class="button bordered thin {% if number == page_obj.number %}selected{% endif %}" href="{% querystring page=number %}">{{ number }}</a>
+            {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <a class="icon-button" href="{% querystring page=page_obj.next_page_number %}">
+            {% icon "chevron-right" %}
+        </a>
+        {% endif %}
+    </div>
+    {% endpartialdef %}
+    <div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 20ch">{% trans "Account" %}</th>
+                    <th style="width: 40ch">{% trans "Reason" %}</th>
+                    <th style="width: 21ch">{% trans "Date/Time" %}</th>
+                    <th style="width: 4ch">{% trans "Type" context "transaction" %}</th>
+                    <th style="width: 5ch">{% trans "Amount" context "money-related" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% include 'ledger/transaction_list_results.html' %}
+            </tbody>
+        </table>
+    </div>
+    {% partial paginator %}
 </div>
 
 {% endblock content %}

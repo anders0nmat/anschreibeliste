@@ -1,10 +1,39 @@
-from typing import Any
+from typing import Any, Callable, Iterator, Tuple
 from django.forms import ModelForm, Form, CharField, IntegerField, HiddenInput, ModelChoiceField, BooleanField, ModelMultipleChoiceField, MultipleChoiceField, DateField
 from django.utils.translation import gettext_lazy as _, pgettext_lazy
 from django.forms.widgets import TextInput, NumberInput, CheckboxSelectMultiple
 
+from itertools import groupby
+
 from .models import Account, Product, Transaction
 from .formfield import FixedPrecisionField, DecimalInput, NativeDateInput
+
+class GroupedModelChoiceIterator(ModelChoiceField.iterator):
+    def __iter__(self) -> Iterator[Tuple[int | str, str]]:
+        if self.field.empty_label is not None:
+            yield ("", self.field.empty_label)
+        for group, choices in groupby(
+            self.queryset.all(),
+            key=lambda row: getattr(row, self.field.group_by_field)
+        ):
+            if group is not None:
+                yield (
+                    self.field.group_label(group),
+                    [self.choice(ch) for ch in choices]
+                )
+
+class GroupedModelChoiceField(ModelMultipleChoiceField):
+    iterator = GroupedModelChoiceIterator
+
+    def __init__(self, *args, group_by_field: str, group_label: str | Callable[[Any], str]=None, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.group_by_field = group_by_field
+        if group_label is None:
+            self.group_label = lambda x: x
+        elif isinstance(group_label, str):
+            self.group_label = lambda x: getattr(x, group_label)
+        else:
+            self.group_label = group_label
 
 def default_placeholder(cls=None, placeholder=" "):
     """
@@ -59,7 +88,7 @@ class RevertTransactionForm(Form):
     transaction = ModelChoiceField(Transaction.objects) 
 
 class TransactionListFilter(Form):
-    account = ModelMultipleChoiceField(Account.objects, label=_('Account'), required=False, widget=CheckboxSelectMultiple)
+    account = GroupedModelChoiceField(Account.objects.filter(active=True), label=_('Account'), required=False, widget=CheckboxSelectMultiple, group_by_field="group", group_label="name")
     type = MultipleChoiceField(choices=Transaction.TransactionType.choices, label=pgettext_lazy('transaction', 'Type'), required=False, widget=CheckboxSelectMultiple)
     start = DateField(required=False, widget=NativeDateInput, label=_('Start'))
     end = DateField(required=False, widget=NativeDateInput, label=_('End'))

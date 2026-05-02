@@ -1,4 +1,4 @@
-from typing import Any, Dict, Literal, Callable, TypeVar
+from typing import Any, Dict, Literal, Callable, TypeVar, Iterable
 from http import HTTPStatus
 from io import BytesIO, TextIOWrapper
 import csv
@@ -17,6 +17,7 @@ from django.views.generic import ListView, UpdateView, CreateView, TemplateView
 from json import loads, dumps
 from django.utils.timezone import now
 from django.utils.translation import gettext as _, pgettext
+from django.core.paginator import Page, Paginator
 
 from .conf import settings
 from .decorators import idempotent
@@ -153,6 +154,7 @@ class TransactionList(PermissionRequiredMixin, ListView):
     queryset = Transaction.objects.all()
     output_format = 'html'
     permission_required = "ledger.view_transaction"
+    paginate_by = 100
 
     def get_queryset(self) -> QuerySet[Any]:
         queryset = super().get_queryset().order_by('-timestamp').select_related('account')
@@ -180,9 +182,13 @@ class TransactionList(PermissionRequiredMixin, ListView):
         return queryset
     
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
-        return super().get_context_data(**kwargs) | {
-            'filters': TransactionListFilter(self.request.GET if self.request.GET else None, label_suffix=''),
+        context = super().get_context_data(**kwargs) |{
+            'filters': TransactionListFilter(self.request.GET if self.request.GET else None, label_suffix='')
         }
+
+        page_obj: Page = context['page_obj']
+        page_obj.adjusted_range = list(page_obj.paginator.get_elided_page_range(page_obj.number, on_each_side=1, on_ends=1))
+        return context
     
     T = TypeVar('T')
     def get_filter(self, query_name: str, convert: Callable[[str], T] = lambda x: x) -> list[T]:
@@ -217,7 +223,7 @@ class TransactionList(PermissionRequiredMixin, ListView):
             ])
         return (headers, values)
 
-    def render_to_csv(self, file: BytesIO, transactions: QuerySet[Transaction]):
+    def render_to_csv(self, file: BytesIO, transactions: Iterable[Transaction]):
         f = TextIOWrapper(file)
         try:
             writer = csv.writer(f)
@@ -227,7 +233,7 @@ class TransactionList(PermissionRequiredMixin, ListView):
         finally:
             f.detach()
 
-    def render_to_xlsx(self, file: BytesIO, transactions: QuerySet[Transaction]):
+    def render_to_xlsx(self, file: BytesIO, transactions: Iterable[Transaction]):
         from openpyxl import Workbook
         from openpyxl.worksheet.worksheet import Worksheet
         wb = Workbook()
@@ -243,9 +249,11 @@ class TransactionList(PermissionRequiredMixin, ListView):
         if self.output_format == 'html':
             return super().render_to_response(context, **response_kwargs)
         
+        queryset: Iterable[Transaction] = context['paginator'].object_list
+
         if self.output_format == 'csv':
             b = BytesIO()
-            self.render_to_csv(b, context['object_list'])
+            self.render_to_csv(b, queryset)
             b.seek(0)
             return FileResponse(b, filename=f"Transaction List.csv", as_attachment=True)
 
@@ -253,7 +261,7 @@ class TransactionList(PermissionRequiredMixin, ListView):
             if not module_exists('openpyxl'):
                 raise ImproperlyConfigured('Output Format "xlsx" requires "openpyxl" to be installed')
             b = BytesIO()
-            self.render_to_xlsx(b, context['object_list'])
+            self.render_to_xlsx(b, queryset)
             b.seek(0)
             return FileResponse(b, filename=f"Transaction List.xlsx", as_attachment=True)
             

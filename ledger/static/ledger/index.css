@@ -36,6 +36,10 @@ main {
         & hr.spacer:first-of-type {
             display: none;
         }
+
+        .slide {
+            padding-top: 0.5em;
+        }
 	}
 
 

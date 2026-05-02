@@ -58,20 +58,30 @@ const updateTable = debounce(async () => {
     const formData = new FormData(filterForm)
     const searchParams = new URLSearchParams()
     formData.forEach((value, key) => {
-        searchParams.append(key, value.toString())
+        if (value !== '') {
+            searchParams.append(key, value.toString())
+        }
     })
     const response = await fetch('./results/?' + searchParams.toString())
     if (!response.ok) { return }
     const response_html = await response.text()
 
     if (updateCount != thisUpdateCount) { return }
-    tableBody.innerHTML = response_html
-    resultCount.textContent = tableBody.childElementCount.toString()
+
+    const parser = new DOMParser()
+    const doc = parser.parseFromString('<table>' + response_html + "</table>", "text/html")
+    const newTable = doc.querySelector<HTMLElement>("tbody")!
+    tableBody.innerHTML = newTable.innerHTML
+    const newResult = doc.querySelector<HTMLElement>("#result-count")!
+    resultCount.innerHTML = newResult.innerHTML
+    const pagination = doc.querySelector(".pagination")!
+    document.querySelectorAll<HTMLElement>(".pagination").forEach(e => e.innerHTML = pagination.innerHTML)
+
     window.history.replaceState(null, "", window.location.origin + window.location.pathname + '?' + searchParams.toString())
 }, 250)
 
 const filterForm = document.getElementById('filters') as HTMLFormElement
-const tableBody = document.getElementById('table-body')!
+const tableBody = document.querySelector<HTMLElement>('tbody')!
 const resultCount = document.getElementById('result-count')!
 const formInputs = getElements(filterForm, [
     "account",

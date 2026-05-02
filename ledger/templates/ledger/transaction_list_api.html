@@ -1,0 +1,25 @@
+<div class="pagination gap-s">
+    {% if page_obj.has_previous %}
+    <a class="icon-button" href="{% querystring page=page_obj.previous_page_number %}">
+        {% icon "chevron-left" %}
+    </a>
+    {% endif %}
+    {% for number in page_obj.adjusted_range %}
+        {% if number == paginator.ELLIPSIS %}
+            <span>{{ number }}</span>
+        {% else %}
+            <a class="button bordered thin {% if number == page_obj.number %}selected{% endif %}" href="{% querystring page=number %}">{{ number }}</a>
+        {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <a class="icon-button" href="{% querystring page=page_obj.next_page_number %}">
+        {% icon "chevron-right" %}
+    </a>
+    {% endif %}
+</div>
+
+<span id="result-count">{{ paginator.count }}</span>
+
+<div id="tbody">
+{% include 'ledger/transaction_list_results.html' %}
+</div>

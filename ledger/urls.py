@@ -16,7 +16,7 @@ urlpatterns = [
     path("transactions/", views.TransactionList.as_view(), name="transaction_list"),
     path("transactions/csv/", views.TransactionList.as_view(output_format="csv")),
     path("transactions/xlsx/", views.TransactionList.as_view(output_format="xlsx")),
-    path("transactions/results/", views.TransactionList.as_view(template_name="ledger/transaction_list_results.html")),
+    path("transactions/results/", views.TransactionList.as_view(template_name="ledger/transaction_list_api.html")),
     
 	path("transaction/", include([
 		path("deposit/", views.custom_transaction, {'action': 'deposit'}, name="transaction_deposit"),

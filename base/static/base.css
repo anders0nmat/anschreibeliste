@@ -350,9 +350,10 @@ hr {
 
 .button {
 	--bg: var(--secondary-bg-color);
+    --_bg: var(--bg);
 	color: var(--primary-text-color);
 	border: none;
-	background: var(--bg);
+	background: var(--_bg);
 	padding: 0.5em 0.75em;
 	margin: 0;
 	display: block;
@@ -360,7 +361,7 @@ hr {
 	
 	@media (hover: hover) {
 		&:not([disabled]):hover {
-			background: color-mix(in srgb, var(--bg), var(--highlight-color) 10%);
+			--_bg: color-mix(in srgb, var(--bg), var(--highlight-color) 10%);
 		}
 	}
 	
@@ -404,6 +405,20 @@ hr {
 	&[disabled] {
 		opacity: 30%;
 	}
+
+    &.bordered {
+        border: thin solid var(--_bg);
+    }
+
+    &.square {
+        aspect-ratio: 1;
+    }
+
+    &.selected {
+        background-color: rgba(from var(--selected-color) r g b / 0.3);
+        border-color: var(--selected-color);
+    }
+
 }
 
 .icon-checkbox {
@@ -507,6 +522,10 @@ hr {
     &.center-across {
         align-items: center;
     }
+   
+    &.baseline-across {
+        align-items: baseline;
+    }
 
     &.centered {
         justify-content: center;
@@ -520,6 +539,10 @@ hr {
 
 .vstack {
     flex-direction: column;
+}
+
+.gap-s {
+    gap: 0.25em;
 }
 
 .gap-m {
@@ -540,6 +563,10 @@ hr {
 
 .p-m {
     padding: .5em;
+}
+
+.mb-m {
+    margin-bottom: .5em;
 }
 
 .m-m {
