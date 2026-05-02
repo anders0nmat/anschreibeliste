@@ -55,6 +55,9 @@ class CreateAccountForm(ModelForm):
     class Meta:
         model = Account
         fields = ['display_name', 'full_name', 'balance', 'credit', 'group', 'member', 'permanent', 'active']
+        help_texts = {
+            'full_name': _("Optional. Used in the transaction qr-code."),
+        }
     
     balance = FixedPrecisionField(label=_('Balance'), decimal_places=2, min_value=0, required=False)
 
@@ -67,10 +70,10 @@ class RestrictedCreateAccountForm(CreateAccountForm):
         return super().save(commit)
 
 @default_placeholder
-class EditAccountForm(ModelForm):
-    class Meta:
-        model = Account
-        fields = ['display_name', 'full_name', 'credit', 'group', 'member', 'permanent', 'active']
+class EditAccountForm(CreateAccountForm):
+    class Meta(CreateAccountForm.Meta):
+        exclude = ['balance']
+    balance = None
 
 @default_placeholder
 class TransactionForm(Form):
@@ -88,7 +91,7 @@ class RevertTransactionForm(Form):
     transaction = ModelChoiceField(Transaction.objects) 
 
 class TransactionListFilter(Form):
-    account = GroupedModelChoiceField(Account.objects.filter(active=True), label=_('Account'), required=False, widget=CheckboxSelectMultiple, group_by_field="group", group_label="name")
+    account = GroupedModelChoiceField(Account.objects.all(), label=_('Account'), required=False, widget=CheckboxSelectMultiple, group_by_field="group", group_label="name")
     type = MultipleChoiceField(choices=Transaction.TransactionType.choices, label=pgettext_lazy('transaction', 'Type'), required=False, widget=CheckboxSelectMultiple)
     start = DateField(required=False, widget=NativeDateInput, label=_('Start'))
     end = DateField(required=False, widget=NativeDateInput, label=_('End'))

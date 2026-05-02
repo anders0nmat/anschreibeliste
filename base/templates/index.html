@@ -29,6 +29,28 @@
 					<span>{% trans "Admin-Panel" %}</span>
 				</a>
 			</li>
+            {% if perms.ledger.view_inactive_account %}
+            <li>
+                <label class="icon-button left-aligned ph-m">
+                    {% icon "eye-off" %}
+                    <span>{% trans "Show inactive users" %}</span>
+                    <input type="checkbox" id="show-inactive-accounts" {% if request.session.show_inactive_accounts %}checked{% endif %}>
+                </label>
+                <script>
+                    const inp = document.getElementById("show-inactive-accounts")
+                    inp.addEventListener("change", _ => {
+                        const currentValue = inp.checked
+                        fetch("{% url 'ledger:show_inactive_accounts' %}", {
+                            method: "POST",
+                            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                            body: new URLSearchParams({'new_value': currentValue}),
+                        })
+                        .then(e => e.json())
+                        .then(e => { inp.checked = e.new_value })
+                    })
+                </script>
+            </li>
+            {% endif %}
 			<span class="separator"></span>
 			{% endif %}
 			<li>

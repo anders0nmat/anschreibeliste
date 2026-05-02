@@ -39,9 +39,9 @@ class AccountGroup(models.Model):
         verbose_name = _('account group')
         verbose_name_plural = _('account groups')
 
-class AccountManager(models.Manager):
+class AccountQueryset(models.QuerySet):
     def grouped(self):
-        return self.filter(active=True)\
+        return self\
             .order_by(models.F("group__order").asc(nulls_first=True), 'display_name')\
             .annotate(
                 _last_balance=models.functions.Coalesce(models.Subquery(
@@ -65,17 +65,17 @@ class AccountManager(models.Manager):
 class Account(models.Model):
     class NotEnoughFunds(Exception): pass
     
-    objects = AccountManager()
+    objects = AccountQueryset.as_manager()
 
     display_name = models.CharField(verbose_name=_('display name'), max_length=255)
     full_name = models.CharField(verbose_name=_('full name'), max_length=255, default='', blank=True)
-    credit = PositiveFixedPrecisionField(verbose_name=_('credit'), decimal_places=fpint.__precision__, default=0)
+    credit = PositiveFixedPrecisionField(verbose_name=_('credit'), decimal_places=fpint.__precision__, default=0, blank=True, help_text=_("How much the account can go into debt."))
     group = models.ForeignKey(AccountGroup, verbose_name=_('group'), on_delete=models.SET_NULL, null=True, default=None, blank=True)
     
     member = models.BooleanField(verbose_name=_('member'))
     permanent = models.BooleanField(verbose_name=_('permanent'), default=False)
 
-    active = models.BooleanField(verbose_name=_('active'), default=True)
+    active = models.BooleanField(verbose_name=_('active'), default=True, help_text=_("Controls visibility."))
     
     # Forward declaration for type-hinting
     transactions: models.QuerySet["Transaction"]
@@ -86,6 +86,7 @@ class Account(models.Model):
         permissions = [
             ('add_permanent_account', 'Can add permanent accounts'),
             ('change_permanent_account', 'Can change permanent accounts'),
+            ('view_inactive_account', 'Can view inactive accounts'),
         ]
         indexes = [
             models.Index('active', models.F('group').asc(), 'display_name', name='idx_grouped_accounts'),

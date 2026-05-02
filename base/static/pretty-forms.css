@@ -1,6 +1,5 @@
-.pretty-form div:has(> :is(input, select, textarea)) {
+.pretty-form div:has(> :is(input[type="text"], input[type="password"], select, textarea)) {
     position: relative;
-    appearance: none;
 
     & > :is(input, select, textarea) {
         padding: 1.25em .75em .25em;
@@ -29,10 +28,12 @@
 
     & > label {
         position: absolute;
+        left: 0;
         padding: .75em .75em;
         transform-origin: 0 0;
         translate: .25em -.25em;
         scale: 0.75;
+        pointer-events: none;
 
         transition:
             translate 100ms ease-in-out,
@@ -44,6 +45,13 @@
     &:has(> :placeholder-shown:not(:focus-within)) > label {
         translate: 0;
         scale: 1;
+    }
+}
+
+.pretty-form div:has(> :is(input, select, textarea)) {
+    &:has([required]) > label::after {
+        content: "*";
+        margin-left: .25ch;
     }
 
     & .helptext {

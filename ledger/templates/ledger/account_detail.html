@@ -22,7 +22,7 @@
 			{{ account.display_name }}
 		</h2>
 		<div style="flex-grow: 1"></div>
-		<a href="{% url 'ledger:account_list' %}" class="slim transparent center button">
+		<a href="{% url 'ledger:account_list' %}" class="icon-button">
 			{% icon "x" %}
 		</a>
 	</div>
@@ -31,7 +31,7 @@
 			<h3>{% translate "Account" %}</h3>
 			{% icon "chevron-right" %}
 		</summary>
-		<form class="pretty-form" method="post">
+		<form class="pretty-form vstack gap-m" method="post">
             {% csrf_token %}
 			{{ form }}
 			{% if form.has_enabled_fields %}
@@ -46,7 +46,7 @@
             <h3>{% translate "Deposit" %}</h3>
             {% icon "chevron-right" %}
 		</summary>
-		<form action="{% url 'ledger:transaction_deposit' %}" method="POST" id="deposit-transaction" class="pretty-form">
+		<form action="{% url 'ledger:transaction_deposit' %}" method="POST" id="deposit-transaction" class="pretty-form vstack gap-m">
 			{% csrf_token %}
 			{% idempotency_key %}
 			<div>
@@ -95,7 +95,7 @@
 			{% icon "chevron-right" %}
 		</summary>
 		
-		<form action="{% url 'ledger:transaction_withdraw' %}" method="post" id="withdraw-transaction" class="pretty-form">
+		<form action="{% url 'ledger:transaction_withdraw' %}" method="post" id="withdraw-transaction" class="pretty-form vstack gap-m">
 			{% csrf_token %}
 			{% idempotency_key %}
 			<div>

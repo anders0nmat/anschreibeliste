@@ -44,25 +44,3 @@ Transaction.listen(event => {
     account.balance = event.balance;
     account.disabled = account.budget <= 0;
 }, false, account_id);
-/* ===== Progressive Enhancement ===== */
-// Submit without reload
-function submit_custom_transaction(action) {
-    return (ev) => {
-        ev.preventDefault();
-        const form = ev.target;
-        const form_data = new FormData(form);
-        const account = form_data.get('account');
-        const amount = form_data.get('amount');
-        const reason = form_data.get('reason') ?? '';
-        Transaction.submit({
-            kind: action,
-            account_id: account,
-            account_name: Account.byId(account)?.name ?? 'Unknown',
-            balance: amount.replace(decimalSeparator, '.'),
-            reason: reason,
-        });
-        form.reset();
-    };
-}
-document.getElementById('withdraw-transaction')?.addEventListener('submit', submit_custom_transaction("withdraw"));
-document.getElementById('deposit-transaction')?.addEventListener('submit', submit_custom_transaction("deposit"));

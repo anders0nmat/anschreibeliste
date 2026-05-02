@@ -35,7 +35,7 @@ const observer = new IntersectionObserver((entries) => {
 		return (entry.intersectionRatio > max.intersectionRatio) ? entry : max
 	})
 	if (activated.intersectionRatio > 0) {
-		slideshow!.parentElement!.dataset.activeSlide = (activated.target as HTMLElement).dataset.slide
+		slideshow!.dataset.activeSlide = (activated.target as HTMLElement).dataset.slide
 	}
 }, {
 	root: slideshow,

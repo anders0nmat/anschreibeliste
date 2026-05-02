@@ -5,7 +5,7 @@
 {% load i18n %}
 
 {% block editor %}
-<aside>
+<aside class="p-m">
 	<div class="title">
 		<h2>{% translate "New Account" %}</h2>
 		<div style="flex-grow: 1"></div>
@@ -18,7 +18,7 @@
 			<h3>{% translate "Account" %}</h3>
 			{% icon "chevron-right" %}
 		</summary>
-		<form class="pretty-form" method="post">
+		<form class="pretty-form vstack gap-m" method="post">
 			{% csrf_token %}
 			{{ form }}
 			<input type="submit" class="primary button" value="{% translate "Save" %}">

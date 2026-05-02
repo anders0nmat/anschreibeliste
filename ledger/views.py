@@ -48,8 +48,15 @@ def js_config() -> dict[str, Any]:
 class AccountList(ListView):
     queryset = Account.objects.grouped()
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if not self.request.session.get('show_inactive_accounts', False):
+            queryset = queryset.filter(active=True)
+        return queryset.grouped()
+    
+
 class AccountDetail(EnableFieldsMixin, UpdateView):
-    queryset = Account.objects.filter(active=True)
+    queryset = Account.objects.grouped()
     object: Account # Type Annotation for IDE
     form_class = EditAccountForm
     template_name_suffix = '_detail'
@@ -71,8 +78,11 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
             ('withdraw', True): 'ledger.add_permanent_withdraw_transaction',
         }
 
+        account_list = Account.objects.grouped()
+        if not self.request.session.get('show_inactive_accounts', False):
+            account_list = account_list.filter(active=True)
         kwargs |= {
-            'account_list': Account.objects.grouped(),
+            'account_list': account_list,
             'transactions': Transaction.objects\
                 .filter(account=self.object)\
                 .order_by('-timestamp')\
@@ -117,8 +127,11 @@ class AccountCreate(PermissionRequiredMixin, CreateView):
         return self.request.user.has_perm('ledger.add_account') or self.request.user.has_perm('ledger.add_permanent_account')
     
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        account_list = Account.objects.grouped()
+        if not self.request.session.get('show_inactive_accounts', False):
+            account_list = account_list.filter(active=True)
         return super().get_context_data(**kwargs) | {
-            'account_list': Account.objects.grouped(),
+            'account_list': Account.objects.filter(active=True).grouped(),
             'js_config': js_config(),
         }
 
@@ -182,9 +195,13 @@ class TransactionList(PermissionRequiredMixin, ListView):
         return queryset
     
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
-        context = super().get_context_data(**kwargs) |{
-            'filters': TransactionListFilter(self.request.GET if self.request.GET else None, label_suffix='')
-        }
+        context = super().get_context_data(**kwargs)
+
+        filters = TransactionListFilter(self.request.GET if self.request.GET else None, label_suffix='')
+        if not self.request.session.get('show_inactive_accounts', False):
+            filters.fields['account'].queryset = filters.fields['account'].queryset.filter(active=True)
+
+        context['filters'] = filters
 
         page_obj: Page = context['page_obj']
         page_obj.adjusted_range = list(page_obj.paginator.get_elided_page_range(page_obj.number, on_each_side=1, on_ends=1))
@@ -300,7 +317,7 @@ class IndexView(TemplateView):
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         return super().get_context_data(**kwargs) | {
-            "account_list": Account.objects.grouped(),
+            "account_list": Account.objects.filter(active=True).grouped(),
             "product_list": Product.objects.grouped().filter(category=self.product_category),
             "transaction_list": self.get_transactions(),
             'js_config': js_config(),
@@ -308,7 +325,7 @@ class IndexView(TemplateView):
 
 def test(request: HttpRequest):
     return render(request, "ledger/test.html", {
-        "accounts": Account.objects.grouped(),
+        "accounts": Account.objects.filter(active=True).grouped(),
         "products": Product.objects.grouped(),
         "transactions": Transaction.objects\
                 .order_by('-timestamp')\
@@ -387,9 +404,9 @@ def custom_transaction(request: HttpRequest, action: Literal['deposit', 'withdra
             else:
                 return HttpResponseRedirect(reverse('ledger:account_detail', kwargs={"pk": transaction.account.pk}))
         except PermissionDenied:
-            form.add_error(ValidationError(_('Not authorized to perform this transaction for this account'), code='user_permission'))        
+            form.add_error(None, ValidationError(_('Not authorized to perform this transaction for this account'), code='user_permission'))        
         except Account.NotEnoughFunds:
-            form.add_error(ValidationError(_('The account has not enough money'), code='out_of_money'))
+            form.add_error(None, ValidationError(_('The account has not enough money'), code='out_of_money'))
     if is_json:
         return JsonResponse(form.errors.as_json(), safe=False, status=HTTPStatus.BAD_REQUEST)
     else:
@@ -449,3 +466,9 @@ def transaction_ping(request: HttpRequest):
     send_event('transaction', 'ping', nonce)
     return HttpResponse('ok')
 
+@require_POST
+@permission_required('ledger.view_inactive_account')
+def show_inactive_accounts(request: HttpRequest):
+    new_value = request.POST.get('new_value', '0')
+    request.session['show_inactive_accounts'] = new_value.casefold() in ('true', '1', 'yes')
+    return JsonResponse({"new_value": request.session['show_inactive_accounts']})

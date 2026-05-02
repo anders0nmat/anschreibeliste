@@ -13,6 +13,8 @@ urlpatterns = [
     path("accounts/<pk>/", views.AccountDetail.as_view(), name="account_detail"),
     path("accounts/<pk>/revert/", views.revert_transaction, name="account_revert"),
 
+    path("accounts/show_inactive_accounts", views.show_inactive_accounts, name="show_inactive_accounts"),
+
     path("transactions/", views.TransactionList.as_view(), name="transaction_list"),
     path("transactions/csv/", views.TransactionList.as_view(output_format="csv")),
     path("transactions/xlsx/", views.TransactionList.as_view(output_format="xlsx")),

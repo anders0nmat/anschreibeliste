@@ -54,33 +54,4 @@ Transaction.listen(event => {
 	account.disabled = account.budget <= 0
 }, false, account_id)
 
-/* ===== Progressive Enhancement ===== */
-
-// Submit without reload
-
-function submit_custom_transaction(action: "deposit" | "withdraw") {
-	return (ev: SubmitEvent) => {
-		ev.preventDefault()
-		const form = ev.target as HTMLFormElement
-		const form_data = new FormData(form)
-
-		const account = form_data.get('account') as string
-		const amount = form_data.get('amount') as string
-		const reason = form_data.get('reason') as string ?? ''
-
-		Transaction.submit({
-			kind: action,
-			account_id: account,
-			account_name: Account.byId(account)?.name ?? 'Unknown',
-			balance: amount.replace(decimalSeparator, '.'),
-			reason: reason,
-		})
-
-		form.reset()
-	}
-}
-
-document.getElementById('withdraw-transaction')?.addEventListener('submit', submit_custom_transaction("withdraw"))
-document.getElementById('deposit-transaction')?.addEventListener('submit', submit_custom_transaction("deposit"))
-
 
