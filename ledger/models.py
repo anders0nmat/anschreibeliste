@@ -169,7 +169,8 @@ class Transaction(models.Model):
 
     revert_threshold = settings.REVERT_THRESHOLD
     timejump_threshold = settings.TIMEJUMP_THRESHOLD
-    objects: TransactionManager = TransactionQuerySet.as_manager()
+    objects = TransactionManager()
+    all_objects = TransactionQuerySet.as_manager()
 
     closing_balance = models.ForeignKey(AccountBalance, verbose_name=_('closing balance'), on_delete=models.SET_NULL, related_name='transactions', null=True, default=None, blank=True)
     account = models.ForeignKey(Account, verbose_name=_('account'), on_delete=models.CASCADE, related_name='transactions')

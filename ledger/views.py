@@ -73,7 +73,7 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
         kwargs |= {
             'account_list': Account.objects.grouped(),
             'transactions': Transaction.objects\
-                .filter(closing_balance=None, account=self.object)\
+                .filter(account=self.object)\
                 .order_by('-timestamp')\
                 .annotate_timejump()\
                 .annotate_revertible(user=self.request.user)\
@@ -150,7 +150,7 @@ class AccountCreate(PermissionRequiredMixin, CreateView):
         return response
 
 class TransactionList(PermissionRequiredMixin, ListView):
-    queryset = Transaction.objects.filter(closing_balance=None)
+    queryset = Transaction.objects.all()
     output_format = 'html'
     permission_required = "ledger.view_transaction"
 
@@ -273,7 +273,7 @@ class IndexView(TemplateView):
         min_results = settings.TRANSACTION_HISTORY_MIN_ENTRIES
         old_threshold = now() - settings.TRANSACTION_HISTORY_OLD_THRESHOLD
         queryset = Transaction.objects\
-            .filter(Q(closing_balance=None) & ~Q(type__in=[Transaction.TransactionType.REVERT_DEPOSIT, Transaction.TransactionType.REVERT_WITHDRAW]))\
+            .exclude(type__in=[Transaction.TransactionType.REVERT_DEPOSIT, Transaction.TransactionType.REVERT_WITHDRAW])\
             .order_by('-timestamp')\
             .annotate_timejump()\
             .annotate_revertible(user=self.request.user)\
@@ -303,7 +303,6 @@ def test(request: HttpRequest):
         "accounts": Account.objects.grouped(),
         "products": Product.objects.grouped(),
         "transactions": Transaction.objects\
-                .filter(closing_balance=None)\
                 .order_by('-timestamp')\
                 .annotate_timejump()\
                 .annotate_revertible(user=request.user)\

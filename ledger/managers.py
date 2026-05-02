@@ -46,13 +46,14 @@ class TransactionQuerySet(models.QuerySet):
             timejump_after=Q(_timedelta_after__gt=timejump),
         )
 
-T = TypeVar('T')
 class TransactionManager(models.Manager):
-    """
-    This class is only for type-hinting purposes
-    """
-    def annotate_revertible(self: T, user: User, revert_threshold: timedelta = None) -> T: ...
-    def annotate_timejump(self: T, timejump: timedelta = None) -> T: ...
+    def get_queryset(self):
+        return TransactionQuerySet(self.model, using=self._db)\
+            .filter(closing_balance=None)
+    
+    Self = TypeVar("Self")
+    def annotate_revertible(self: Self, user: User, revert_threshold: timedelta = None) -> Self: ...
+    def annotate_timejump(self: Self, timejump: timedelta = None) -> Self: ...
 
 class ProductManager(models.Manager):
     def grouped(self):
