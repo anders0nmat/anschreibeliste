@@ -15,13 +15,19 @@
 {% endcomment %}
 {% load i18n %}
 
-<template id="transaction-template">
-	{% include 'ledger/snippets/transaction.html' with transaction=None %}
-</template>
-
 {% for transaction in transactions %}
 	{% include 'ledger/snippets/transaction.html' with transaction=transaction %}
 {% empty %}
 	<span class="separator" id="no-transactions">{% translate "No transactions found" %}</span>
 {% endfor %}
+
+<template id="transaction-template">
+	{% include 'ledger/snippets/transaction.html' with transaction=None %}
+</template>
+
+<style>
+    :root {
+        --reverted-text: "{% trans "REVERTED" %}";
+    }
+</style>
 

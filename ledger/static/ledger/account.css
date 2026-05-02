@@ -183,6 +183,3 @@ aside {
 	--selected-color: var(--negative-color);
 }
 
-#transaction-revert {
-	display: none;
-}

@@ -3,7 +3,7 @@
 	grid-template-columns: auto auto min-content;
 	gap: 0.25em;
 	margin: 0;
-	padding: 0;
+    padding: 0 .5em .5em .5em;
 	list-style: none;
 
 	& .separator {
@@ -23,6 +23,14 @@
 	#transaction-revert {
 		display: none;
 	}
+
+    @media screen and (min-width: 900px) {
+        & {
+            padding: 0;
+            padding-right: 0.5em;
+            padding-bottom: .5em;
+        }
+    }
 }
 
 .transaction {
@@ -40,10 +48,31 @@
 	align-items: center;
 	border: thin solid var(--secondary-bg-color);
 
+    position: relative;
+
 	&:not([data-transaction-id]) {
 		background-color: transparent;
 		border-color: transparent;
 	}
+
+    &[data-reverted] {
+        background-color: rgba(from var(--secondary-bg-color) r g b / 0.4);
+        color: var(--disabled-text-color);
+
+        &::after {
+            content: var(--reverted-text, 'REVERTED');
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: rgba(from var(--disabled-text-color) r g b / 0.5);
+            position: absolute;
+            inset: 0;
+            display: grid;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--secondary-bg-color);
+            z-index: -1;
+        }
+    }
 
 	&[error] {
 		background-color: color-mix(in srgb, var(--secondary-bg-color), red 10%);

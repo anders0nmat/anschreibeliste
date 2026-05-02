@@ -4,7 +4,7 @@
 	<span class="separator before">{{ transaction.timestamp|date:"l, d. F Y H:i" }}</span>
 {% endif %}
 
-<li class="transaction" data-transaction-id>
+<li class="transaction" data-transaction-id {% if transaction.related_transaction is not None %}data-reverted{% endif %}>
 	<span class="account">{{ transaction.account.display_name }}</span>
 	<span class="reason">{{ transaction.reason }}</span>
     {{ transaction.fp_amount|default:0|money }}
@@ -13,7 +13,7 @@
 
 	{% if revert_form %}
 	<button
-	name="transaction" value="{{ transaction.pk }}"
+	name="transaction" value="{% if transaction.related_transaction is not None %}{{ transaction.related_transaction.pk }}{% else %}{{ transaction.pk }}{% endif %}"
 	class="undo icon-button"
 	{% if transaction.allow_revert == False %}disabled{% endif %}>
         {% icon "undo-2" %}

@@ -1,9 +1,11 @@
 main {
 	display: grid;
-	grid-template-rows: auto max-content;
+	grid-template-rows: auto max-content max-content;
 	grid-template-areas: 
 		"content"
+        "slide-bar"
 		"new-transaction";
+    gap: 0.5em;
 
 
 	@media screen and (max-width: 899px) {
@@ -13,14 +15,27 @@ main {
 				"new-transaction"
 				"transactions";
 
-			& #tabs {
+			& #tabs,
+            & #slide-bar {
 				display: none;
 			}
+
+            & #new-transaction {
+                margin: .5em .5em 0 .5em;
+            }
 
 			& div:has(#transactions) {
 				display: unset;
 			}
 		}
+
+        & div:has(> .slide-indicator) {
+            display: none;
+        }
+
+        & hr.spacer:first-of-type {
+            display: none;
+        }
 	}
 
 
@@ -29,7 +44,7 @@ main {
 			grid-template-columns: 3fr minmax(min-content, 1fr);
 			grid-template-rows: max-content auto;
 			grid-template-areas: 
-				"content new-transaction"
+				"slide-bar new-transaction"
 				"content transactions";
 		}
 
@@ -39,13 +54,8 @@ main {
 	}
 }
 
-#tabs {
-	display: grid;
-	grid-area: content;
-	grid-template-rows: subgrid;
-	overflow: hidden;
-
-    overscroll-behavior: contain;
+#slide-bar {
+    grid-area: slide-bar;
 }
 
 body {
@@ -72,7 +82,6 @@ div:has(#transactions) {
 	background: linear-gradient(to right, var(--bg) 50%, transparent 0) left;
 	background-size: 200% 100%;
 	background-position-x: left;
-    bottom: 0.5em;
 	grid-area: new-transaction;
 	border: thin solid var(--selected-color);
 	grid-template-columns: auto auto max-content;
@@ -80,6 +89,13 @@ div:has(#transactions) {
 		"account price undo"
 		"reason  price undo";
 	grid-auto-columns: max-content;
+    margin: 0 .5em .5em .5em;
+
+    @media screen and (min-width: 900px) {
+        & {
+            margin: .5em .5em 0 0;
+        }
+    }
 
 	&.timeout {
 		animation: both 10s progress-background ease-in-out;
@@ -176,13 +192,6 @@ div:has(#transactions) {
 	  to { background-position-x: right; }
 }
 
-
-@media screen and (max-width: 899px) {
-	div:has(> #transaction-multiplier) {
-		display: none;
-	}
-}
-
 @media screen and (min-width: 900px) {
     body {
         height: 100vh;
@@ -191,17 +200,6 @@ div:has(#transactions) {
 }
 
 #transaction-multiplier {
-	margin: 0;
-	padding: 0.25em 0.25em;
-
-	display: flex;
-	gap: 0.25em;
-
-	cursor: default;
-	align-self: center;
-	
-	font-weight: normal;
-	font-size: 125%;
 
 	background-color: var(--secondary-bg-color);
 
@@ -218,11 +216,6 @@ div:has(#transactions) {
 		color: var(--secondary-text-color);
 		font-size: 80%;
 		margin-left: 2px;
-	}
-
-	& button {
-		font-size: 80%;
-		align-items: center;
 	}
 }
 
@@ -246,7 +239,6 @@ div:has(#transactions) {
 	display: flex;
 	flex-flow: row nowrap;
 	align-items: center;
-	font-size: 110%;
 	overflow: hidden;
 	
 	& .slide-indicator {
@@ -362,27 +354,5 @@ label:has(#item-search) {
 		color: inherit;
 		padding: 0.25em;
 		width: 12ch;
-	}
-}
-
-label:has(input[name="invert_member"]) {
-	margin-right: 0.5em;
-	padding: 0.375em;
-	font-size: 125%;
-	color: var(--secondary-text-color);
-	
-	&:has(input:checked) {
-		color: color-mix(in srgb, var(--selected-color), var(--highlight-color) 25%);
-	}
-}
-
-label:has(#lock-account) {
-	margin-right: 0.5em;
-	padding: 0.375em;
-	font-size: 125%;
-	color: var(--secondary-text-color);
-	
-	&:has(input:checked) {
-		color: color-mix(in srgb, var(--selected-color), var(--highlight-color) 25%);
 	}
 }

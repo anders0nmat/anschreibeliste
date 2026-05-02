@@ -182,7 +182,7 @@ class Transaction(models.Model):
 
     extra = models.JSONField(verbose_name=_('extra'), default=dict, blank=True)
     
-    related_transaction: "Transaction" = models.OneToOneField(to="self", verbose_name=_('related transaction'), help_text=_('Used to track and associate canceled transactions'), on_delete=models.CASCADE, null=True, default=None, blank=True)
+    related_transaction: "Transaction" = models.OneToOneField(to="self", verbose_name=_('related transaction'), help_text=_('Used to track and associate canceled transactions'), on_delete=models.CASCADE, null=True, default=None, blank=True, editable=False)
 
     idempotency_key: str | None
 

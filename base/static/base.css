@@ -466,6 +466,10 @@ hr {
     &.primary {
         --bg: var(--selected-color);
     }
+
+    &.opaque {
+        --bg: var(--secondary-bg-color);
+    }
 }
 
 .negative {
@@ -530,6 +534,10 @@ hr {
     padding: 0.25em;
 }
 
+.p-sm {
+    padding: 0.375em;
+}
+
 .p-m {
     padding: .5em;
 }
@@ -552,6 +560,10 @@ hr {
 
 .text-small {
     font-size: 85%;
+}
+
+.text-big {
+    font-size: 125%;
 }
 
 .tag {
@@ -599,6 +611,11 @@ input:not(:is([type="checkbox"], [type="radio"], [type="button"], [type="submit"
     border: thin solid var(--separator-color);
     color: currentColor;
     width: 100%;
+}
+
+input[type="search"] {
+    padding: 0.5em 1em;
+    line-height: 1;
 }
 
 :is(input, select, textarea):focus-within {

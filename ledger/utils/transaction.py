@@ -1,5 +1,6 @@
 from typing import Literal
 from django.utils.translation import gettext as _, pgettext
+from django.utils.formats import date_format
 from ..models import Transaction, Account, Product, UserModel
 
 from django.core.exceptions import PermissionDenied
@@ -108,7 +109,13 @@ def transaction_event(instance: Transaction) -> dict:
     # Associate transaction with request
     if instance.idempotency_key is not None:
         data["idempotency_key"] = instance.idempotency_key
-                
+
+    # Test if timejump occured
+    previous_transaction: Transaction = Transaction.objects.filter(timestamp__lt=instance.timestamp).order_by("-timestamp").first()
+    if previous_transaction and previous_transaction.timestamp < instance.timestamp - Transaction.timejump_threshold:
+        data['timejump_before'] = date_format(previous_transaction.timestamp, 'l, d. F Y H:i')
+        data['timejump_after'] = date_format(instance.timestamp, 'l, d. F Y H:i')
+            
     return data
             
 

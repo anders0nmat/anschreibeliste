@@ -23,63 +23,59 @@
 
 {% load_icons "badge" "undo-2" class="visually-hidden" %}
 
-<div id="tabs" data-active-slide="products">
-	<style>
-		[data-active-slide="products"] .slide-indicator[data-slide="products"],
-		[data-active-slide="accounts"] .slide-indicator[data-slide="accounts"] {
+{% translate "Products" as the_product %}
+{% translate "Accounts" as the_account %}
+
+<div id="slide-bar" class="hstack center-across ph-m gap-m">
+    <style>
+		main:has([data-active-slide="products"]) .slide-indicator[data-slide="products"],
+		main:has([data-active-slide="accounts"]) .slide-indicator[data-slide="accounts"] {
 			--bg: var(--secondary-bg-color);
 		}
-	</style>
-
-	{% translate "Products" as the_product %}
-	{% translate "Accounts" as the_account %}
-
-	<div class="slide-bar">
-		<button class="slide-indicator transparent button" data-slide="products">{{ the_product }}</button>
-		<button class="slide-indicator transparent button" data-slide="accounts">{{ the_account }}</button>
-		<div style="flex-grow:1"></div>
-		<div hidden>
-			<label>
-				<input type="search" id="item-search" placeholder="{% translate "Search..." %}" autocomplete="off">
-			</label>
-		</div>
-		<div style="flex-grow:1"></div>
-		<label class="center button">
-			<input type="checkbox" class="css-hidden" id="lock-account" autocomplete="off">
-            {% icon "user-lock" %}
-		</label>
-		<label class="center button">
-			<input type="checkbox" class="css-hidden" name="invert_member" form="new-transaction">
-            {% icon "badge-update" %}
-		</label>
-		<div id="transaction-multiplier">
-			<button type="button" class="transparent slim center button" data-increment="-1">
-                {% icon "minus" %}
-            </button>
-			<span class="css-hidden" aria-hidden="true"  inputmode="numeric" contenteditable>1</span>
-			<label>
-				<span class="visually-hidden">{% translate "Amount:" %}</span>
-				<input type="number" name="amount" value="1" form="new-transaction" min="1">
-			</label>
-			<button type="button" class="transparent slim center button" data-increment="1">
-                {% icon "plus" %}
-            </button>
-		</div>
-	</div>
-
-	<div class="slideshow">
-		<div class="slide group-list p-m" id="products" data-slide="products">
-			<h2 class="visually-hidden">{{ the_product }}</h2>
-			{% include 'ledger/snippets/products.html' with items=product_list target_form="new-transaction" %}
-		</div>
-		
-		<div class="slide group-list p-m" id="accounts" data-slide="accounts">
-			<h2 class="visually-hidden">{{ the_account }}</h2>
-			{% include 'ledger/snippets/accounts.html' with items=account_list target_form="new-transaction" %}
-		</div>
-	</div>
+    </style>
+    <div class="hstack">
+        <button class="slide-indicator transparent button" data-slide="products">{{ the_product }}</button>
+        <button class="slide-indicator transparent button" data-slide="accounts">{{ the_account }}</button>
+    </div>
+    <hr class="spacer">
+    <div hidden>
+        <input type="search" id="item-search" placeholder="{% translate "Search" %}" autocomplete="off">
+    </div>
+    <hr class="spacer">
+    <label class="icon-checkbox icon-button opaque p-sm text-big">
+        <input type="checkbox" class="css-hidden" id="lock-account" autocomplete="off">
+        {% icon "user-lock" %}
+    </label>
+    <label class="icon-checkbox icon-button opaque text-big p-sm">
+        <input type="checkbox" class="css-hidden" name="invert_member" form="new-transaction">
+        {% icon "badge-update" %}
+    </label>
+    <div id="transaction-multiplier" class="hstack p-s gap-s text-big">
+        <button type="button" class="icon-button text-small" data-increment="-1">
+            {% icon "minus" %}
+        </button>
+        <span class="css-hidden" aria-hidden="true" inputmode="numeric" contenteditable>1</span>
+        <label>
+            <span class="visually-hidden">{% translate "Amount:" %}</span>
+            <input type="number" name="amount" value="1" form="new-transaction" min="1">
+        </label>
+        <button type="button" class="icon-button text-small" data-increment="1">
+            {% icon "plus" %}
+        </button>
+    </div>
 </div>
-<form action="/transaction/order/" id="new-transaction" class="transaction m-m" method="POST">
+<div id="tabs" class="slideshow" data-active-slide="products">
+    <div class="slide group-list ph-m" id="products" data-slide="products">
+        <h2 class="visually-hidden">{{ the_product }}</h2>
+        {% include 'ledger/snippets/products.html' with items=product_list target_form="new-transaction" %}
+    </div>
+    
+    <div class="slide group-list ph-m" id="accounts" data-slide="accounts">
+        <h2 class="visually-hidden">{{ the_account }}</h2>
+        {% include 'ledger/snippets/accounts.html' with items=account_list target_form="new-transaction" %}
+    </div>
+</div>
+<form action="/transaction/order/" id="new-transaction" class="transaction" method="POST">
 	{% csrf_token %}
 	<input type="hidden" name="idempotency-key" value="{{ idempotency_key }}">
 

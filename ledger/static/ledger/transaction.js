@@ -117,11 +117,32 @@ export class Transaction extends HTMLWrapper {
         this.event_source.addEventListener('create', event => {
             const data = JSON.parse(event.data);
             console.log("received server event:", data);
+            const related_transaction = data.related !== undefined && Transaction.from(document.querySelector(`.transaction:has([name="transaction"][value="${data.related}"])`));
+            if (related_transaction) {
+                related_transaction.can_revert = false;
+                related_transaction.element.dataset.reverted = '';
+            }
             const confirmed_transaction = data.idempotency_key && Transaction.fromQuery(`.transaction[data-pending-id="${data.idempotency_key}"]`);
             if (confirmed_transaction) {
                 confirmed_transaction.applyServerEvent(data);
+                if ('timejump_before' in data) {
+                    if (confirmed_transaction.element.nextElementSibling?.classList.contains('transaction')) {
+                        // No timejump exists yet
+                        const before = document.createElement('span');
+                        before.classList.add('separator', 'before');
+                        before.textContent = data.timejump_before;
+                        confirmed_transaction.element.insertAdjacentElement('afterend', before);
+                    }
+                    // in any case, put timejump_after
+                    if ('timejump_after' in data) {
+                        const after = document.createElement('span');
+                        after.classList.add('separator', 'after');
+                        after.textContent = data.timejump_after;
+                        confirmed_transaction.element.insertAdjacentElement('afterend', after);
+                    }
+                }
             }
-            else {
+            else if (!related_transaction) {
                 if (account !== undefined && data.account != account) {
                     // Ignore transactions by other accounts than the one specified
                     return;
@@ -129,11 +150,24 @@ export class Transaction extends HTMLWrapper {
                 const new_transaction = Transaction.create();
                 new_transaction.applyServerEvent(data);
                 new_transaction.status?.element.remove();
-                document.getElementById('transactions').prepend(new_transaction.element);
-            }
-            const related_transaction = data.related !== undefined && Transaction.from(document.querySelector(`.transaction:has([name="transaction"][value="${data.related}"])`));
-            if (related_transaction) {
-                related_transaction.can_revert = false;
+                const transaction_list = document.getElementById('transactions');
+                if ('timejump_before' in data) {
+                    if (transaction_list.querySelector(':scope > :is(.transaction, .before')?.classList.contains('transaction')) {
+                        // No timejump exists yet
+                        const before = document.createElement('span');
+                        before.classList.add('separator', 'before');
+                        before.textContent = data.timejump_before;
+                        transaction_list.prepend(before);
+                    }
+                    // in any case, put timejump_after
+                    if ('timejump_after' in data) {
+                        const after = document.createElement('span');
+                        after.classList.add('separator', 'after');
+                        after.textContent = data.timejump_after;
+                        transaction_list.prepend(after);
+                    }
+                }
+                transaction_list.prepend(new_transaction.element);
             }
             if (ontransaction) {
                 ontransaction(data);
