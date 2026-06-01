@@ -15,8 +15,6 @@ from django.utils.translation import gettext_lazy as _
 
 import xml.etree.ElementTree as ET
 
-from base.forms import NoLabelSuffixMixin
-
 class GroupedModelChoiceIterator(ModelChoiceField.iterator):
     def __iter__(self) -> Iterator[Tuple[int | str, str]]:
         if self.field.empty_label is not None:
@@ -65,7 +63,7 @@ def get_tag_color(value):
     color = instance.color
     return {'style': f'--color: {color}', 'class': 'tag'}
 
-class RecipeForm(NoLabelSuffixMixin, ModelForm):
+class RecipeForm(ModelForm):
     class Meta:
         model = Recipe
         fields = '__all__'

@@ -1,0 +1,11 @@
+td.original, th.original {
+    display: none;
+}
+
+.inline-group .tabular tr.has_original td {
+    padding: .25em;
+}
+
+.inline-group thead th {
+    padding-inline: .25em;
+}

@@ -15,9 +15,9 @@ from .utils import fpint, server_language
 # Create your models here.
 # TODO : Better terminologiy regarding money:
 # TODO : User A has amount k and additionally is allowed to go amount n into debt
-# TODO : How to call k
-# TODO : How to call n
-# TODO : How to call k + n
+# TODO : How to call k => Debit
+# TODO : How to call n => Credit
+# TODO : How to call k + n => Balance
 
 UserModel: Type[AbstractBaseUser] = get_user_model()
 
@@ -51,7 +51,7 @@ class AccountQueryset(models.QuerySet):
                         .values_list('closing_balance', flat=True)[:1]),
                     models.Value(0)),
                 _summed_transactions=models.functions.Coalesce(models.Subquery(
-                    Transaction.objects\
+                    Transaction.recent_objects\
                         .filter(closing_balance=None, account=models.OuterRef('pk'))\
                         .values('account__pk')\
                         .annotate(sum=
@@ -136,7 +136,7 @@ class Account(models.Model):
     def close_balance(self, cutoff_date=None):
         if cutoff_date is None:
             cutoff_date = now()
-        pending_transactions = self.transactions.filter(closing_balance=None, timestamp__date__lt=cutoff_date)
+        pending_transactions = self.transactions.filter(closing_balance=None, timestamp__lt=cutoff_date)
         if pending_transactions.exists():
             closing_balance = AccountBalance.objects.create(account=self, timestamp=cutoff_date, closing_balance=self.current_balance, previous_balance=self.last_balance)
             pending_transactions.update(closing_balance=closing_balance)
@@ -170,8 +170,8 @@ class Transaction(models.Model):
 
     revert_threshold = settings.REVERT_THRESHOLD
     timejump_threshold = settings.TIMEJUMP_THRESHOLD
-    objects = TransactionManager()
-    all_objects = TransactionQuerySet.as_manager()
+    recent_objects = TransactionManager()
+    objects = TransactionQuerySet.as_manager()
 
     closing_balance = models.ForeignKey(AccountBalance, verbose_name=_('closing balance'), on_delete=models.SET_NULL, related_name='transactions', null=True, default=None, blank=True)
     account = models.ForeignKey(Account, verbose_name=_('account'), on_delete=models.CASCADE, related_name='transactions')

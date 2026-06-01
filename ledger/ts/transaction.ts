@@ -1,6 +1,6 @@
-import { _set_money, config, HTMLWrapper } from './base.js'
+import { _set_money, API, HTMLWrapper } from './base.js'
 
-const SUBMIT_OVERLAY_DURATION = config().submit_overlay
+const SUBMIT_OVERLAY_DURATION = API.config.submit_overlay
 
 interface ServerEvent {
 	id: number,
@@ -120,7 +120,7 @@ class Status extends HTMLWrapper {
 export class Transaction extends HTMLWrapper {
 	static template: string = 'transaction-template'
 	static all_selector: string = '#transactions .transaction'
-	static api = config().transaction
+	static api = API.endpoints
 
 	private static csrf_token = document.querySelector<HTMLInputElement>('[name=csrfmiddlewaretoken]')!.value
 	private static async post(url: RequestInfo | URL, body: any, idempotency_key: string | undefined = undefined): ReturnType<typeof fetch> {

@@ -1,5 +1,5 @@
-import { _set_money, config, HTMLWrapper } from './base.js';
-const SUBMIT_OVERLAY_DURATION = config().submit_overlay;
+import { _set_money, API, HTMLWrapper } from './base.js';
+const SUBMIT_OVERLAY_DURATION = API.config.submit_overlay;
 function getRadioGroup(formElements, name) {
     const elements = formElements[name];
     if (elements instanceof RadioNodeList) {
@@ -50,7 +50,7 @@ class Status extends HTMLWrapper {
 export class Transaction extends HTMLWrapper {
     static template = 'transaction-template';
     static all_selector = '#transactions .transaction';
-    static api = config().transaction;
+    static api = API.endpoints;
     static csrf_token = document.querySelector('[name=csrfmiddlewaretoken]').value;
     static async post(url, body, idempotency_key = undefined) {
         return fetch(url, {

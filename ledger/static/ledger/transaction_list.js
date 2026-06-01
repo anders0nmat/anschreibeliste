@@ -1,3 +1,4 @@
+import { debounce } from "./base.js";
 document.querySelectorAll('[data-action]').forEach(button => {
     switch (button.dataset.action) {
         case 'select-all':
@@ -29,22 +30,6 @@ document.querySelectorAll('[data-action]').forEach(button => {
             break;
     }
 });
-function debounce(func, wait, immediate = false) {
-    var timeout;
-    return function (...args) {
-        var context = this;
-        var later = function () {
-            timeout = null;
-            if (!immediate)
-                func.apply(context, args);
-        };
-        var callNow = immediate && !timeout;
-        clearTimeout(timeout ?? undefined);
-        timeout = setTimeout(later, wait);
-        if (callNow)
-            func.apply(context, args);
-    };
-}
 function getElements(formElement, names) {
     return Array.from(formElement.elements)
         .filter((item) => names.includes(item.name));

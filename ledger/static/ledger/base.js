@@ -52,8 +52,22 @@ export function _cloneTemplate(id) {
     const template = document.getElementById(id);
     return template.content.cloneNode(true);
 }
-export function config() {
-    return JSON.parse(document.getElementById('js-config')?.textContent ?? '{}');
+export const API = await (await fetch('/api/ledger/')).json();
+export function debounce(func, wait, immediate = false) {
+    var timeout;
+    return function (...args) {
+        var context = this;
+        var later = function () {
+            timeout = null;
+            if (!immediate)
+                func.apply(context, args);
+        };
+        var callNow = immediate && !timeout;
+        clearTimeout(timeout ?? undefined);
+        timeout = setTimeout(later, wait);
+        if (callNow)
+            func.apply(context, args);
+    };
 }
 export class HTMLWrapper {
     static from(element) {

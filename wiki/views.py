@@ -224,8 +224,8 @@ def article_update(request: HttpRequest, slug: str = None):
     article = Article.objects.filter(slug=slug).first()
 
     if request.method == "POST":
-        form = ArticleForm(request.POST, instance=article, label_suffix='')
-        formset = AttachmentFormset(request.POST, request.FILES, instance=article, form_kwargs={'label_suffix': ''})
+        form = ArticleForm(request.POST, instance=article)
+        formset = AttachmentFormset(request.POST, request.FILES, instance=article)
         if form.is_valid() and formset.is_valid():
             article: Article = form.save()
             formset.instance = article
@@ -239,8 +239,8 @@ def article_update(request: HttpRequest, slug: str = None):
                 initial = {'slug': slug}
             except ValidationError:
                 pass
-        form = ArticleForm(instance=article, initial=initial, label_suffix='')
-        formset = AttachmentFormset(instance=article, form_kwargs={'label_suffix': ''})
+        form = ArticleForm(instance=article, initial=initial)
+        formset = AttachmentFormset(instance=article)
 
     if slug:
         attachment_list = Attachment.objects.filter(article__slug=slug)

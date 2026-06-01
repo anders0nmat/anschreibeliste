@@ -20,12 +20,7 @@ from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib.auth.views import LoginView, LogoutView
 
-class CustomLoginView(LoginView):
-    def get_form_kwargs(self):
-        return super().get_form_kwargs() | {
-            'label_suffix': '',
-        }
-    
+class CustomLoginView(LoginView):    
     def get_form(self, form_class = None):
         form = super().get_form(form_class)
         form.fields['username'].widget.attrs['placeholder'] = ' '

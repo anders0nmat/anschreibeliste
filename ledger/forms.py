@@ -88,7 +88,7 @@ class ProductTransactionForm(Form):
     invert_member = BooleanField(initial=False, required=False)
     
 class RevertTransactionForm(Form):
-    transaction = ModelChoiceField(Transaction.objects) 
+    transaction = ModelChoiceField(Transaction.recent_objects) 
 
 class TransactionListFilter(Form):
     account = GroupedModelChoiceField(Account.objects.all(), label=_('Account'), required=False, widget=CheckboxSelectMultiple, group_by_field="group", group_label="name")

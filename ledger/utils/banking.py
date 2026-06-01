@@ -5,7 +5,7 @@ from ..conf import settings
 from typing import Optional
 
 import qrcode
-from qrcode.image.svg import SvgImage
+from qrcode.image.svg import SvgPathImage
 import qrcode.image.styles.moduledrawers.svg as qr_svg
 
 class NoSvgNamespaceMixin:
@@ -17,11 +17,18 @@ class NoSvgNamespaceMixin:
     def tag_qname(self, _):
         pass
 
-class SvgCircleDrawerNoNS(NoSvgNamespaceMixin, qr_svg.SvgCircleDrawer):
+class SvgCircleDrawerNoNS(NoSvgNamespaceMixin, qr_svg.SvgPathCircleDrawer):
     pass
 
-class SvgSquareDrawerNoNS(NoSvgNamespaceMixin, qr_svg.SvgSquareDrawer):
+class SvgSquareDrawerNoNS(NoSvgNamespaceMixin, qr_svg.SvgPathSquareDrawer):
     pass
+
+class CustomSvgPathImage(SvgPathImage):
+    @property
+    def QR_PATH_STYLE(self):
+        return SvgPathImage.QR_PATH_STYLE | {
+            'fill': 'currentColor'
+        }
 
 
 class Version(Enum):
@@ -105,7 +112,7 @@ class EPCCode:
 
     @property
     def qr_code(self) -> str:
-        qr = qrcode.QRCode(image_factory=SvgImage)
+        qr = qrcode.QRCode(image_factory=CustomSvgPathImage)
         qr.add_data(str(self))
         svg = qr.make_image(
             attrib={
@@ -114,7 +121,7 @@ class EPCCode:
             module_drawer= SvgSquareDrawerNoNS(),
             eye_drawer=SvgSquareDrawerNoNS())
         return svg.to_string(encoding="unicode")
-
+    
     def __str__(self) -> str:
         if self.version == Version.nonEWR and not self.bic:
             raise ValueError('No BIC speicifed for non-EWR transaction')

@@ -111,7 +111,7 @@ def transaction_event(instance: Transaction) -> dict:
         data["idempotency_key"] = instance.idempotency_key
 
     # Test if timejump occured
-    previous_transaction: Transaction = Transaction.objects.filter(timestamp__lt=instance.timestamp).order_by("-timestamp").first()
+    previous_transaction: Transaction = Transaction.recent_objects.filter(timestamp__lt=instance.timestamp).order_by("-timestamp").first()
     if previous_transaction and previous_transaction.timestamp < instance.timestamp - Transaction.timejump_threshold:
         data['timejump_before'] = date_format(previous_transaction.timestamp, 'l, d. F Y H:i')
         data['timejump_after'] = date_format(instance.timestamp, 'l, d. F Y H:i')

@@ -69,22 +69,39 @@ export function _cloneTemplate(id: string): DocumentFragment {
 	return template.content.cloneNode(true) as DocumentFragment
 }
 
-interface ServerConfig {
-	transaction: {
+interface API {
+	endpoints: {
 		deposit: string
 		withdraw: string
 		order: string
 		revert: string
 		events: string
 		ping: string
+        qr: string
+        session: string
 	}
 
-	submit_overlay: number
-	transaction_timeout: number
+    config: {
+        submit_overlay: number
+        transaction_timeout: number
+    }
 }
 
-export function config(): ServerConfig {
-	return JSON.parse(document.getElementById('js-config')?.textContent ?? '{}') as ServerConfig
+export const API: API = await (await fetch('/api/ledger/')).json()
+
+export function debounce<Args extends any[], F extends (...args: Args) => any>(func: F, wait: number, immediate: boolean = false) {
+    var timeout: ReturnType<typeof setTimeout> | null
+    return function(this: ThisParameterType<F>, ...args: Parameters<F>) {
+		var context = this
+        var later = function() {
+            timeout = null
+            if (!immediate) func.apply(context, args)
+        }
+        var callNow = immediate && !timeout
+        clearTimeout(timeout ?? undefined)
+        timeout = setTimeout(later, wait)
+        if (callNow) func.apply(context, args)
+    }
 }
 
 interface GenericHTMLWrapper<T> {

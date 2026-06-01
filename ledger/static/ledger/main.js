@@ -1,7 +1,7 @@
-import { config, HTMLIdentifierWrapper } from './base.js';
+import { API, HTMLIdentifierWrapper, debounce } from './base.js';
 import { Transaction } from './transaction.js';
 import { Account } from './accounts.js';
-const TRANSACTION_TIMEOUT = config().transaction_timeout;
+const TRANSACTION_TIMEOUT = API.config.transaction_timeout;
 const SEARCH_DEBOUNCE_DELAY = 50;
 class Product extends HTMLIdentifierWrapper {
     static all_selector = '#products .item';
@@ -152,22 +152,6 @@ document.querySelector('.slideshow').classList.add('horizontal');
 // Activate search bar
 document.querySelector('div[hidden]').hidden = false;
 const search_bar = document.querySelector('#item-search');
-function debounce(func, wait, immediate = false) {
-    var timeout;
-    return function (...args) {
-        var context = this;
-        var later = function () {
-            timeout = null;
-            if (!immediate)
-                func.apply(context, args);
-        };
-        var callNow = immediate && !timeout;
-        clearTimeout(timeout ?? undefined);
-        timeout = setTimeout(later, wait);
-        if (callNow)
-            func.apply(context, args);
-    };
-}
 // An array of [name, element] pairs, for faster search
 const search_items = [...Account.all(), ...Product.all()].map(e => [e.name, e.element]);
 search_bar.addEventListener('input', debounce(_ => {

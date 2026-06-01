@@ -3,7 +3,9 @@ from . import models
 from adminsortable2.admin import SortableAdminMixin, SortableTabularInline
 from django.contrib import messages
 from django import forms
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from django.utils.html import format_html
 from django_admin_action_forms import AdminActionForm, AdminActionFormsMixin, action_with_form
 
 from .utils import fpint
@@ -20,13 +22,24 @@ class AccountAdmin(AdminActionFormsMixin, admin.ModelAdmin):
     list_display = ["display_name", "full_name", "group", "active", "member", "permanent", "custom_balance", "custom_credit", "last_balance", ]
     list_filter = ["active", "member", ]
 
+    readonly_fields = ['custom_balance', 'last_closing_balance']
+
+    class Media:
+        css = {'all': ['ledger/admin.css']}
+
     @admin.display(description=_('Credit'))
     def custom_credit(self, obj: models.Account):
-        return fpint(obj.credit)
+        return format_html('{}€', fpint(obj.credit))
     
     @admin.display(description=_('Balance'))
     def custom_balance(self, obj: models.Account):
-        return fpint(obj.current_balance)
+        return format_html('{}€', fpint(obj.current_balance))
+    
+    @admin.display(description=_('Last closing balance'))
+    def last_closing_balance(self, obj: models.Account):
+        if obj.last_balance:
+            return format_html('<a href="{}">{}</a>', reverse('admin:ledger_accountbalance_change', args=[obj.last_balance.pk]), obj.last_balance)
+        return '-'
 
     @action_with_form(
         CloseBalanceForm,
@@ -42,14 +55,77 @@ class AccountAdmin(AdminActionFormsMixin, admin.ModelAdmin):
 
     actions = [close_balance]
 
-admin.site.register(models.AccountBalance)
+class ReadOnlyAdmin(admin.ModelAdmin):
+    readonly_fields = []
+    exclude = []
+
+    def get_readonly_fields(self, request, obj=None):
+        excludes = set(self.exclude)
+        return [field.name for field in obj._meta.fields if field.name not in excludes] + \
+               [field.name for field in obj._meta.many_to_many if field.name not in excludes] + \
+               list(self.readonly_fields)
+
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+    
+class ReadOnlyTabularInline(admin.TabularInline):
+    extra = 0
+    can_delete = False
+    editable_fields = []
+    readonly_fields = []
+    exclude = []
+
+    def get_readonly_fields(self, request, obj=None):
+        return list(self.readonly_fields) + \
+               [field.name for field in self.model._meta.fields
+                if field.name not in self.editable_fields and
+                   field.name not in self.exclude]
+
+    def has_add_permission(self, request, obj):
+        return False
+
+class TransactionListInline(ReadOnlyTabularInline):
+    model = models.Transaction
+    exclude = ['related_transaction', 'extra', 'account', 'amount']
+    readonly_fields = ['custom_amount']
+
+    
+    @admin.display(description=_('Amount'))
+    def custom_amount(self, obj: models.Transaction):
+        return format_html('{}€', fpint(obj.amount, obj.type in models.Transaction.TransactionType.withdraws()))
+
+@admin.register(models.AccountBalance)
+class AccountBalanceAdmin(ReadOnlyAdmin):
+    readonly_fields = ['custom_closing_balance']
+    inlines = [TransactionListInline]
+    exclude = ['id', 'closing_balance']
+
+    class Media:
+        css = {'all': ['ledger/admin-accountbalance.css']}
+
+    
+    @admin.display(description=_('Closing Balance'))
+    def custom_closing_balance(self, obj: models.Account):
+        return format_html('{}€', fpint(obj.closing_balance))
 
 
 @admin.register(models.Transaction)
-class TransactionAdmin(admin.ModelAdmin):
+class TransactionAdmin(ReadOnlyAdmin):
     list_display = ["account__display_name", "reason", "type", "fp_amount", "timestamp", ]
     list_filter = ["account", "type", ]
     ordering = ["-timestamp", ]
+    exclude = [ 'amount' ]
+    
+    readonly_fields = [ 'custom_amount' ]
+
+
+    @admin.display(description=_('Amount'))
+    def custom_amount(self, obj: models.Transaction):
+        return format_html('{}€', fpint(obj.amount, obj.type in models.Transaction.TransactionType.withdraws()))
     
 
 class ProductTabularInline(SortableTabularInline):

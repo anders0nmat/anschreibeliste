@@ -13,8 +13,6 @@ urlpatterns = [
     path("accounts/<pk>/", views.AccountDetail.as_view(), name="account_detail"),
     path("accounts/<pk>/revert/", views.revert_transaction, name="account_revert"),
 
-    path("accounts/show_inactive_accounts", views.show_inactive_accounts, name="show_inactive_accounts"),
-
     path("transactions/", views.TransactionList.as_view(), name="transaction_list"),
     path("transactions/csv/", views.TransactionList.as_view(output_format="csv")),
     path("transactions/xlsx/", views.TransactionList.as_view(output_format="xlsx")),
@@ -27,13 +25,16 @@ urlpatterns = [
 		path("revert/", views.revert_transaction, name="transaction_revert"),
 	])),
     
-	path("api/transaction/", include(([
+	path("api/ledger/", include(([
+        path("", views.get_api_description),
 		path("deposit/", views.custom_transaction, {'action': 'deposit'}, name='deposit'),
 		path("withdraw/", views.custom_transaction, {'action': 'withdraw'}, name="withdraw"),
 		path("order/", views.product_transaction, name='order'),
 		path("revert/", views.revert_transaction, name='revert'),
 		path("events/", views.transaction_events, name="events"),
 		path("ping/", views.transaction_ping, name="ping"),
+        path("qr/", views.deposit_qr, name="qr"),
+        path("session/", views.set_session_var, name="session"),
 	], "api"))),
 ]
 

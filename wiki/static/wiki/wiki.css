@@ -720,6 +720,10 @@ article#preview {
     }
 }
 
+article#top {
+    scroll-margin-top: 10vh;
+}
+
 @keyframes highlight {
     from {
         background-color: var(--md-footnote-highlight);

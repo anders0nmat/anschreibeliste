@@ -1,3 +1,5 @@
+import { debounce } from "./base.js"
+
 
 document.querySelectorAll<HTMLButtonElement>('[data-action]').forEach(button => {
     switch (button.dataset.action) {
@@ -30,21 +32,6 @@ document.querySelectorAll<HTMLButtonElement>('[data-action]').forEach(button => 
             break
     }
 })
-
-function debounce<Args extends any[], F extends (...args: Args) => any>(func: F, wait: number, immediate: boolean = false) {
-    var timeout: ReturnType<typeof setTimeout> | null
-    return function(this: ThisParameterType<F>, ...args: Parameters<F>) {
-		var context = this
-        var later = function() {
-            timeout = null
-            if (!immediate) func.apply(context, args)
-        }
-        var callNow = immediate && !timeout
-        clearTimeout(timeout ?? undefined)
-        timeout = setTimeout(later, wait)
-        if (callNow) func.apply(context, args)
-    }
-}
 
 function getElements(formElement: HTMLFormElement, names: string[]): HTMLInputElement[] {
     return (Array.from(formElement.elements) as HTMLInputElement[])

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-04-28 12:38+0200\n"
-"PO-Revision-Date: 2026-04-28 12:38+0200\n"
+"PO-Revision-Date: 2026-06-01 22:54+0200\n"
 "Last-Translator: Arian\n"
 "Language-Team: German <kde-i18n-de@kde.org>\n"
 "Language: de_DE\n"
@@ -14,27 +14,27 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Lokalize 25.12.3\n"
+"X-Generator: Lokalize 26.04.0\n"
 
 #: admin.py:45
 msgid "Add tags"
-msgstr ""
+msgstr "Tags hinzufügen"
 
 #: admin.py:46
 msgid "Remove tags"
-msgstr ""
+msgstr "Tags entfernen"
 
 #: admin.py:57
 msgid "Tags"
-msgstr ""
+msgstr "Tags"
 
 #: admin.py:64
 msgid "Assign recipe group to selected recipes"
-msgstr ""
+msgstr "Zu Rezeptgruppe hinzufügen"
 
 #: admin.py:72
 msgid "Manage tags of selected recipes"
-msgstr ""
+msgstr "Verwalte Tags"
 
 #: forms.py:76
 msgid "product"

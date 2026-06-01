@@ -15,6 +15,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, UpdateView, CreateView, TemplateView
 from json import loads, dumps
+from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from django.utils.translation import gettext as _, pgettext
 from django.core.paginator import Page, Paginator
@@ -29,21 +30,26 @@ from .utils.banking import EPCCode
 from .utils import server_language
 from .utils.transaction import order_product, custom_transaction as custom_transaction_api, transaction_event
 
-def js_config() -> dict[str, Any]:
-    transaction_timeout: timedelta = settings.TRANSACTION_TIMEOUT
-    submit_overlay: timedelta = settings.SUBMIT_OVERLAY
-    return {
-        'transaction': {
-            'deposit': reverse('ledger:api:deposit'),
-            'withdraw': reverse('ledger:api:withdraw'),
-            'order': reverse('ledger:api:order'),
-            'revert': reverse('ledger:api:revert'),
-            'events': reverse('ledger:api:events'),
-            'ping': reverse('ledger:api:ping'),
+def get_api_description(request: HttpRequest):
+    api_description = {
+        'endpoints': {
+            name: reverse('ledger:api:' + name)
+            for name in [
+                'deposit',
+                'withdraw',
+                'order',
+                'revert',
+                'events',
+                'ping',
+                'qr',
+            ]
         },
-        'transaction_timeout': transaction_timeout.total_seconds() * 1_000,
-        'submit_overlay': submit_overlay.total_seconds() * 1_000,
+        'config': {
+            'transaction_timeout': settings.TRANSACTION_TIMEOUT.total_seconds() * 1000,
+            'submit_overlay': settings.SUBMIT_OVERLAY.total_seconds() * 1000
+        },
     }
+    return JsonResponse(api_description)
 
 class AccountList(ListView):
     queryset = Account.objects.grouped()
@@ -53,7 +59,6 @@ class AccountList(ListView):
         if not self.request.session.get('show_inactive_accounts', False):
             queryset = queryset.filter(active=True)
         return queryset.grouped()
-    
 
 class AccountDetail(EnableFieldsMixin, UpdateView):
     queryset = Account.objects.grouped()
@@ -62,7 +67,7 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
     template_name_suffix = '_detail'
     
     def get_form_kwargs(self) -> Dict[str, Any]:
-        return super().get_form_kwargs() | { 'label_suffix': '' }
+        return super().get_form_kwargs()
 
     def get_success_url(self) -> str:
         if not self.object.active:
@@ -83,23 +88,23 @@ class AccountDetail(EnableFieldsMixin, UpdateView):
             account_list = account_list.filter(active=True)
         kwargs |= {
             'account_list': account_list,
-            'transactions': Transaction.objects\
+            'transactions': Transaction.recent_objects\
                 .filter(account=self.object)\
+                .exclude(type__in=[Transaction.TransactionType.REVERT_DEPOSIT, Transaction.TransactionType.REVERT_WITHDRAW])\
                 .order_by('-timestamp')\
                 .annotate_timejump()\
                 .annotate_revertible(user=self.request.user)\
                 .select_related('account'),
-            'js_config': js_config(),
             'banking_details': EPCCode.from_config(self.object.full_name or '[Name]'),
         }
 
         if self.request.user.has_perm(PERMS[('deposit', self.object.permanent)]):
             kwargs |= {
-                'deposit_form': TransactionForm(initial={'account': self.object, 'action': 'deposit'}, label_suffix=""),
+                'deposit_form': TransactionForm(initial={'account': self.object, 'action': 'deposit'}),
             }
         if self.request.user.has_perm(PERMS[('withdraw', self.object.permanent)]):
             kwargs |= {
-                'withdraw_form': TransactionForm(initial={'account': self.object, 'action': 'withdraw'}, label_suffix=""),
+                'withdraw_form': TransactionForm(initial={'account': self.object, 'action': 'withdraw'}),
             }
         
         return super().get_context_data(**kwargs)
@@ -132,14 +137,10 @@ class AccountCreate(PermissionRequiredMixin, CreateView):
             account_list = account_list.filter(active=True)
         return super().get_context_data(**kwargs) | {
             'account_list': Account.objects.filter(active=True).grouped(),
-            'js_config': js_config(),
         }
 
     def get_success_url(self) -> str:
         return reverse('ledger:account_detail', args=[self.object.pk])
-
-    def get_form_kwargs(self) -> Dict[str, Any]:
-        return super().get_form_kwargs() | { 'label_suffix': '' }
 
     def get_form_class(self) -> type:
         HAS_PERM_FORMS = {
@@ -164,7 +165,7 @@ class AccountCreate(PermissionRequiredMixin, CreateView):
         return response
 
 class TransactionList(PermissionRequiredMixin, ListView):
-    queryset = Transaction.objects.all()
+    queryset = Transaction.recent_objects.all()
     output_format = 'html'
     permission_required = "ledger.view_transaction"
     paginate_by = 100
@@ -197,7 +198,7 @@ class TransactionList(PermissionRequiredMixin, ListView):
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
 
-        filters = TransactionListFilter(self.request.GET if self.request.GET else None, label_suffix='')
+        filters = TransactionListFilter(self.request.GET if self.request.GET else None)
         if not self.request.session.get('show_inactive_accounts', False):
             filters.fields['account'].queryset = filters.fields['account'].queryset.filter(active=True)
 
@@ -320,7 +321,6 @@ class IndexView(TemplateView):
             "account_list": Account.objects.filter(active=True).grouped(),
             "product_list": Product.objects.grouped().filter(category=self.product_category),
             "transaction_list": self.get_transactions(),
-            'js_config': js_config(),
         }
 
 def test(request: HttpRequest):
@@ -467,8 +467,25 @@ def transaction_ping(request: HttpRequest):
     return HttpResponse('ok')
 
 @require_POST
-@permission_required('ledger.view_inactive_account')
-def show_inactive_accounts(request: HttpRequest):
-    new_value = request.POST.get('new_value', '0')
-    request.session['show_inactive_accounts'] = new_value.casefold() in ('true', '1', 'yes')
-    return JsonResponse({"new_value": request.session['show_inactive_accounts']})
+def set_session_var(request: HttpRequest):
+    key, value = request.POST.get('key'), request.POST.get('value')
+    
+    if key.casefold() == 'show_inactive_accounts':
+        if not request.user.has_perm('ledger.view_inactive_account'):
+            raise PermissionDenied()
+        value = value.casefold() in ('true', '1', 'yes')
+        request.session['show_inactive_accounts'] = value
+        return JsonResponse({'value': value})
+
+    raise BadRequest()
+
+def deposit_qr(request: HttpRequest):
+    pk = request.GET.get('account')
+    account = get_object_or_404(Account, pk=pk)
+    code = EPCCode.from_config(name=account.full_name)
+    amount = float(request.GET.get('amount', '').replace(',', '.') or '0.0')
+
+    if amount > 0:
+        code.amount = f"EUR{amount:.2f}"
+
+    return HttpResponse(code.qr_code)
