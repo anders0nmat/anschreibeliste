@@ -1,4 +1,4 @@
-.pretty-form div:has(> :is(input[type="text"], input[type="password"], select, textarea)) {
+.pretty-form div:has(> :is(.input, input[type="text"], input[type="password"], select, textarea)) {
     position: relative;
 
     & > :is(input, select, textarea) {
@@ -8,6 +8,11 @@
         &:user-invalid {
             border-color: var(--negative-color);
         }
+    }
+
+    & > .input {
+        padding: 1.25em .25em .25em;   
+        display: inline-block;     
     }
 
     & > select {
@@ -42,13 +47,18 @@
         color: var(--secondary-text-color);
     }
 
+    &:has(.input) > label {
+        padding: .75em .25em;
+        translate: 0 -.25em;
+    }
+
     &:has(> :placeholder-shown:not(:focus-within)) > label {
         translate: 0;
         scale: 1;
     }
 }
 
-.pretty-form div:has(> :is(input, select, textarea)) {
+.pretty-form div:has(> :is(.input, input, select, textarea)) {
     &:has([required]) > label::after {
         content: "*";
         margin-left: .25ch;

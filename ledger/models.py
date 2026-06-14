@@ -76,6 +76,8 @@ class Account(models.Model):
     permanent = models.BooleanField(verbose_name=_('permanent'), default=False)
 
     active = models.BooleanField(verbose_name=_('active'), default=True, help_text=_("Controls visibility."))
+
+    created = models.DateTimeField(verbose_name=_('created'), default=now, blank=True)
     
     # Forward declaration for type-hinting
     transactions: models.QuerySet["Transaction"]

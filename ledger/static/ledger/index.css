@@ -45,7 +45,7 @@ main {
 
 	@media screen and (min-width: 900px) {
 		& {
-			grid-template-columns: 3fr minmax(min-content, 1fr);
+			grid-template-columns: 3fr minmax(40ch, 1fr);
 			grid-template-rows: max-content auto;
 			grid-template-areas: 
 				"slide-bar new-transaction"

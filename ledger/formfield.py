@@ -1,6 +1,8 @@
 from typing import Any
 from django import forms
 from django.forms.widgets import Widget, NumberInput, Input, DateInput
+from django.utils import formats
+from django.utils.html import conditional_escape
 from django.utils.formats import sanitize_separators, number_format, get_format
 from django.utils.translation import gettext as _
 from re import escape
@@ -90,3 +92,19 @@ class FixedPrecisionField(forms.IntegerField):
             attrs.setdefault('pattern', pattern)
         return attrs
 
+class ReadonlyWidget(forms.Widget):
+    template_name = 'forms/readonly_widget.html'
+
+    def __init__(self, format=None, attrs=None) -> None:
+        super().__init__(attrs)
+        self.format = format
+
+    def format_value(self, value):
+        """
+        Return a value as it should appear when rendered in a template.
+        """
+        if value == "" or value is None:
+            return None
+        if self.is_localized:
+            return formats.localize_input(value, default=self.format)
+        return conditional_escape(value)

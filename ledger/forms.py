@@ -1,7 +1,9 @@
 from typing import Any, Callable, Iterator, Tuple
-from django.forms import ModelForm, Form, CharField, IntegerField, HiddenInput, ModelChoiceField, BooleanField, ModelMultipleChoiceField, MultipleChoiceField, DateField
+from django.forms import ModelForm, Form, CharField, IntegerField, HiddenInput, ModelChoiceField, BooleanField, ModelMultipleChoiceField, MultipleChoiceField, DateField, DateTimeField
 from django.utils.translation import gettext_lazy as _, pgettext_lazy
 from django.forms.widgets import TextInput, NumberInput, CheckboxSelectMultiple
+
+from .formfield import ReadonlyWidget
 
 from itertools import groupby
 
@@ -73,7 +75,10 @@ class RestrictedCreateAccountForm(CreateAccountForm):
 class EditAccountForm(CreateAccountForm):
     class Meta(CreateAccountForm.Meta):
         exclude = ['balance']
+        fields = CreateAccountForm.Meta.fields + ['created']
+        
     balance = None
+    created = DateTimeField(required=False, disabled=True, widget=ReadonlyWidget(format='%d.%m.%Y %H:%M'), localize=True)
 
 @default_placeholder
 class TransactionForm(Form):
