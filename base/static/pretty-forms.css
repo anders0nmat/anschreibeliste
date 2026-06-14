@@ -100,6 +100,7 @@
 
 }
 
+.pretty-form.tag-form .tag,
 .pretty-form .tag-form .tag {
     & input[type="checkbox"] {
         position: absolute;

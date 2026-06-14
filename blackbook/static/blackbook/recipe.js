@@ -23,7 +23,7 @@ function splitQuoted(str) {
 // An array of [name, element] pairs, for faster search
 const search_items = [...document.querySelectorAll('#recipes a.recipe')]
     .map(e => [JSON.parse(e.querySelector('script')?.textContent ?? '{}'), e]);
-search_bar.addEventListener('input', debounce(_ => {
+function search() {
     search_items.forEach(([_, e]) => delete e.dataset.selected);
     const searchTerms = splitQuoted(search_bar.value.toLowerCase());
     const matches = (metadata) => {
@@ -43,6 +43,10 @@ search_bar.addEventListener('input', debounce(_ => {
     search_items.forEach(([metadata, element]) => {
         element.style.display = matches(metadata) ? '' : 'none';
     });
+}
+search_bar.addEventListener('input', debounce(_ => {
+    updateFilters();
+    search();
 }, 50));
 async function selectWithAnimation(list, index) {
     return new Promise(resolve => {
@@ -87,3 +91,29 @@ random_button.addEventListener("click", _ => {
     selectWithAnimation(visible_recipes, selected_index)
         .then(_ => random_button.disabled = false);
 });
+function updateFilters() {
+    document.querySelectorAll('#filters input[type="checkbox"]').forEach(e => {
+        const value = search_bar.value;
+        const terms = splitQuoted(value);
+        const filter = e.dataset.filter.toLowerCase();
+        e.checked = terms.some(v => v.toLowerCase() == filter);
+    });
+}
+document.querySelectorAll('#filters input[type="checkbox"]').forEach(e => {
+    e.addEventListener('change', _ => {
+        const old_value = search_bar.value;
+        const terms = splitQuoted(old_value);
+        const filter = e.dataset.filter.toLowerCase();
+        if (e.checked) {
+            if (!terms.some(v => v.toLowerCase() == filter)) {
+                const quote = filter.includes(' ') ? '"' : '';
+                search_bar.value += (search_bar.value ? ' ' : '') + quote + filter + quote;
+            }
+        }
+        else {
+            search_bar.value = terms.filter(v => v.toLowerCase() != filter).map(e => e.includes(' ') ? '"' + e + '"' : e).join(' ');
+        }
+        search();
+    });
+});
+search();

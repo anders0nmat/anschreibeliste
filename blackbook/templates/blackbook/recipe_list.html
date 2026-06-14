@@ -6,6 +6,7 @@
 
 {% block import %}
     {{ block.super }}
+    <link rel="stylesheet" href="{% static 'pretty-forms.css' %}">
     <link rel="stylesheet" href="{% static 'blackbook/recipe.css' %}">
     <script type="module" src="{% static 'blackbook/recipe.js' %}"></script>
 {% endblock import %}
@@ -13,9 +14,40 @@
 {% block content %}
 
 <div class="hstack center-along p-m gap-m">
+    <label class="icon-checkbox icon-button p-m">
+        <input type="checkbox" id="show-filters" autocomplete="off">
+        {% icon "funnel" %}
+    </label>
     <input type="search" id="recipe-search" placeholder="{% trans "Search" %}">
     <a href="{% url 'blackbook:recipe_new' %}" class="icon-button p-m">{% icon "plus" %}</a>
     <button type="button" class="icon-button p-m" id="random">{% icon "dices" %}</button>
+</div>
+
+<style>
+body:has(#show-filters:not(:checked)) #filters {
+    display: none;
+}
+</style>
+
+<div class="vstack p-m gap-m" id="filters">
+    <span class="caption">{% trans "Tags" %}</span>
+    <div class="hstack gap-m pretty-form tag-form wrap">
+        {% for tag in tags %}
+        <label class="tag" style="--color: {{ tag.color }}">
+            <input type="checkbox" data-filter="tag:{{ tag.name }}">
+            {{ tag.name }}
+        </label>
+        {% endfor %}
+    </div>
+    <span class="caption">{% trans "Ingredients" %}</span>
+    <div class="hstack gap-m pretty-form tag-form wrap">
+        {% for ingredient in ingredients %}
+        <label class="tag">
+            <input type="checkbox" data-filter="has:{{ ingredient.name }}">
+            {{ ingredient.name }}
+        </label>
+        {% endfor %}
+    </div>
 </div>
 
 <ul id="recipes">

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-28 12:38+0200\n"
+"POT-Creation-Date: 2026-06-14 16:40+0200\n"
 "PO-Revision-Date: 2026-06-01 22:54+0200\n"
 "Last-Translator: Arian\n"
 "Language-Team: German <kde-i18n-de@kde.org>\n"
@@ -24,7 +24,7 @@ msgstr "Tags hinzufügen"
 msgid "Remove tags"
 msgstr "Tags entfernen"
 
-#: admin.py:57
+#: admin.py:57 templates/blackbook/recipe_list.html:33
 msgid "Tags"
 msgstr "Tags"
 
@@ -36,16 +36,16 @@ msgstr "Zu Rezeptgruppe hinzufügen"
 msgid "Manage tags of selected recipes"
 msgstr "Verwalte Tags"
 
-#: forms.py:76
+#: forms.py:74
 msgid "product"
 msgstr "Produkt"
 
-#: forms.py:76 models.py:90
+#: forms.py:74 models.py:90
 msgid "Used to display pricing"
 msgstr "Bestimmt den Preis"
 
 #. Translators: Shown as placeholder in a new tag field
-#: forms.py:246
+#: forms.py:244
 msgid "New tag"
 msgstr "Neuer Tag"
 
@@ -93,7 +93,7 @@ msgstr "Zutatengruppen"
 msgid "Ingredient"
 msgstr "Zutat"
 
-#: models.py:66
+#: models.py:66 templates/blackbook/recipe_list.html:42
 msgid "Ingredients"
 msgstr "Zutaten"
 
@@ -118,7 +118,6 @@ msgid "group"
 msgstr "Gruppe"
 
 #: models.py:87
-#| msgid "Serving glass"
 msgid "Serving Glass"
 msgstr "Servier-Glas"
 
@@ -166,7 +165,7 @@ msgstr "Anweisung"
 msgid "Save"
 msgstr "Speichern"
 
-#: templates/blackbook/recipe_list.html:16
+#: templates/blackbook/recipe_list.html:21
 msgid "Search"
 msgstr "Suchen"
 

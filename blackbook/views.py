@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpRequest, HttpResponseRedirect
 from django.views.generic import ListView, DetailView
 
-from .models import Recipe, Tag
+from .models import Recipe, Tag, Ingredient
 from .forms import RecipeForm, RecipeStepFormset, TagFormset
 
 # Create your views here.
@@ -13,6 +13,13 @@ class RecipeList(ListView):
         .order_by('name')\
         .select_related('group')\
         .prefetch_related('tags', 'steps__ingredient')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["tags"] = Tag.objects.order_by('name')
+        context["ingredients"] = Ingredient.objects.order_by('name')
+        return context
+    
 
 class RecipeDetail(DetailView):
     queryset = Recipe.objects\
