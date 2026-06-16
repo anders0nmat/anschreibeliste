@@ -7,7 +7,6 @@
 {% block import %}
 	<link rel="stylesheet" href="{% static 'ledger/transaction_history.css' %}">
 	<script type="module" src="{% static 'ledger/account_detail.js' %}"></script>
-	<script type="module" src="{% static 'ledger/transaction.js' %}"></script>
 	{{ api|json_script:"api" }}
 	{{ block.super }}
 {% endblock import %}
