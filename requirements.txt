@@ -8,6 +8,7 @@ cryptography==44.0.0
 daphne==4.1.2
 Django==6.0.1
 django-admin-sortable2==2.3.1
+django-admin-action-forms==2.2.1
 django-colorfield==0.14.0
 et_xmlfile==2.0.0
 hyperlink==21.0.0
