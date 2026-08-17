@@ -1,0 +1,22 @@
+{% extends 'ledger/snippets/grouped_item_grid.html' %}
+{% load ledger %}
+
+{% block item %}
+{% with product=item %}
+<button type="button"
+        class="item calculator-product"
+        data-calculator-product
+        data-product-id="{{ product.pk }}"
+        data-name="{{ product.display_name|escape }}"
+        data-cost="{{ product.cost }}"
+        data-member-cost="{{ product.member_cost }}">
+    <h4 class="name">{{ product.display_name }}</h4>
+    <span class="price">
+        {{ product.cost|money }}
+        {% if product.cost != product.member_cost %}
+        {{ product.member_cost|money }}
+        {% endif %}
+    </span>
+</button>
+{% endwith %}
+{% endblock item %}
