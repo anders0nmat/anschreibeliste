@@ -7,6 +7,7 @@ constantly==23.10.4
 cryptography==44.0.0
 daphne==4.1.2
 Django==6.0.1
+django-admin-action-forms==2.2.1
 django-admin-sortable2==2.3.1
 django-colorfield==0.14.0
 et_xmlfile==2.0.0
@@ -27,7 +28,7 @@ pyOpenSSL==25.0.0
 PyYAML==6.0.2
 qrcode==8.1
 service-identity==24.2.0
-setuptools==75.8.0
+setuptools==82.0.0
 sqlparse==0.5.3
 Twisted==24.11.0
 txaio==23.1.1
