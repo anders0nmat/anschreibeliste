@@ -4,6 +4,7 @@ from markdown import markdown
 from .base_path import BasePath
 from .admonition import IconAdmonition
 from .adaptive_image import AdaptiveImages
+from .interactive_tasklist import InteractiveTasklist
 
 from pymdownx.emoji import to_alt
 
@@ -55,7 +56,7 @@ def render_markdown(content: str, image_base_path='') -> str:
             'pymdownx.emoji',
             'pymdownx.escapeall',
             'pymdownx.tilde',
-            'pymdownx.tasklist',
+            InteractiveTasklist(),
             'pymdownx.smartsymbols',
         ], extension_configs={
             'pymdownx.highlight': {

@@ -357,7 +357,7 @@ const enable_auto_indent = document.querySelector<HTMLInputElement>('input[data-
 
 textarea.addEventListener('input', (ev: InputEvent) => {
     if (enable_autoclose_brackets.checked) {
-        const BRACKETS = {
+        const BRACKETS: Record<string, string> = {
             '(': ')',
             '[': ']',
             '{': '}',

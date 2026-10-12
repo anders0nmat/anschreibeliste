@@ -281,30 +281,20 @@ def article_checkbox(request: HttpRequest, slug: str):
         'no': False,
     }
     try:
-        checkbox_index = int(request.POST.get('index'))
+        checkbox_lines = [int(l) for l in request.POST.getlist('line')]
         checkbox_state = VALUE_MAP[request.POST.get('value', '').casefold()]
     except (KeyError, ValueError):
-        return HttpResponseBadRequest("Requires 'index' and 'value' field in POST body")
-
-    """
-    RegEx Explaination:
-    each checkbox line must:
-    - start with any number of whitespace (space or tab) '[ \t]*'
-    - A list item '[*+-]'
-    - Followed by at least one space '[ \t]+'
-    - Followed by a valid checkbox '\[([ xX])\]'
-      - A valid checkbox is one of '[ ]', '[x]', '[X]'
-      - We capture the string inside the square brackets for use later
-    - Followed by at least a space (space or tab) '[ \t]' (We dont need any more, so one does fine)
-    """
-    matches = re.finditer(r'^[ \t]*[*+-][ \t]+\[([ xX])\][ \t]', article.content, re.MULTILINE)
-
-    checkbox_match = next(islice(matches, checkbox_index, None), None)
-    if not checkbox_match:
-        return HttpResponseNotFound(f'No checkbox with id {checkbox_index} in article {article.slug}')
+        return HttpResponseBadRequest("Requires 'line' and 'value' field in POST body")
     
-    new_state = 'x' if checkbox_state else ' '
-    article.content = article.content[:checkbox_match.start(1)] + new_state + article.content[checkbox_match.end(1):]
+    lines = article.content.splitlines(keepends=True)
+    
+    for line in checkbox_lines:
+        if line < 1 or line > len(lines):
+            return HttpResponseNotFound(f'No line {line} in article {article.slug}')
+
+        lines[line - 1] = re.sub(r'(- +\[)[ xX]?(\])', rf'\1{"x" if checkbox_state else " "}\2', lines[line - 1], count=1)
+
+    article.content = ''.join(lines)
 
     article.save()
     

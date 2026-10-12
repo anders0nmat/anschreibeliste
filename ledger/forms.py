@@ -78,7 +78,7 @@ class EditAccountForm(CreateAccountForm):
         fields = CreateAccountForm.Meta.fields + ['created']
         
     balance = None
-    created = DateTimeField(required=False, disabled=True, widget=ReadonlyWidget(format='%d.%m.%Y %H:%M'), localize=True)
+    created = DateTimeField(label=_('created'), required=False, disabled=True, widget=ReadonlyWidget(format='%d.%m.%Y %H:%M'), localize=True)
 
 @default_placeholder
 class TransactionForm(Form):

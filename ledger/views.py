@@ -332,7 +332,6 @@ def test(request: HttpRequest):
                 .annotate_timejump()\
                 .annotate_revertible(user=request.user)\
                 .select_related('account'),
-        'js_config': js_config(),
     })
 
 def test_event(request: HttpRequest):

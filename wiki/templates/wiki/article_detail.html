@@ -47,8 +47,15 @@
 <div id="article-content">
 {% csrf_token %}
 {% block article %}
-    {% if article %}
+{% if article %}
     <article id="top">
+        <template id="clear-checklist">
+            <div class="checklist-toolbar">
+                <button type="button" class="button slim">
+                    <span>{% trans "Clear checklist" %}</span>
+                </button>
+            </div>
+        </template>
         {{ article.content_html|safe }}
     </article>
     {% else %}

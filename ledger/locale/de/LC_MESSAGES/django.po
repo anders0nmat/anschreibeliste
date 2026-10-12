@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-14 16:40+0200\n"
+"POT-Creation-Date: 2026-10-12 17:51+0200\n"
 "PO-Revision-Date: 2026-06-14 16:43+0200\n"
 "Last-Translator: Arian\n"
 "Language-Team: German <kde-i18n-de@kde.org>\n"
@@ -66,8 +66,12 @@ msgstr "Gib eine Zahl mit {decimal_places} Nachkommastellen ein."
 msgid "Optional. Used in the transaction qr-code."
 msgstr "Optional. Wird zum generieren des Banking QR-Codes genutzt"
 
+#: forms.py:81 models.py:80
+msgid "created"
+msgstr "Erstellt"
+
 #: forms.py:85 forms.py:99 templates/ledger/account_create.html:18
-#: templates/ledger/account_detail.html:31
+#: templates/ledger/account_detail.html:30
 #: templates/ledger/transaction_list.html:126 views.py:225
 msgid "Account"
 msgstr "Account"
@@ -160,10 +164,6 @@ msgstr "Aktiv"
 msgid "Controls visibility."
 msgstr "Steuert die Sichtbarkeit"
 
-#: models.py:80
-msgid "created"
-msgstr "Erstellt"
-
 #: models.py:97 models.py:147 models.py:179
 msgid "account"
 msgstr "Account"
@@ -197,11 +197,11 @@ msgstr "Schlussbilanzen"
 msgid "{account}: {closing_balance} at {timestamp}"
 msgstr "{account}: {closing_balance} am {timestamp}"
 
-#: models.py:163 templates/ledger/account_detail.html:46
+#: models.py:163 templates/ledger/account_detail.html:45
 msgid "Deposit"
 msgstr "Einzahlung"
 
-#: models.py:164 templates/ledger/account_detail.html:94
+#: models.py:164 templates/ledger/account_detail.html:93
 msgid "Withdraw"
 msgstr "Auszahlung"
 
@@ -316,33 +316,33 @@ msgid "New Account"
 msgstr "Neuer Account"
 
 #: templates/ledger/account_create.html:24
-#: templates/ledger/account_detail.html:38
+#: templates/ledger/account_detail.html:37
 msgid "Save"
 msgstr "Speichern"
 
-#: templates/ledger/account_detail.html:67
-#: templates/ledger/account_detail.html:117
+#: templates/ledger/account_detail.html:66
+#: templates/ledger/account_detail.html:116
 msgid "Confirm"
 msgstr "Bestätigen"
 
-#: templates/ledger/account_detail.html:73
+#: templates/ledger/account_detail.html:72
 msgid "Name"
 msgstr "Name"
 
-#: templates/ledger/account_detail.html:77
+#: templates/ledger/account_detail.html:76
 msgid "IBAN"
 msgstr "IBAN"
 
-#: templates/ledger/account_detail.html:81
+#: templates/ledger/account_detail.html:80
 msgid "Invoice Text"
 msgstr "Verwendungszweck"
 
 #. Translators: Used to withdraw the entire deposited money
-#: templates/ledger/account_detail.html:109
+#: templates/ledger/account_detail.html:108
 msgid "All"
 msgstr "Alles"
 
-#: templates/ledger/account_detail.html:124 templates/ledger/main.html:105
+#: templates/ledger/account_detail.html:123 templates/ledger/main.html:103
 msgid "Transactions"
 msgstr "Transaktionen"
 
@@ -350,27 +350,27 @@ msgstr "Transaktionen"
 msgid "Select an account"
 msgstr "Wähle einen Account"
 
-#: templates/ledger/main.html:26
+#: templates/ledger/main.html:24
 msgid "Products"
 msgstr "Getränke"
 
-#: templates/ledger/main.html:27
+#: templates/ledger/main.html:25
 msgid "Accounts"
 msgstr "Accounts"
 
-#: templates/ledger/main.html:42
+#: templates/ledger/main.html:40
 msgid "Search"
 msgstr "Suche..."
 
-#: templates/ledger/main.html:59
+#: templates/ledger/main.html:57
 msgid "Amount:"
 msgstr "Menge:"
 
-#: templates/ledger/main.html:84
+#: templates/ledger/main.html:82
 msgid "Select account"
 msgstr "Account auswählen"
 
-#: templates/ledger/main.html:88
+#: templates/ledger/main.html:86
 msgid "Select product"
 msgstr "Produkt auswählen"
 
@@ -478,18 +478,18 @@ msgstr "Datum"
 msgid "Time"
 msgstr "Uhrzeit"
 
-#: views.py:374 views.py:409
+#: views.py:373 views.py:408
 msgid "The account has not enough money"
 msgstr "Der ausgewählte Account hat nicht genug Guthaben"
 
-#: views.py:407
+#: views.py:406
 msgid "Not authorized to perform this transaction for this account"
 msgstr "Nicht berechtigt, diese Transaktion durchzuführen"
 
-#: views.py:437
+#: views.py:436
 msgid "Transaction already reverted"
 msgstr "Transaktion bereits zurückgezogen"
 
-#: views.py:439
+#: views.py:438
 msgid "Not authorized to revert this transaction"
 msgstr "Nicht berechtigt, diese Transaktion zurückzuziehen"

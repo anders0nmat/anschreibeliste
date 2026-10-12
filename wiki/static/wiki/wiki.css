@@ -542,6 +542,10 @@ article {
         margin-block: 0.5em;
         padding-left: 2em;
 
+        & > .checklist-toolbar {
+            margin-left: -2em;
+        }
+
         li:not(:last-child) {
             margin-bottom: 0.25em;
         }

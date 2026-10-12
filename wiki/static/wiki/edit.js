@@ -1,3 +1,4 @@
+"use strict";
 const textarea = document.getElementById('id_raw_content');
 /* Show uploaded image immediately */
 /* Image list can insert image at current selection */

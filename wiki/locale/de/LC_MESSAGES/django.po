@@ -1,44 +1,42 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# SPDX-FileCopyrightText: 2026 THE PACKAGE 'S
 # This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-19 00:04+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"POT-Creation-Date: 2026-10-12 17:52+0200\n"
+"PO-Revision-Date: 2026-10-12 17:54+0200\n"
+"Last-Translator: Arian\n"
+"Language-Team: German <kde-i18n-de@kde.org>\n"
+"Language: de_DE\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Lokalize 26.08.0\n"
 
-#: markdown/__init__.py:23
+#: markdown/__init__.py:24
 msgctxt "admonition title"
 msgid "Info"
 msgstr "Info"
 
-#: markdown/__init__.py:28
+#: markdown/__init__.py:29
 msgctxt "admonition title"
 msgid "Tip"
 msgstr "Tipp"
 
-#: markdown/__init__.py:33
+#: markdown/__init__.py:34
 msgctxt "admonition title"
 msgid "Important"
 msgstr "Wichtig"
 
-#: markdown/__init__.py:38
+#: markdown/__init__.py:39
 msgctxt "admonition title"
 msgid "Warning"
 msgstr "Warnung"
 
-#: markdown/__init__.py:43
+#: markdown/__init__.py:44
 msgctxt "admonition title"
 msgid "Caution"
 msgstr "Achtung"
@@ -95,11 +93,15 @@ msgstr "Bearbeiten"
 msgid "Back to top"
 msgstr "Zum Anfang"
 
-#: templates/wiki/article_detail.html:57
+#: templates/wiki/article_detail.html:55
+msgid "Clear checklist"
+msgstr "ToDo-Liste zurücksetzen"
+
+#: templates/wiki/article_detail.html:64
 msgid "Article does not exist"
 msgstr "Artikel existiert nicht"
 
-#: templates/wiki/article_detail.html:60
+#: templates/wiki/article_detail.html:67
 #, python-format
 msgid ""
 "The article you were looking for does not exist.<br> You can <a "
@@ -134,12 +136,12 @@ msgstr "Übernehme Einrückung nach Zeilenumbruch"
 msgid "Save"
 msgstr "Speichern"
 
-#: templates/wiki/article_update.html:71 templates/wiki/article_update.html:137
-#: templates/wiki/article_update.html:148
+#: templates/wiki/article_update.html:71 templates/wiki/article_update.html:143
+#: templates/wiki/article_update.html:154
 msgid "Drop your files here"
 msgstr "Dateien hier ablegen"
 
-#: templates/wiki/article_update.html:78
+#: templates/wiki/article_update.html:78 templates/wiki/article_update.html:90
 msgid "Name"
 msgstr "Name"
 
@@ -147,20 +149,20 @@ msgstr "Name"
 msgid "No images available"
 msgstr "Keine Bilder gefunden"
 
-#: templates/wiki/article_update.html:109
+#: templates/wiki/article_update.html:115
 msgid ""
 "<b>Tip:</b> Articles get grouped together if they have a matching prefix."
 msgstr ""
 "<b>Tipp:</b> Artikel werden gruppiert, wenn sie den gleichen Prefix haben"
 
-#: templates/wiki/article_update.html:118
+#: templates/wiki/article_update.html:124
 msgid ""
 "E.g. `animal_cat` and `animal_dog` get grouped under a new `animal` article."
 msgstr ""
 "Z.B. werden `animal_cat` und `animal_dog` unter einem neuen Artikel `animal` "
 "gruppiert"
 
-#: templates/wiki/article_update.html:166
+#: templates/wiki/article_update.html:172
 msgid "Add file"
 msgstr "Datei hinzufügen"
 
@@ -169,6 +171,7 @@ msgid "Wiki"
 msgstr "Wiki"
 
 #: templates/wiki/main.html:10
+#, python-format
 msgid ""
 "This is the wiki landing page.<br> You can customize it by <a "
 "href=\"%(update_url)s\">creating a landing page</a>."
@@ -185,14 +188,14 @@ msgid "Delete"
 msgstr "Löschen"
 
 #. Translators: Default title of the wiki startpage
-#: views.py:178
+#: views.py:176
 msgid "Home"
 msgstr "Startseite"
 
-#: views.py:212 views.py:213
+#: views.py:210 views.py:211
 msgid "(Optional)"
 msgstr "(Optional)"
 
-#: views.py:214
+#: views.py:212
 msgid "(Markdown supported)"
 msgstr "(Unterstützt Markdown)"
