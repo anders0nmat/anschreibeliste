@@ -63,6 +63,8 @@
 		color: var(--headline-text-color);
 		gap: 4px;
 
+        text-align: left;
+
 		overflow: hidden;
 		overflow-wrap: break-word;
 		hyphens: auto;

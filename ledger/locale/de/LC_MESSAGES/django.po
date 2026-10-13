@@ -5,8 +5,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 17:51+0200\n"
-"PO-Revision-Date: 2026-06-14 16:43+0200\n"
+"POT-Creation-Date: 2026-10-13 11:59+0200\n"
+"PO-Revision-Date: 2026-10-13 12:01+0200\n"
 "Last-Translator: Arian\n"
 "Language-Team: German <kde-i18n-de@kde.org>\n"
 "Language: de_DE\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Lokalize 26.04.0\n"
+"X-Generator: Lokalize 26.08.0\n"
 
 #: admin.py:18
 msgid "Cutoff date"
@@ -342,7 +342,7 @@ msgstr "Verwendungszweck"
 msgid "All"
 msgstr "Alles"
 
-#: templates/ledger/account_detail.html:123 templates/ledger/main.html:103
+#: templates/ledger/account_detail.html:123 templates/ledger/main.html:109
 msgid "Transactions"
 msgstr "Transaktionen"
 
@@ -350,29 +350,45 @@ msgstr "Transaktionen"
 msgid "Select an account"
 msgstr "Wähle einen Account"
 
-#: templates/ledger/main.html:24
+#: templates/ledger/main.html:26
 msgid "Products"
 msgstr "Getränke"
 
-#: templates/ledger/main.html:25
+#: templates/ledger/main.html:27
 msgid "Accounts"
 msgstr "Accounts"
 
-#: templates/ledger/main.html:40
+#: templates/ledger/main.html:42
 msgid "Search"
 msgstr "Suche..."
 
-#: templates/ledger/main.html:57
+#: templates/ledger/main.html:53 templates/ledger/snippets/calculator.html:7
+msgid "Calculator"
+msgstr "Rechner"
+
+#: templates/ledger/main.html:62
 msgid "Amount:"
 msgstr "Menge:"
 
-#: templates/ledger/main.html:82
+#: templates/ledger/main.html:88
 msgid "Select account"
 msgstr "Account auswählen"
 
-#: templates/ledger/main.html:86
+#: templates/ledger/main.html:92
 msgid "Select product"
 msgstr "Produkt auswählen"
+
+#: templates/ledger/snippets/calculator.html:9
+msgid "Price type"
+msgstr "Preiskategorie"
+
+#: templates/ledger/snippets/calculator.html:13
+msgid "Close"
+msgstr "Schließen"
+
+#: templates/ledger/snippets/calculator.html:30
+msgid "Clear"
+msgstr "Leeren"
 
 #: templates/ledger/snippets/transaction_history.html:21
 msgid "No transactions found"

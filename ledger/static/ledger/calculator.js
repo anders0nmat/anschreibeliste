@@ -8,10 +8,26 @@ const calculatorModeButtons = document.querySelectorAll('[data-calculator-mode]'
 const calculatorProducts = document.querySelectorAll('[data-calculator-product]');
 const calculatorTimeoutProgress = document.querySelector('.calculator-timeout-progress');
 const calculatorItems = new Map();
-const formatCalculatorMoney = cents => new Intl.NumberFormat('de-DE', {
-    style: 'currency',
-    currency: 'EUR',
-}).format(cents / 100);
+const formatCalculatorMoney = cents => {
+    const sp = document.createElement('span')
+    sp.classList.add('money')
+    if (cents < 0) { sp.classList.add('negative') }
+    
+    const int = document.createElement('span')
+    int.classList.add('integer')
+    int.textContent = Math.trunc(cents / 100)
+    
+    const sep = document.createElement('span')
+    sep.classList.add('separator')
+    sep.textContent = ','
+    
+    const frac = document.createElement('span')
+    frac.classList.add('fraction')
+    frac.textContent = (cents % 100).toString().padStart(2, '0')
+    
+    sp.append(int, sep, frac)
+    return sp
+};
 let calculatorMode = 'external';
 let calculatorTimeout;
 
@@ -50,19 +66,27 @@ function renderCalculator() {
         const name = document.createElement('span');
         name.className = 'calculator-selection-name';
         name.textContent = `${item.amount}x ${item.name}`;
-        if (item.mode === 'external') {
-            const badge = document.createElement('span');
+        if (item.mode === 'member') {
+            /*const badge = document.createElement('span');
             badge.className = 'tag';
-            badge.textContent = 'Extern';
+            badge.textContent = 'Clubbi';
             name.append(' ', badge);
+            */
+           const xmlns = "http://www.w3.org/2000/svg"
+           const badge = document.createElementNS(xmlns, 'svg')
+           badge.classList.add('lucide', 'badge')
+
+           const use = document.createElementNS(xmlns, 'use')
+           use.setAttribute('href', '#icon-badge')
+           badge.append(use)
+           name.append(badge)
         }
-        const itemPrice = document.createElement('span');
-        itemPrice.className = 'calculator-selection-price';
-        itemPrice.textContent = formatCalculatorMoney(item.amount * price);
+        const itemPrice = formatCalculatorMoney(item.amount * price)
+        itemPrice.classList.add('calculator-selection-price')
         row.append(name, itemPrice);
         calculatorSelections.append(row);
     }
-    calculatorTotal.textContent = formatCalculatorMoney(total);
+    calculatorTotal.replaceChildren(formatCalculatorMoney(total))
 }
 
 calculatorModeButtons.forEach(button => button.addEventListener('click', () => {
