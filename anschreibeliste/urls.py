@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from typing import Iterable
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
@@ -36,6 +37,11 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
     path("recipes/", include("blackbook.urls")),
 ]
+
+if isinstance(settings.EXTRA_URLPATTERNS, Iterable):
+    urlpatterns += settings.EXTRA_URLPATTERNS
+elif callable(settings.EXTRA_URLPATTERNS):
+    urlpatterns += settings.EXTRA_URLPATTERNS()
 
 # Static file serving during development
 if settings.DEBUG:

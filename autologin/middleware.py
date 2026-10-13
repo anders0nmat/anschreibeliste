@@ -1,11 +1,10 @@
 
 from typing import Any, Callable
+from datetime import timedelta
 from django.http import HttpRequest, HttpResponse
-from django.contrib.auth import login
+from django.utils.timezone import now
 
-from django.conf import settings
-
-from .models import AutoLogin
+from .models import PrivilegedSession
 from logging import getLogger
 
 logger = getLogger('autologin')
@@ -15,25 +14,15 @@ class AutoLoginMiddleware:
         self.get_response = get_response
 
     def __call__(self, request: HttpRequest) -> Any:
-        if not request.user.is_authenticated:
-            self.auto_login(request)
+        privileged_session = PrivilegedSession.objects.filter(session_key=request.session.session_key).first()
+        if privileged_session:
+            if now() - privileged_session.last_changed > timedelta(days=30):
+                request.session.cycle_key()
+                privileged_session.session_key = request.session.session_key
+                privileged_session.save()
+                logger.info(f'Recycled session key for privileged connection "{privileged_session.name}"')
+            request.session.set_expiry(timedelta(days=90))
 
         response = self.get_response(request)
 
         return response
-    
-    def auto_login(self, request: HttpRequest): 
-        try:
-            session_key = request.COOKIES.get(settings.SESSION_COOKIE_NAME)
-            login_rule = AutoLogin.objects.get(session_key=session_key)
-            login(request, login_rule.user)
-            login_rule.session_key = request.session.session_key
-            login_rule.history.create(
-                new_session_id=request.session.session_key,
-                ip_address=request.META['REMOTE_ADDR'],
-                user_agent=request.META['HTTP_USER_AGENT']
-            )
-            login_rule.save()
-            logger.info(f'Renewed session for {request.META['REMOTE_ADDR']} according to login rule "{login_rule.name}"')
-        except (AutoLogin.DoesNotExist, AutoLogin.MultipleObjectsReturned):
-            pass
