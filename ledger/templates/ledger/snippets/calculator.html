@@ -1,0 +1,33 @@
+{% load i18n %}
+
+<dialog id="calculator-dialog" class="calculator-dialog" aria-labelledby="calculator-title">
+    <div class="calculator-layout">
+        <section class="calculator-products">
+            <header class="calculator-header">
+                <h2 id="calculator-title">{% translate "Calculator" %}</h2>
+                <div class="calculator-header-actions">
+                    <div class="calculator-mode" role="group" aria-label="{% translate 'Price type' %}">
+                        <button type="button" class="calculator-mode-button is-active" data-calculator-mode="external">Extern</button>
+                        <button type="button" class="calculator-mode-button" data-calculator-mode="member">Clubbi</button>
+                    </div>
+                    <button type="button" class="icon-button" id="calculator-close" aria-label="{% translate 'Close' %}">
+                        {% icon "x" %}
+                    </button>
+                </div>
+            </header>
+            <div class="calculator-product-list group-list ph-m">
+                {% include 'ledger/snippets/calculator_products.html' with items=items %}
+            </div>
+        </section>
+        <aside class="calculator-summary">
+            <div class="calculator-summary-header">
+                <div class="calculator-timeout-bar" aria-hidden="true">
+                    <div class="calculator-timeout-progress"></div>
+                </div>
+                <output id="calculator-total" class="calculator-total" aria-live="polite">0,00 €</output>
+            </div>
+            <ul id="calculator-selections" class="calculator-selections" aria-live="polite"></ul>
+            <button type="button" class="calculator-clear">{% translate "Clear" %}</button>
+        </aside>
+    </div>
+</dialog>

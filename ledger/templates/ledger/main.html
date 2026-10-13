@@ -8,9 +8,11 @@
 	<link rel="stylesheet" href="{% static 'ledger/index.css' %}">
 	<link rel="stylesheet" href="{% static 'ledger/transaction_history.css' %}">
 	<link rel="stylesheet" href="{% static 'ledger/item_grid.css' %}">
+	<link rel="stylesheet" href="{% static 'ledger/calculator.css' %}">
 	
 
 	<script type="module" src="{% static 'ledger/main.js' %}"></script>
+	<script type="module" src="{% static 'ledger/calculator.js' %}"></script>
 
 	{{ api|json_script:"api" }}
 
@@ -48,6 +50,9 @@
         <input type="checkbox" class="css-hidden" name="invert_member" form="new-transaction">
         {% icon "badge-update" %}
     </label>
+    <button type="button" class="icon-button opaque text-big p-sm" id="calculator-open" aria-label="{% translate 'Calculator' %}">
+        {% icon "calculator" %}
+    </button>
     <div id="transaction-multiplier" class="hstack p-s gap-s text-big">
         <button type="button" class="icon-button text-small" data-increment="-1">
             {% icon "minus" %}
@@ -62,6 +67,7 @@
         </button>
     </div>
 </div>
+{% include 'ledger/snippets/calculator.html' with items=product_list %}
 <div id="tabs" class="slideshow" data-active-slide="products">
     <div class="slide group-list ph-m" id="products" data-slide="products">
         <h2 class="visually-hidden">{{ the_product }}</h2>
